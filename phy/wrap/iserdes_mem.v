@@ -65,7 +65,6 @@ module  iserdes_mem(
          .Q8                         (),
          .SHIFTOUT1                  (),
          .SHIFTOUT2                  (),
-     
          .BITSLIP                    (1'b0),
          .CE1                        (1'b1),
          .CE2                        (1'b1),

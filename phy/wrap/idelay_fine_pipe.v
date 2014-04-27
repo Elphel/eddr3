@@ -20,7 +20,13 @@
  *******************************************************************************/
 `timescale 1ns/1ps
 
-module  idelay_fine_pipe(
+module  idelay_fine_pipe
+//SuppressWarnings VEditor - IODELAY_GRP used in (* *) construnt
+# ( parameter  IODELAY_GRP  = "IODELAY_MEMORY",
+    parameter integer DELAY_VALUE = 0,
+    parameter real REFCLK_FREQUENCY = 200.0,
+    parameter HIGH_PERFORMANCE_MODE    = "FALSE"
+) (
     input clk,
     input rst,
     input set,
@@ -29,9 +35,6 @@ module  idelay_fine_pipe(
     input data_in,
     output data_out
 );
-    parameter integer DELAY_VALUE = 0;
-    parameter real REFCLK_FREQUENCY = 200.0;
-    parameter HIGH_PERFORMANCE_MODE    = "FALSE";
     
     reg [2:0] fdly_pre=DELAY_VALUE[2:0], fdly=DELAY_VALUE[2:0];
     always @ (posedge clk or posedge rst) begin
@@ -40,7 +43,7 @@ module  idelay_fine_pipe(
         if (rst)      fdly <= DELAY_VALUE[2:0];
         else if (set) fdly <= fdly_pre;
     end
-    IDELAYE2_FINEDELAY
+(* IODELAY_GROUP = IODELAY_GRP *) IDELAYE2_FINEDELAY
      #(
         .CINVCTRL_SEL("FALSE"),
         .DELAY_SRC("IDATAIN"),

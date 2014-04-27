@@ -10,7 +10,7 @@
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- *  idelay_fine_pipe.v is distributed in the hope that it will be useful,
+ *  odelay_fine_pipe.v is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -20,7 +20,13 @@
  *******************************************************************************/
 `timescale 1ns/1ps
 
-module  odelay_fine_pipe(
+module  odelay_fine_pipe
+//SuppressWarnings VEditor - IODELAY_GRP used in (* *) construnt
+# ( parameter  IODELAY_GRP  = "IODELAY_MEMORY",
+    parameter integer DELAY_VALUE = 0,
+    parameter real REFCLK_FREQUENCY = 200.0,
+    parameter HIGH_PERFORMANCE_MODE    = "FALSE"
+) (
     input clk,
     input rst,
     input set,
@@ -29,10 +35,6 @@ module  odelay_fine_pipe(
     input data_in,
     output data_out
 );
-    parameter integer DELAY_VALUE = 0;
-    parameter real REFCLK_FREQUENCY = 200.0;
-    parameter HIGH_PERFORMANCE_MODE    = "FALSE";
-    
     reg [2:0] fdly_pre=DELAY_VALUE[2:0], fdly=DELAY_VALUE[2:0];
     always @ (posedge clk or posedge rst) begin
         if (rst)      fdly_pre <= DELAY_VALUE[2:0];
@@ -41,7 +43,7 @@ module  odelay_fine_pipe(
         else if (set) fdly <= fdly_pre;
     end
  
-    ODELAYE2_FINEDELAY
+ (* IODELAY_GROUP = IODELAY_GRP *) ODELAYE2_FINEDELAY
      #(
         .CINVCTRL_SEL("FALSE"),
         .DELAY_SRC("ODATAIN"),

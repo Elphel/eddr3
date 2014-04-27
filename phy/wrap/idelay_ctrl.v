@@ -20,12 +20,16 @@
  *******************************************************************************/
 `timescale 1ns/1ps
 
-module  idelay_ctrl(
+module  idelay_ctrl
+//SuppressWarnings VEditor - IODELAY_GRP used in (* *) construnt
+# ( parameter  IODELAY_GRP  = "IODELAY_MEMORY"
+) (
     input refclk,
     input rst,
     output rdy
 );
 
+(* IODELAY_GROUP = IODELAY_GRP *)
 IDELAYCTRL idelay_ctrl_i(
     .RDY(rdy),
     .REFCLK(refclk),

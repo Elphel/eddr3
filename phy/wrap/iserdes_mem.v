@@ -20,10 +20,14 @@
  *******************************************************************************/
 `timescale 1ns/1ps
 //`define IVERILOG // uncomment just to chenck syntax (by the editor) in the corresponding branch
-module  iserdes_mem(
+module  iserdes_mem #
+(
+    parameter DYN_CLKDIV_INV_EN="FALSE"
+) (
     input        iclk,     // source-synchronous clock
     input        oclk,     // system clock, phase should allow iclk-to-oclk jitter with setup/hold margin
     input        oclk_div, // oclk divided by 2, front aligned
+    input        inv_clk_div, // invert oclk_div (this clock is shared between iserdes and oserdes
     input        rst,      // reset
     input        d_direct, // direct input from IOB, normally not used, controlled by IOBDELAY parameter (set to "NONE")
     input        ddly,     // serial input from idelay 
@@ -35,7 +39,7 @@ module  iserdes_mem(
      ISERDESE2 #(
          .DATA_RATE                  ("DDR"),
          .DATA_WIDTH                 (4),
-         .DYN_CLKDIV_INV_EN          ("FALSE"),
+         .DYN_CLKDIV_INV_EN          (DYN_CLKDIV_INV_EN),
          .DYN_CLK_INV_EN             ("FALSE"),
          .INIT_Q1                    (1'b0),
          .INIT_Q2                    (1'b0),
@@ -74,7 +78,7 @@ module  iserdes_mem(
          .CLKDIV                     (oclk_div),
          .DDLY                       (ddly),
          .D                          (d_direct), // direct connection to IOB bypassing idelay
-         .DYNCLKDIVSEL               (1'b0),
+         .DYNCLKDIVSEL               (inv_clk_div),
          .DYNCLKSEL                  (1'b0),
          .OCLK                       (oclk),
          .OCLKB                      (!oclk),
@@ -87,7 +91,7 @@ module  iserdes_mem(
      ISERDESE1 #(
          .DATA_RATE                  ("DDR"),
          .DATA_WIDTH                 (4),
-         .DYN_CLKDIV_INV_EN          ("FALSE"),
+         .DYN_CLKDIV_INV_EN          (DYN_CLKDIV_INV_EN),
          .DYN_CLK_INV_EN             ("FALSE"),
          .INIT_Q1                    (1'b0),
          .INIT_Q2                    (1'b0),
@@ -123,7 +127,7 @@ module  iserdes_mem(
          .CLKDIV                     (oclk_div),
          .DDLY                       (ddly),
          .D                          (d_direct), // direct connection to IOB bypassing idelay
-         .DYNCLKDIVSEL               (1'b0),
+         .DYNCLKDIVSEL               (inv_clk_div),
          .DYNCLKSEL                  (1'b0),
          .OCLK                       (oclk),
          .OFB                        (),

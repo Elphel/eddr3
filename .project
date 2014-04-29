@@ -42,4 +42,26 @@
 	<natures>
 		<nature>com.elphel.vdt.veditor.HdlNature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>vivado_logs/VivadoSynthesis.log</name>
+			<type>1</type>
+			<location>/data/vdt/vdt-projects/eddr3/vivado_logs/VivadoSynthesis-20140429103628186.log</location>
+		</link>
+		<link>
+			<name>vivado_logs/VivadoTimimgSummaryReportSynthesis.log</name>
+			<type>1</type>
+			<location>/data/vdt/vdt-projects/eddr3/vivado_logs/VivadoTimimgSummaryReportSynthesis-20140429103628186.log</location>
+		</link>
+		<link>
+			<name>vivado_logs/VivadoTimingReportSynthesis.log</name>
+			<type>1</type>
+			<location>/data/vdt/vdt-projects/eddr3/vivado_logs/VivadoTimingReportSynthesis-20140429103628186.log</location>
+		</link>
+		<link>
+			<name>vivado_state/eddr3-synth.dcp</name>
+			<type>1</type>
+			<location>/data/vdt/vdt-projects/eddr3/vivado_state/eddr3-synth-20140429103628186.dcp</location>
+		</link>
+	</linkedResources>
 </projectDescription>

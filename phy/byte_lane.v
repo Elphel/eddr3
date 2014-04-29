@@ -2,7 +2,7 @@
  * Module: byte_lane
  * Date:2014-04-26  
  * Author: Andrey Filippov
- * Description: DDR3 byte lane, ingluding DQS I/O, 8xDQ I/O and DM output 
+ * Description: DDR3 byte lane, including DQS I/O, 8xDQ I/O and DM output 
  *
  * Copyright (c) 2014 Elphel, Inc.
  * byte_lane.v is free software; you can redistribute it and/or modify
@@ -44,7 +44,7 @@ module  byte_lane #(
     input   [3:0] tin_dq,          // tristate for data out (sent out earlier than data!) and dm 
     input   [3:0] din_dqs,         // parallel data to be sent out over DQS
     input   [3:0] tin_dqs,         // tristate for DQS out (sent out earlier than data!) 
-    output [31:0] dout,            // parallel data received from DDR3 memory, 4 bits per DG I/O
+    output [31:0] dout,            // parallel data received from DDR3 memory, 4 bits per DQ I/O
     input   [7:0] dly_data,        // delay value (3 LSB - fine delay)
     input   [4:0] dly_addr,        // select which delay to program
     input         ld_delay,        // load delay data to selected iodelayl (clk_iv synchronous)
@@ -91,7 +91,7 @@ end
 
 generate
     genvar i;
-    for (i=0; i<7; i=i+1) begin: dq_block
+    for (i=0; i < 8; i=i+1) begin: dq_block
     dq_single #(
         .IODELAY_GRP(IODELAY_GRP),
         .IBUF_LOW_PWR(IBUF_LOW_PWR),

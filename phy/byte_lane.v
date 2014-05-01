@@ -25,7 +25,8 @@ module  byte_lane #(
     parameter IBUF_LOW_PWR ="TRUE",
     parameter IOSTANDARD_DQ = "SSTL15_T_DCI",
     parameter IOSTANDARD_DQS = "DIFF_SSTL15_T_DCI",
-    parameter SLEW = "SLOW",
+    parameter SLEW_DQ = "SLOW",
+    parameter SLEW_DQS = "SLOW",
     parameter real REFCLK_FREQUENCY = 300.0,
     parameter HIGH_PERFORMANCE_MODE = "FALSE"
 )(
@@ -47,7 +48,7 @@ module  byte_lane #(
     output [31:0] dout,            // parallel data received from DDR3 memory, 4 bits per DQ I/O
     input   [7:0] dly_data,        // delay value (3 LSB - fine delay)
     input   [4:0] dly_addr,        // select which delay to program
-    input         ld_delay,        // load delay data to selected iodelayl (clk_iv synchronous)
+    input         ld_delay,        // load delay data to selected iodelay (clk_div synchronous)
     input         set              // clk_div synchronous set all delays from previously loaded values
 );
 
@@ -96,7 +97,7 @@ generate
         .IODELAY_GRP(IODELAY_GRP),
         .IBUF_LOW_PWR(IBUF_LOW_PWR),
         .IOSTANDARD(IOSTANDARD_DQ),
-        .SLEW(SLEW),
+        .SLEW(SLEW_DQ),
         .REFCLK_FREQUENCY(REFCLK_FREQUENCY),
         .HIGH_PERFORMANCE_MODE(HIGH_PERFORMANCE_MODE)
     ) dq_i(
@@ -123,7 +124,7 @@ dq_single #(
         .IODELAY_GRP(IODELAY_GRP),
         .IBUF_LOW_PWR(IBUF_LOW_PWR),
         .IOSTANDARD(IOSTANDARD_DQ),
-        .SLEW(SLEW),
+        .SLEW(SLEW_DQ),
         .REFCLK_FREQUENCY(REFCLK_FREQUENCY),
         .HIGH_PERFORMANCE_MODE(HIGH_PERFORMANCE_MODE)
 ) dm_i(
@@ -148,7 +149,7 @@ dqs_single #(
         .IODELAY_GRP(IODELAY_GRP),
         .IBUF_LOW_PWR(IBUF_LOW_PWR),
         .IOSTANDARD(IOSTANDARD_DQS),
-        .SLEW(SLEW),
+        .SLEW(SLEW_DQS),
         .REFCLK_FREQUENCY(REFCLK_FREQUENCY),
         .HIGH_PERFORMANCE_MODE(HIGH_PERFORMANCE_MODE)
 ) dqs_i (

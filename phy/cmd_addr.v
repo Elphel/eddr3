@@ -26,7 +26,7 @@ module  cmd_addr #(
     parameter SLEW =        "SLOW",
     parameter real REFCLK_FREQUENCY = 300.0,
     parameter HIGH_PERFORMANCE_MODE = "FALSE",
-    parameter ADDRESS_NUMBER=         15
+    parameter integer ADDRESS_NUMBER= 15
 )(
     output  [ADDRESS_NUMBER-1:0] ddr3_a,   // output address ports (14:0) for 4Gb device
     output  [2:0]                ddr3_ba,  // output bank address ports

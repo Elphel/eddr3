@@ -33,7 +33,7 @@ module  oserdes_mem #(
     output       tout_dly, // tristate out to be connected to odelay input
     output       tout_iob  // tristate out to be connected directly to the tristate control of the output buffer
 );
-localparam integer MODE_DDR_BIN=(MODE_DDR=="TRUE")?1:0;
+//localparam integer MODE_DDR_BIN=(MODE_DDR=="TRUE")?1:0;
 localparam         DATA_RATE=   (MODE_DDR=="TRUE")?"DDR":"SDR";
 localparam integer DATA_WIDTH=  (MODE_DDR=="TRUE")?4:2;
 localparam integer DDR3_DATA=   (MODE_DDR=="TRUE")?1:0;

@@ -23,7 +23,7 @@
 module  odelay_fine_pipe
 //SuppressWarnings VEditor - IODELAY_GRP used in (* *) construnt
 # ( parameter  IODELAY_GRP  = "IODELAY_MEMORY",
-    parameter integer DELAY_VALUE = 0,
+    parameter [7:0] DELAY_VALUE = 0,
     parameter real REFCLK_FREQUENCY = 200.0,
     parameter HIGH_PERFORMANCE_MODE    = "FALSE"
 ) (

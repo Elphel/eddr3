@@ -44,7 +44,7 @@ assign dly_ready= dly_ready_0 && dqs_data;
 wire d_ser;
 wire dqs_tri1;
 
-wire d_tri;
+//wire d_tri;
 
 BUFR #(.BUFR_DIVIDE("2"))      clk_div_i (.I(clk_in),.O(clk_div),.CLR(rst), .CE(1'b1));
 BUFR #(.BUFR_DIVIDE("BYPASS")) clk_i     (.I(clk_in),.O(clk),    .CLR(1'b0),.CE(1'b1));
@@ -65,9 +65,10 @@ BUFG                           ref_clk_i (.I(clk_ref_in),.O(clk_ref));
                .TBYTE_SRC            ("FALSE")
             ) oserdes_i (
                 .OFB                 (d_ser),
-                .OQ                  (), // dout_iob),
+                .OQ                  (),
                 .SHIFTOUT1           (),
                 .SHIFTOUT2           (),
+                .TFB                 (),
 //                .TFB                 (d_tri),
 //                .TQ                  (dqs_tri1),
                 .TQ                  (),

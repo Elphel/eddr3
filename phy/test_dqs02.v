@@ -24,18 +24,18 @@ module  test_dqs02(
     input rst,    // reset
     input refclk, // 200MHz/300MHz for delay calibration
     input clk_in,
-    input set,
-    input ld_dly_data,
-    input ld_dly_tri,
-    input [7:0] dly_data,
+//    input set,
+//    input ld_dly_data,
+//    input ld_dly_tri,
+//    input [7:0] dly_data,
     input [3:0] data_in,
-    input [3:0] tri_in,
+//    input [3:0] tri_in,
     inout       dqs,
-    inout       ndqs,
+//    inout       ndqs,
     output      dqs_received,
-    output      dly_ready,
-    input       dqs_tri_a,
-    output      dqs_tri
+    output      dly_ready
+//    input       dqs_tri_a,
+//    output      dqs_tri
 //    output      dqs_data
    
 );
@@ -43,7 +43,7 @@ wire refclk_b=refclk; // use buffer
 wire clk, clk_div;
 //wire dqs_data,dqs_tri; // after odelay
 //wire dqs_data; // after odelay
-wire pre_dqs_data,pre_dqs_tri; // before odelay
+//wire pre_dqs_data,pre_dqs_tri; // before odelay
 wire dqs_data;
 BUFR #(.BUFR_DIVIDE("2"))      clk_div_i (.I(clk_in),.O(clk_div),.CLR(rst), .CE(1'b1));
 BUFR #(.BUFR_DIVIDE("BYPASS")) clk_i     (.I(clk_in),.O(clk),    .CLR(1'b0),.CE(1'b1));
@@ -58,7 +58,8 @@ oserdes_mem oserdes_dqs_i(
     .dout_dly(), //pre_dqs_data), // data out to be connected to odelay input
     .dout_iob(dqs_data), // data out to be connected directly to the output buffer
     .tout_dly(), // tristate out to be connected to odelay input
-    .tout_iob(pre_dqs_tri)  // tristate out to be connected directly to the tristate control of the output buffer
+//    .tout_iob(pre_dqs_tri)  // tristate out to be connected directly to the tristate control of the output buffer
+    .tout_iob()  // tristate out to be connected directly to the tristate control of the output buffer
 );
 
 idelay_ctrl# (

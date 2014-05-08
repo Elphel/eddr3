@@ -28,7 +28,7 @@ module  test_dqs04(
     input       clk_ref_in,
     input       rst,
     output      dqs_received,
-    input       dqs_tri,
+//    input       dqs_tri,
     output      dly_ready,
     
     input [4:0] dly_data,

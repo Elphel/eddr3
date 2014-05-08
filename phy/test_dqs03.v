@@ -36,7 +36,9 @@ module  test_dqs03(
     input       ld
     
 );
-wire clk,clk_div,clk_ref;
+//SuppressWarnings all
+wire clk;
+wire clk_div,clk_ref;
 wire dqs_data_dly;
 BUFR #(.BUFR_DIVIDE("2"))      clk_div_i (.I(clk_in),.O(clk_div),.CLR(rst), .CE(1'b1));
 BUFR #(.BUFR_DIVIDE("BYPASS")) clk_i     (.I(clk_in),.O(clk),    .CLR(1'b0),.CE(1'b1));

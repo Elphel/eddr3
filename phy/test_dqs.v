@@ -34,7 +34,7 @@ module  test_dqs(
     inout       ndqs,
     output      dqs_received,
     output      dly_ready,
-    input       dqs_tri_a,
+//    input       dqs_tri_a,
     output      dqs_tri
     
 );

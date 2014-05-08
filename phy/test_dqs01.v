@@ -36,12 +36,24 @@ IOBUFDS #(
     .IBUF_LOW_PWR("TRUE"),
     .IOSTANDARD("DEFAULT"),
     .SLEW("SLOW")
-) iobufs_dqs_i (
-    .O(dqs_received), 
-    .IO(dqs[1:0]),
-    .IOB(ndqs),
-    .I(123),  //2'b11), //dqs_data),
-    .T(dqs_tri));
+) iobufs_dqs_i0 (
+    .O(dqs_received[0]), 
+    .IO(dqs[0]),
+    .IOB(ndqs[0]),
+    .I(dqs_data[0]),
+    .T(dqs_tri[0]));
+
+IOBUFDS #(
+    .DQS_BIAS("FALSE"),
+    .IBUF_LOW_PWR("TRUE"),
+    .IOSTANDARD("DEFAULT"),
+    .SLEW("SLOW")
+) iobufs_dqs_i1 (
+    .O(dqs_received[1]), 
+    .IO(dqs[1]),
+    .IOB(ndqs[1]),
+    .I(dqs_data[1]),
+    .T(dqs_tri[1]));
 
 endmodule
 

@@ -20,13 +20,13 @@
  *******************************************************************************/
 `timescale 1ns/1ps
 
-module  test_dqs01(
-    input       dqs_data,
-    inout       dqs,
-    inout       ndqs,
-    output      dqs_received,
-    input       dqs_tri
-    
+module  test_dqs01( 
+    input  [1:0] dqs_data, 
+    inout  [1:0] dqs,
+    inout  [1:0] ndqs,
+    output [1:0] dqs_received,
+    input  [1:0] dqs_tri
+   
 );
 
 
@@ -37,10 +37,10 @@ IOBUFDS #(
     .IOSTANDARD("DEFAULT"),
     .SLEW("SLOW")
 ) iobufs_dqs_i (
-    .O(dqs_received),
-    .IO(dqs),
+    .O(dqs_received), 
+    .IO(dqs[1:0]),
     .IOB(ndqs),
-    .I(dqs_data),
+    .I(123),  //2'b11), //dqs_data),
     .T(dqs_tri));
 
 endmodule

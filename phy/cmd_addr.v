@@ -84,7 +84,7 @@ always @ (posedge clk_div or posedge rst) begin
         in_tri_r <= in_tri;
         dly_data_r<=dly_data;set_r<=set;
         ld_dly_cmd <=  {8 { dly_addr[4] & dly_addr[3] & ld_delay}} & decode_sel[7:0];
-        ld_dly_addr <= {(ADDRESS_NUMBER-1) {ld_delay}} & decode_addr;
+        ld_dly_addr <= {(ADDRESS_NUMBER) {ld_delay}} & decode_addr;
     end
 end     
 
@@ -100,7 +100,7 @@ generate
          .REFCLK_FREQUENCY(REFCLK_FREQUENCY),
          .HIGH_PERFORMANCE_MODE(HIGH_PERFORMANCE_MODE)
     ) cmda_addr_i (
-    .dq(ddr3_a),               // I/O pad (appears on the output 1/2 clk_div earlier, than DDR data)
+    .dq(ddr3_a[i]),               // I/O pad (appears on the output 1/2 clk_div earlier, than DDR data)
     .clk(clk),          // free-running system clock, same frequency as iclk (shared for R/W)
     .clk_div(clk_div),      // free-running half clk frequency, front aligned to clk (shared for R/W)
     .rst(rst),

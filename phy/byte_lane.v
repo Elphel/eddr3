@@ -110,8 +110,9 @@ generate
         .dci_disable(dci_disable_dq_r), // disable DCI termination during writes and idle
         .dly_data(dly_data_r),          // delay value (3 LSB - fine delay)
         .din(din_r[4*i+3:4*i]) ,        // parallel data to be sent out
+//        .din(din_r[4*i+3-:4]) ,        // parallel data to be sent out
         .tin(tin_dq_r),                 // tristate for data out (sent out earlier than data!) 
-        .dout(dout[4*i+3:4*i]),         // parallel data received from DDR3 memory
+        .dout(dout[4*i+3:4*i]),          // parallel data received from DDR3 memory
         .set_odelay(set_r),             // clk_div synchronous load odelay value from dly_data
         .ld_odelay(ld_odly[i]),         // clk_div synchronous set odealy value from loaded
         .set_idelay(set_r),             // clk_div synchronous load idelay value from dly_data

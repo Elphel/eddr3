@@ -97,7 +97,7 @@ module  phy_top #(
     .ADDRESS_NUMBER(ADDRESS_NUMBER)
   ) cmd_addr_i(
     .ddr3_a   (ddr3_a[ADDRESS_NUMBER-1:0]), // output address ports (14:0) for 4Gb device
-    .ddr3_ba  (ddr3_ba[2:0]),            // output bank address ports
+    .ddr3_ba  (ddr3_ba[2:0]),             // output bank address ports
     .ddr3_we  (ddr3_we),                 // output WE port
     .ddr3_ras (ddr3_ras),                // output RAS port
     .ddr3_cas (ddr3_cas),                // output CAS port

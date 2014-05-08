@@ -37,7 +37,7 @@ module  test_dqs02(
     input       dqs_tri_a,
     output      dqs_tri
 //    output      dqs_data
-    
+   
 );
 wire refclk_b=refclk; // use buffer
 wire clk, clk_div;

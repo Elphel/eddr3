@@ -36,7 +36,7 @@ module  oserdes_mem #(
 //localparam integer MODE_DDR_BIN=(MODE_DDR=="TRUE")?1:0;
 localparam         DATA_RATE=   (MODE_DDR=="TRUE")?"DDR":"SDR";
 localparam integer DATA_WIDTH=  (MODE_DDR=="TRUE")?4:2;
-localparam integer DDR3_DATA=   (MODE_DDR=="TRUE")?1:0;
+//localparam integer DDR3_DATA=   (MODE_DDR=="TRUE")?1:0;
 /*
     Serialized data will go through odelay elements (with fine delay adjustment), tristate output will
     go directly. Luckily the active time for DQ/DQS may be extended (there is at least 1 full clock period

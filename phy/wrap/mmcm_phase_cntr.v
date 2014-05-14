@@ -1,16 +1,16 @@
 /*******************************************************************************
- * Module: mmcm_adv
+ * Module: mmcm_phase_cntr
  * Date:2014-05-01  
  * Author: Andrey Filippov
- * Description: MMCME2_ADV wrapper
+ * Description: MMCME2_ADV with phase counter, supporting absolute phase setting
  *
  * Copyright (c) 2014 Elphel, Inc.
- * mmcm_adv.v is free software; you can redistribute it and/or modify
+ * mmcm_phase_cntr.v is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- *  mmcm_adv.v is distributed in the hope that it will be useful,
+ *  mmcm_phase_cntr.v is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -20,9 +20,10 @@
  *******************************************************************************/
 `timescale 1ns/1ps
 
-module  mmcm_adv#(
-    parameter CLKIN1_PERIOD =         0.000,  // input period in ns, 0..100.000 - MANDATORY, resolution down to 1 ps
-    parameter CLKIN2_PERIOD =         0.000,  // input period in ns, 0..100.000 - MANDATORY, resolution down to 1 ps
+// all counters are two-clock cycle nets
+module  mmcm_phase_cntr#(
+    parameter PHASE_WIDTH=            8,      // number of bits for te phase counter (depends on divisors)
+    parameter CLKIN_PERIOD =         0.000,  // input period in ns, 0..100.000 - MANDATORY, resolution down to 1 ps
     parameter BANDWIDTH =       "OPTIMIZED",  //"OPTIMIZED", "HIGH","LOW"
     parameter CLKFBOUT_MULT_F =       5.000,  // 2.0 to 64.0 . Together with CLKOUT#_DIVIDE and DIVCLK_DIVIDE
     parameter CLKFBOUT_PHASE =        0.000,  // CLOCK FEEDBACK phase in degrees (3 significant digits, -360.000...+360.000)
@@ -68,19 +69,19 @@ module  mmcm_adv#(
     parameter SS_MODE       =         "CENTER_HIGH",//"CENTER_HIGH","CENTER_LOW","DOWN_HIGH","DOWN_LOW"
     parameter SS_MOD_PERIOD =         10000,        // integer 4000-40000 - SS modulation period in ns
     parameter STARTUP_WAIT  =         "FALSE"       // Delays "DONE" signal until MMCM is locked
-    
 )
 (
-    input clkin1,   // General clock input
-    input clkin2,   // Secondary clock input
+    input clkin,   // General clock input
     input clkfbin,  // Feedback clock input
-    input clkinsel, // Clock select input : 1 - clkin1, 0 - clkin2
     input rst,      // asynchronous reset input
     input pwrdwn,   // power down input    
     input psclk,    // phase shift clock input
-    input psen,     // phase shift enable input
-    input psincdec, // phase shift direction input (1 - increment, 0 - decrement)
-    output psdone,   // phase shift done (12 clocks after psen
+    
+    input ps_we,     // phase shift write eneble
+    input [PHASE_WIDTH-1:0] ps_din, // phase shift data input (2-s complement)
+    output ps_ready,  // phase shift change finished
+    output reg [PHASE_WIDTH-1:0] ps_dout, // current phase shift value
+     
     output clkout0,  // output 0, HPC BUFR/BUFIO capable
     output clkout1,  // output 1, HPC BUFR/BUFIO capable
     output clkout2,  // output 2, HPC BUFR/BUFIO capable
@@ -96,13 +97,43 @@ module  mmcm_adv#(
     output clkfboutb,// inverted feedback output
     output locked   // PLL locked output
 );
+    wire psen;       // phase shift enable input
+    reg psincdec;    // phase shift direction input (1 - increment, 0 - decrement)
+    wire psdone;     // phase shift done (12 clocks after psen
+    reg [PHASE_WIDTH-1:0] ps_target;
+    reg ps_busy=0;
+    reg ps_start0, ps_start;
+    assign ps_ready=!ps_busy && locked && ps_start0 && ps_start;
+    assign psen=ps_start && (diff != 0);
+    wire [PHASE_WIDTH:0] diff= ps_target-ps_dout;
+    always @ (posedge psclk or posedge rst) begin
+        if (rst) ps_start0 <= 0;
+        else ps_start0 <= ps_we && ps_ready;
+        
+        if (rst) ps_dout <= 0;
+        else if (psen &&  psincdec) ps_dout <= ps_dout +1; 
+        else if (psen && !psincdec) ps_dout <= ps_dout -1;
+        
+        if (rst) ps_target <= 0;
+        else if (ps_we && ps_ready) ps_target <= ps_din;
+
+        if (rst)           ps_busy <= 1'b0;
+        else if (ps_start) ps_busy <= (diff!=0);
+        
+        
+    end
+    always @ (posedge psclk) begin
+        ps_start <= ps_start0 || psdone;
+        psincdec <= !diff[PHASE_WIDTH];
+    end
+
     MMCME2_ADV #(
         .BANDWIDTH           (BANDWIDTH),
         .CLKFBOUT_MULT_F     (CLKFBOUT_MULT_F),
         .CLKFBOUT_PHASE      (CLKFBOUT_PHASE),
         .CLKFBOUT_USE_FINE_PS(CLKFBOUT_USE_FINE_PS),
-        .CLKIN1_PERIOD       (CLKIN1_PERIOD), 
-        .CLKIN2_PERIOD       (CLKIN2_PERIOD),
+        .CLKIN1_PERIOD       (CLKIN_PERIOD), 
+        .CLKIN2_PERIOD        (0),
         .CLKOUT0_DIVIDE_F    (CLKOUT0_DIVIDE_F),
         .CLKOUT0_DUTY_CYCLE  (CLKOUT0_DUTY_CYCLE),
         .CLKOUT0_PHASE       (CLKOUT0_PHASE),
@@ -166,9 +197,9 @@ module  mmcm_adv#(
         .LOCKED         (locked), // output
         .PSDONE         (psdone), // output
         .CLKFBIN        (clkfbin), // input
-        .CLKIN1         (clkin1), // input
-        .CLKIN2         (clkin2), // input
-        .CLKINSEL       (clkinsel), // input
+        .CLKIN1         (clkin), // input
+        .CLKIN2            (1'b0), // input
+        .CLKINSEL          (1'b1), // input Select CLKIN1
         .DADDR             (7'b0), // Dynamic reconfiguration address (input[6:0])
         .DCLK              (1'b0), // Dynamic reconfiguration clock input
         .DEN               (1'b0), // Dynamic reconfiguration enable input
@@ -183,5 +214,4 @@ module  mmcm_adv#(
 
 
 endmodule
-
 

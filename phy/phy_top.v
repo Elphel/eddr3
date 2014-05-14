@@ -140,7 +140,7 @@ module  phy_top #(
     .rst             (rst),
     .dci_disable_dqs (dci_disable_dqs),  // disable DCI termination during writes and idle for dqs
     .dci_disable_dq  (dci_disable_dq),   // disable DCI termination during writes and idle for dq and dm signals
-    .din             (din[31:0]),        // parallel data to be sent out (4 bits per DG I/))
+    .din             (din[31:0]),        // parallel data to be sent out (4 bits per DQ I/O))
     .din_dm          (din_dm[3:0]),      // parallel data to be sent out over DM
     .tin_dq          (tin_dq[3:0]),      // tristate for data out (sent out earlier than data!) and dm 
     .din_dqs         (din_dqs[3:0]),     // parallel data to be sent out over DQS
@@ -148,7 +148,7 @@ module  phy_top #(
     .dout            (dout[31:0]),       // parallel data received from DDR3 memory, 4 bits per DQ I/O
     .dly_data        (dly_data[7:0]),    // delay value (3 LSB - fine delay)
     .dly_addr        (dly_addr[4:0]),    // select which delay to program
-    .ld_delay        (ld_data_l),        // load delay data to selected iodelayl (clk_iv synchronous)
+    .ld_delay        (ld_data_l),        // load delay data to selected iodelayl (clk_div synchronous)
     .set             (set)               // clk_div synchronous set all delays from previously loaded values
 );
 
@@ -172,7 +172,7 @@ module  phy_top #(
     .rst             (rst),
     .dci_disable_dqs (dci_disable_dqs),  // disable DCI termination during writes and idle for dqs
     .dci_disable_dq  (dci_disable_dq),   // disable DCI termination during writes and idle for dq and dm signals
-    .din             (din[63:32]),       // parallel data to be sent out (4 bits per DG I/))
+    .din             (din[63:32]),       // parallel data to be sent out (4 bits per DQ I/O))
     .din_dm          (din_dm[7:4]),      // parallel data to be sent out over DM
     .tin_dq          (tin_dq[7:4]),      // tristate for data out (sent out earlier than data!) and dm 
     .din_dqs         (din_dqs[7:4]),     // parallel data to be sent out over DQS
@@ -180,7 +180,7 @@ module  phy_top #(
     .dout            (dout[63:32]),      // parallel data received from DDR3 memory, 4 bits per DQ I/O
     .dly_data        (dly_data[7:0]),    // delay value (3 LSB - fine delay)
     .dly_addr        (dly_addr[4:0]),    // select which delay to program
-    .ld_delay        (ld_data_h),        // load delay data to selected iodelayl (clk_iv synchronous)
+    .ld_delay        (ld_data_h),        // load delay data to selected iodelayl (clk_div synchronous)
     .set             (set)               // clk_div synchronous set all delays from previously loaded values
 );
 

@@ -45,7 +45,8 @@ module  cmd_addr #(
     input                  [1:0] in_cas,   // input CAS, 2 bits (first, second)
     input                  [1:0] in_cke,   // input CKE, 2 bits (first, second)
     input                  [1:0] in_odt,   // input ODT, 2 bits (first, second)
-    input                  [1:0] in_tri,   // tristate command/address outputs - same timing, but no odelay
+//    input                  [1:0] in_tri,   // tristate command/address outputs - same timing, but no odelay
+    input                        in_tri,   // tristate command/address outputs - same timing, but no odelay
     input                  [7:0] dly_data, // delay value (3 LSB - fine delay)
     input                  [4:0] dly_addr, // select which delay to program
     input                        ld_delay, // load delay data to selected iodelayl (clk_iv synchronous)
@@ -54,9 +55,11 @@ module  cmd_addr #(
 reg  [2*ADDRESS_NUMBER-1:0] in_a_r=0;
 reg  [5:0] in_ba_r=0;
 reg  [1:0] in_we_r=2'h3, in_ras_r=2'h3, in_cas_r=2'h3, in_cke_r=2'h3, in_odt_r=2'h0;
-reg  [1:0] in_tri_r=2'h0; // or tri-state on reset?
-reg  [7:0] dly_data_r=0; 
-reg        set_r=0;
+//reg  [1:0] in_tri_r=2'h0; // or tri-state on reset?
+reg  in_tri_r=1'b0; // or tri-state on reset?
+// Preventing register duplication
+ (* keep = "true" *) reg  [7:0] dly_data_r=0; 
+ (* keep = "true" *) reg        set_r=0;
 reg  [7:0] ld_dly_cmd=8'b0;
 reg  [ADDRESS_NUMBER-1:0] ld_dly_addr=0;
 wire  [ADDRESS_NUMBER-1:0] decode_addr;
@@ -74,7 +77,8 @@ always @ (posedge clk_div or posedge rst) begin
     if (rst) begin
         in_a_r <= 0; in_ba_r <= 6'b0;
         in_we_r <= 2'h3; in_ras_r <= 2'h3; in_cas_r <= 2'h3; in_cke_r <= 2'h3; in_odt_r <= 2'h0;
-        in_tri_r <= 2'h0; // or tri-state on reset?
+//        in_tri_r <= 2'h0; // or tri-state on reset?
+        in_tri_r <= 1'b0; // or tri-state on reset?
         dly_data_r<=8'b0;set_r<=1'b0;
         ld_dly_cmd <= 8'b0; ld_dly_addr <= 0;
     end else begin
@@ -82,7 +86,8 @@ always @ (posedge clk_div or posedge rst) begin
         in_ba_r <= in_ba; 
         in_we_r <= in_we; in_ras_r <= in_ras; in_cas_r <= in_cas; in_cke_r <= in_cke; in_odt_r <= in_odt;
         in_tri_r <= in_tri;
-        dly_data_r<=dly_data;set_r<=set;
+        dly_data_r<=dly_data;
+        set_r<=set;
         ld_dly_cmd <=  {8 { dly_addr[4] & dly_addr[3] & ld_delay}} & decode_sel[7:0];
         ld_dly_addr <= {(ADDRESS_NUMBER) {ld_delay}} & decode_addr;
     end
@@ -106,7 +111,8 @@ generate
     .rst(rst),
     .dly_data(dly_data_r[7:0]),     // delay value (3 LSB - fine delay)
     .din(in_a_r[2*i+1:2*i]),      // parallel data to be sent out
-    .tin(in_tri_r[1:0]),          // tristate for data out (sent out earlier than data!) 
+//    .tin(in_tri_r[1:0]),          // tristate for data out (sent out earlier than data!) 
+    .tin(in_tri_r),          // tristate for data out (sent out earlier than data!) 
     .set_delay(set_r),             // clk_div synchronous load odelay value from dly_data
     .ld_delay(ld_dly_addr[i])      // clk_div synchronous set odealy value from loaded
 );       
@@ -127,7 +133,8 @@ endgenerate
     .rst(rst),
     .dly_data(dly_data_r[7:0]),
     .din(in_ba_r[1:0]),
-    .tin(in_tri_r[1:0]), 
+//    .tin(in_tri_r[1:0]), 
+    .tin(in_tri_r), 
     .set_delay(set_r),
     .ld_delay(ld_dly_cmd[0]));
 // ba1
@@ -144,7 +151,8 @@ endgenerate
     .rst(rst),
     .dly_data(dly_data_r[7:0]),
     .din(in_ba_r[3:2]),
-    .tin(in_tri_r[1:0]), 
+//    .tin(in_tri_r[1:0]), 
+    .tin(in_tri_r), 
     .set_delay(set_r),
     .ld_delay(ld_dly_cmd[1]));
 // ba2
@@ -161,7 +169,8 @@ endgenerate
     .rst(rst),
     .dly_data(dly_data_r[7:0]),
     .din(in_ba_r[5:4]),
-    .tin(in_tri_r[1:0]), 
+//    .tin(in_tri_r[1:0]), 
+    .tin(in_tri_r), 
     .set_delay(set_r),
     .ld_delay(ld_dly_cmd[2]));
 
@@ -179,7 +188,8 @@ endgenerate
     .rst(rst),
     .dly_data(dly_data_r[7:0]),
     .din(in_we_r[1:0]),
-    .tin(in_tri_r[1:0]), 
+//    .tin(in_tri_r[1:0]), 
+    .tin(in_tri_r), 
     .set_delay(set_r),
     .ld_delay(ld_dly_cmd[3]));
 
@@ -197,7 +207,8 @@ endgenerate
     .rst(rst),
     .dly_data(dly_data_r[7:0]),
     .din(in_ras_r[1:0]),
-    .tin(in_tri_r[1:0]), 
+//    .tin(in_tri_r[1:0]), 
+    .tin(in_tri_r), 
     .set_delay(set_r),
     .ld_delay(ld_dly_cmd[4]));
 
@@ -215,7 +226,8 @@ endgenerate
     .rst(rst),
     .dly_data(dly_data_r[7:0]),
     .din(in_cas_r[1:0]),
-    .tin(in_tri_r[1:0]), 
+//    .tin(in_tri_r[1:0]), 
+    .tin(in_tri_r), 
     .set_delay(set_r),
     .ld_delay(ld_dly_cmd[5]));
 
@@ -233,7 +245,8 @@ endgenerate
     .rst(rst),
     .dly_data(dly_data_r[7:0]),
     .din(in_cke_r[1:0]),
-    .tin(in_tri_r[1:0]), 
+//    .tin(in_tri_r[1:0]), 
+    .tin(in_tri_r), 
     .set_delay(set_r),
     .ld_delay(ld_dly_cmd[6]));
 
@@ -251,7 +264,8 @@ endgenerate
     .rst(rst),
     .dly_data(dly_data_r[7:0]),
     .din(in_odt_r[1:0]),
-    .tin(in_tri_r[1:0]), 
+//    .tin(in_tri_r[1:0]), 
+    .tin(in_tri_r), 
     .set_delay(set_r),
     .ld_delay(ld_dly_cmd[7]));
 

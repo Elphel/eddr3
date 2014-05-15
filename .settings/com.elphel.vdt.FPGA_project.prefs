@@ -1,4 +1,4 @@
-FPGA_project_2_ImplementationTopFile=phy/test_dqs07.v
+FPGA_project_2_ImplementationTopFile=phy/test_phy_top_01.v
 FPGA_project_4_part=xc7z030fbg484-2
 com.elphel.store.context.FPGA_project=FPGA_project_2_ImplementationTopFile<-@\#\#@->FPGA_project_4_part<-@\#\#@->
 eclipse.preferences.version=1

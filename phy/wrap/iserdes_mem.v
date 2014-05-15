@@ -22,7 +22,8 @@
 //`define IVERILOG // uncomment just to chenck syntax (by the editor) in the corresponding branch
 module  iserdes_mem #
 (
-    parameter DYN_CLKDIV_INV_EN="FALSE"
+    parameter DYN_CLKDIV_INV_EN="FALSE",
+    parameter IOBDELAY = "IFD"  // "NONE", "IBUF", "IFD", "BOTH"
 ) (
     input        iclk,     // source-synchronous clock
     input        oclk,     // system clock, phase should allow iclk-to-oclk jitter with setup/hold margin
@@ -33,7 +34,6 @@ module  iserdes_mem #
     input        ddly,     // serial input from idelay 
     output [3:0] dout
 );
-  parameter IOBDELAY = "IFD";  // "NONE", "IBUF", "IFD", "BOTH"
 
 `ifndef IVERILOG  // Not using simulator - instantiate actual ISERDESE2 (can not be simulated because of encrypted )           
      ISERDESE2 #(

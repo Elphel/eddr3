@@ -80,7 +80,7 @@ module  mmcm_phase_cntr#(
     input ps_we,     // phase shift write eneble
     input [PHASE_WIDTH-1:0] ps_din, // phase shift data input (2-s complement)
     output ps_ready,  // phase shift change finished
-    output reg [PHASE_WIDTH-1:0] ps_dout, // current phase shift value
+    output [PHASE_WIDTH-1:0] ps_dout, // current phase shift value
      
     output clkout0,  // output 0, HPC BUFR/BUFIO capable
     output clkout1,  // output 1, HPC BUFR/BUFIO capable
@@ -97,22 +97,27 @@ module  mmcm_phase_cntr#(
     output clkfboutb,// inverted feedback output
     output locked   // PLL locked output
 );
+    reg [PHASE_WIDTH-1:0] ps_dout_r;
     wire psen;       // phase shift enable input
     reg psincdec;    // phase shift direction input (1 - increment, 0 - decrement)
     wire psdone;     // phase shift done (12 clocks after psen
     reg [PHASE_WIDTH-1:0] ps_target;
     reg ps_busy=0;
-    reg ps_start0, ps_start;
+// TODO: find out why it was optimized out!    
+    (* keep = "true" *) reg ps_start0, ps_start; // debugging
     assign ps_ready=!ps_busy && locked && ps_start0 && ps_start;
     assign psen=ps_start && (diff != 0);
-    wire [PHASE_WIDTH:0] diff= ps_target-ps_dout;
+//    wire [PHASE_WIDTH:0] diff= ps_target-ps_dout_r;
+// made a difference, so it doesn't seem Vivado extends bits of operands "+", "-"
+    wire [PHASE_WIDTH:0] diff= {ps_target[PHASE_WIDTH-1],ps_target}-{ps_dout_r[PHASE_WIDTH-1],ps_dout_r};
+    assign  ps_dout = ps_dout_r; 
     always @ (posedge psclk or posedge rst) begin
         if (rst) ps_start0 <= 0;
         else ps_start0 <= ps_we && ps_ready;
         
-        if (rst) ps_dout <= 0;
-        else if (psen &&  psincdec) ps_dout <= ps_dout +1; 
-        else if (psen && !psincdec) ps_dout <= ps_dout -1;
+        if (rst) ps_dout_r <= 0;
+        else if (psen &&  psincdec) ps_dout_r <= ps_dout_r +1; 
+        else if (psen && !psincdec) ps_dout_r <= ps_dout_r -1;
         
         if (rst) ps_target <= 0;
         else if (ps_we && ps_ready) ps_target <= ps_din;

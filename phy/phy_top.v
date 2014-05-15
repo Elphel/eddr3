@@ -43,10 +43,10 @@ module  phy_top #(
     parameter CLKFBOUT_DIV_REF =    3, // To get 300MHz for the reference clock
     parameter DIVCLK_DIVIDE=        1,
     parameter CLKFBOUT_PHASE =      0.000,
-    parameter CLKOUT0_PHASE =       0.000,
-    parameter CLKOUT1_PHASE =       0.000,
-    parameter CLKOUT2_PHASE =       0.000,
-    parameter CLKOUT3_PHASE =       0.000,  
+    parameter ICLK_PHASE =          0.000,
+    parameter CLK_PHASE =           0.000,
+    parameter CLK_DIV_PHASE =       0.000,
+    parameter MCLK_PHASE =          0.000,  
     parameter REF_JITTER1 =         0.010,
     parameter SS_EN =              "FALSE",
     parameter SS_MODE =      "CENTER_HIGH",
@@ -83,7 +83,8 @@ module  phy_top #(
     input                  [1:0] in_cas,   // input CAS, 2 bits (first, second)
     input                  [1:0] in_cke,   // input CKE, 2 bits (first, second)
     input                  [1:0] in_odt,   // input ODT, 2 bits (first, second)
-    input                  [1:0] in_tri,   // tristate command/address outputs - same timing, but no odelay
+//    input                  [1:0] in_tri,   // tristate command/address outputs - same timing, but no odelay
+    input                        in_tri,   // tristate command/address outputs - same timing, but no odelay
     
     input                 [63:0] din,             // parallel data to be sent out (4 bits per DG I/))
     input                  [7:0] din_dm,          // parallel data to be sent out over DM
@@ -143,7 +144,8 @@ module  phy_top #(
     .in_cas   (in_cas[1:0]),             // input CAS, 2 bits (first, second)
     .in_cke   (in_cke[1:0]),             // input CKE, 2 bits (first, second)
     .in_odt   (in_odt[1:0]),             // input ODT, 2 bits (first, second)
-    .in_tri   (in_tri[1:0]),             // tristate command/address outputs - same timing, but no odelay
+//    .in_tri   (in_tri[1:0]),             // tristate command/address outputs - same timing, but no odelay
+    .in_tri   (in_tri),             // tristate command/address outputs - same timing, but no odelay
     .dly_data (dly_data[7:0]),           // delay value (3 LSB - fine delay)
     .dly_addr (dly_addr[4:0]),           // select which delay to program
     .ld_delay (ld_cmda),               // load delay data to selected iodelayl (clk_iv synchronous)
@@ -237,7 +239,10 @@ wire clk_pre, clk_div_pre, iclk_pre, mclk_pre, clk_fb;
 BUFR clk_bufr_i (.O(clk), .CE(), .CLR(), .I(clk_pre));
 BUFR clk_div_bufr_i (.O(clk_div), .CE(), .CLR(), .I(clk_div_pre));
 BUFIO iclk_bufio_i (.O(iclk), .I(iclk_pre) );
-BUFIO clk_ref_i (.O(clk_ref), .I(clk_ref_pre));
+//BUFIO clk_ref_i (.O(clk_ref), .I(clk_ref_pre));
+//assign clk_ref=clk_ref_pre;
+//BUFH clk_ref_i (.O(clk_ref), .I(clk_ref_pre));
+BUFG clk_ref_i (.O(clk_ref), .I(clk_ref_pre));
 BUFG mclk_i (.O(mclk),.I(mclk_pre) );
     /* Instance template for module mmcm_phase_cntr */
     mmcm_phase_cntr #(
@@ -247,10 +252,10 @@ BUFG mclk_i (.O(mclk),.I(mclk_pre) );
         .CLKFBOUT_MULT_F     (CLKFBOUT_MULT),
         .DIVCLK_DIVIDE       (DIVCLK_DIVIDE),
         .CLKFBOUT_PHASE      (CLKFBOUT_PHASE),
-        .CLKOUT0_PHASE       (CLKOUT0_PHASE),
-        .CLKOUT1_PHASE       (CLKOUT1_PHASE),
-        .CLKOUT2_PHASE       (CLKOUT2_PHASE),
-        .CLKOUT3_PHASE       (CLKOUT3_PHASE),
+        .CLKOUT0_PHASE       (ICLK_PHASE),
+        .CLKOUT1_PHASE       (CLK_PHASE),
+        .CLKOUT2_PHASE       (CLK_DIV_PHASE),
+        .CLKOUT3_PHASE       (MCLK_PHASE),
 //        .CLKOUT4_PHASE          (0.000),
 //        .CLKOUT5_PHASE          (0.000),
 //        .CLKOUT6_PHASE          (0.000),
@@ -303,10 +308,6 @@ BUFG mclk_i (.O(mclk),.I(mclk_pre) );
     );
 
 // Generate reference clock for the I/O delays
-    /*
-         parameter CLKFBOUT_MULT_REF =   9, // Fvco=Fclkin*CLKFBOUT_MULT_F/DIVCLK_DIVIDE, Fout=Fvco/CLKOUT#_DIVIDE
-    parameter CLKFBOUT_DIV_REF =   3, // To get 300MHz for the reference clock
-     Instance template for module pll_base */
     pll_base #(
         .CLKIN_PERIOD(CLKIN_PERIOD),
         .BANDWIDTH("OPTIMIZED"),

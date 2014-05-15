@@ -1,3 +1,3 @@
-VivadoSynthesis_102_ConstraintsFiles=phy/test_dqs07_placement.xdc<-@\#\#@->
+VivadoSynthesis_102_ConstraintsFiles=phy/test_phy_top_01.xdc<-@\#\#@->
 com.elphel.store.context.VivadoSynthesis=VivadoSynthesis_102_ConstraintsFiles<-@\#\#@->
 eclipse.preferences.version=1

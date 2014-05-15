@@ -31,7 +31,8 @@ module  byte_lane #(
     parameter HIGH_PERFORMANCE_MODE = "FALSE"
 )(
     inout   [7:0] dq,              // DQ  I/O pads
-    inout         dm,              // DM  I/O pad (actually only output)
+//    inout         dm,              // DM  I/O pad (actually only output)
+    output        dm,              // DM  I/O pad (actually only output)
     inout         dqs,             //  DQS I/O pad
     inout         ndqs,            // ~DQS I/O pad
     input         clk,             // free-running system clock, same frequency as iclk (shared for R/W)
@@ -57,11 +58,12 @@ wire dqs_read;
 wire  iclk;         // source-synchronous clock (BUFR from DQS)
 reg  [31:0] din_r=0;
 reg  [3:0] din_dm_r=0, din_dqs_r=0, tin_dq_r=4'hf, tin_dqs_r=4'hf;
-reg  [7:0] dly_data_r=0; 
-reg        set_r=0;
+// Preventing register duplication
+ (* keep = "true" *) reg  [7:0] dly_data_r=0; 
+ (* keep = "true" *) reg        set_r=0;
+ (* keep = "true" *) reg  dci_disable_dqs_r, dci_disable_dq_r;
 reg  [7:0] ld_odly=8'b0, ld_idly=8'b0;
 reg        ld_odly_dqs,ld_idly_dqs,ld_odly_dm;
-reg  dci_disable_dqs_r, dci_disable_dq_r;
 BUFR                          iclk_i    (.O(iclk),.I(dqs_read), .CLR(1'b0),.CE(1'b1)); // OK, works with constraint? Seems now work w/o
 wire [9:0] decode_sel={
     (dly_addr[3:0]==9)?1'b1:1'b0,
@@ -120,7 +122,7 @@ generate
     );
     end
 endgenerate
-
+/*
 dq_single #(
         .IODELAY_GRP(IODELAY_GRP),
         .IBUF_LOW_PWR(IBUF_LOW_PWR),
@@ -144,6 +146,31 @@ dq_single #(
         .ld_odelay(ld_odly_dm),         // clk_div synchronous set odealy value from loaded
         .set_idelay(1'b0),              // clk_div synchronous load idelay value from dly_data
         .ld_idelay(1'b0)                // clk_div synchronous set idealy value from loaded
+);
+*/
+dm_single #(
+        .IODELAY_GRP(IODELAY_GRP),
+        .IBUF_LOW_PWR(IBUF_LOW_PWR),
+        .IOSTANDARD(IOSTANDARD_DQ),
+        .SLEW(SLEW_DQ),
+        .REFCLK_FREQUENCY(REFCLK_FREQUENCY),
+        .HIGH_PERFORMANCE_MODE(HIGH_PERFORMANCE_MODE)
+) dm_i(
+        .dm(dm),                        // DM output pad
+//        .iclk(iclk),                    // source-synchronous clock (BUFR from DQS)
+        .clk(clk),                      // free-running system clock, same frequency as iclk (shared for R/W)
+        .clk_div(clk_div),              // free-running half clk frequency, front aligned to clk (shared for R/W)
+//        .inv_clk_div(inv_clk_div),      // invert clk_div for R channel (clk_div is shared between R and W)
+        .rst(rst),
+        .dci_disable(dci_disable_dq_r), // disable DCI termination during writes and idle
+        .dly_data(dly_data_r),          // delay value (3 LSB - fine delay)
+        .din(din_dm_r[3:0]) ,           // parallel data to be sent out
+        .tin(tin_dq_r),                 // tristate for data out (sent out earlier than data!) 
+//        .dout(),                        // parallel data received from DDR3 memory
+        .set_odelay(set_r),             // clk_div synchronous load odelay value from dly_data
+        .ld_odelay(ld_odly_dm)         // clk_div synchronous set odealy value from loaded
+//        .set_idelay(1'b0),              // clk_div synchronous load idelay value from dly_data
+//        .ld_idelay(1'b0)                // clk_div synchronous set idealy value from loaded
 );
 
 dqs_single #(

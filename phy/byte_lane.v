@@ -122,32 +122,7 @@ generate
     );
     end
 endgenerate
-/*
-dq_single #(
-        .IODELAY_GRP(IODELAY_GRP),
-        .IBUF_LOW_PWR(IBUF_LOW_PWR),
-        .IOSTANDARD(IOSTANDARD_DQ),
-        .SLEW(SLEW_DQ),
-        .REFCLK_FREQUENCY(REFCLK_FREQUENCY),
-        .HIGH_PERFORMANCE_MODE(HIGH_PERFORMANCE_MODE)
-) dm_i(
-        .dq(dm),                        // DM output pad
-        .iclk(iclk),                    // source-synchronous clock (BUFR from DQS)
-        .clk(clk),                      // free-running system clock, same frequency as iclk (shared for R/W)
-        .clk_div(clk_div),              // free-running half clk frequency, front aligned to clk (shared for R/W)
-        .inv_clk_div(inv_clk_div),      // invert clk_div for R channel (clk_div is shared between R and W)
-        .rst(rst),
-        .dci_disable(dci_disable_dq_r), // disable DCI termination during writes and idle
-        .dly_data(dly_data_r),          // delay value (3 LSB - fine delay)
-        .din(din_dm_r[3:0]) ,           // parallel data to be sent out
-        .tin(tin_dq_r),                 // tristate for data out (sent out earlier than data!) 
-        .dout(),                        // parallel data received from DDR3 memory
-        .set_odelay(set_r),             // clk_div synchronous load odelay value from dly_data
-        .ld_odelay(ld_odly_dm),         // clk_div synchronous set odealy value from loaded
-        .set_idelay(1'b0),              // clk_div synchronous load idelay value from dly_data
-        .ld_idelay(1'b0)                // clk_div synchronous set idealy value from loaded
-);
-*/
+
 dm_single #(
         .IODELAY_GRP(IODELAY_GRP),
         .IBUF_LOW_PWR(IBUF_LOW_PWR),
@@ -157,20 +132,15 @@ dm_single #(
         .HIGH_PERFORMANCE_MODE(HIGH_PERFORMANCE_MODE)
 ) dm_i(
         .dm(dm),                        // DM output pad
-//        .iclk(iclk),                    // source-synchronous clock (BUFR from DQS)
         .clk(clk),                      // free-running system clock, same frequency as iclk (shared for R/W)
         .clk_div(clk_div),              // free-running half clk frequency, front aligned to clk (shared for R/W)
-//        .inv_clk_div(inv_clk_div),      // invert clk_div for R channel (clk_div is shared between R and W)
         .rst(rst),
         .dci_disable(dci_disable_dq_r), // disable DCI termination during writes and idle
         .dly_data(dly_data_r),          // delay value (3 LSB - fine delay)
         .din(din_dm_r[3:0]) ,           // parallel data to be sent out
         .tin(tin_dq_r),                 // tristate for data out (sent out earlier than data!) 
-//        .dout(),                        // parallel data received from DDR3 memory
         .set_odelay(set_r),             // clk_div synchronous load odelay value from dly_data
         .ld_odelay(ld_odly_dm)         // clk_div synchronous set odealy value from loaded
-//        .set_idelay(1'b0),              // clk_div synchronous load idelay value from dly_data
-//        .ld_idelay(1'b0)                // clk_div synchronous set idealy value from loaded
 );
 
 dqs_single #(

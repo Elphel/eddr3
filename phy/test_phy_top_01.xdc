@@ -194,6 +194,14 @@ set_property PACKAGE_PIN T9 [get_ports {fake_din}]
 set_property IOSTANDARD SSTL15 [get_ports {fake_en}]
 set_property PACKAGE_PIN T10 [get_ports {fake_en}]
 
+#    input                        fake_oe,
+set_property IOSTANDARD SSTL15 [get_ports {fake_oe}]
+set_property PACKAGE_PIN V8 [get_ports {fake_oe}]
+#    output                       fake_dout
+set_property IOSTANDARD SSTL15 [get_ports {fake_dout}]
+set_property PACKAGE_PIN W8 [get_ports {fake_dout}]
+
+
 
 
 set_property INTERNAL_VREF  0.750 [get_iobanks 34]

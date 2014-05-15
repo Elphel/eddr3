@@ -68,7 +68,9 @@ module  test_phy_top_01#(
     input                        clk_in,   // master input clock, initially assuming 100MHz
     input                        rst_in,      // reset delays/serdes\
     input                        fake_din,
-    input                        fake_en
+    input                        fake_en,
+    input                        fake_oe,
+    output                       fake_dout
 );
 // SuppressWarnings VEditor 
   (* keep = "true" *) wire clk; // output
@@ -105,8 +107,22 @@ module  test_phy_top_01#(
     reg                  [6:0] dly_addr; // select which delay to program
     reg                        ld_delay; // load delay data to selected iodelayl (clk_iv synchronous)
     reg                        set;       // clk_div synchronous set all delays from previously loaded values
+    
+    reg                 [63:0] dout_r;
+    reg                        locked_r;
+    reg                 [ 7:0] ps_out_r;
+    
 // Create fake data sources for all input
+    assign  fake_dout= locked_r;
     always @ (posedge mclk) begin
+        if (!fake_oe) begin
+            dout_r <= dout;
+            locked_r <=locked;
+            ps_out_r <=ps_out;
+        end else if (fake_en) begin
+            {locked_r,dout_r,ps_out_r} <= {dout_r,ps_out_r,1'b0}; 
+        end 
+    
         if (fake_en)
       {
         in_a,

@@ -43,11 +43,8 @@ module  ddr3c16   #(
     parameter SS_EN =              "FALSE",
     parameter SS_MODE =      "CENTER_HIGH",
     parameter SS_MOD_PERIOD =       10000,
-    parameter DQSTRI_FIRST=    4'h3, // DQS tri-state control word, first when enabling output 
-    parameter DQSTRI_LAST=     4'hc, // DQS tri-state control word, first after disabling output
-    parameter DQTRI_FIRST=     4'h7, // DQ tri-state control word, first when enabling output 
-    parameter DQTRI_LAST=      4'he  // DQ tri-state control word, first after disabling output
-    
+    parameter CMD_PAUSE_BITS=       6,
+    parameter CMD_DONE_BIT=         6
 )(
     // DDR3 interface
     output                       SDCLK, // DDR3 clock differential output, positive
@@ -60,27 +57,29 @@ module  ddr3c16   #(
     output                       SDCKE, // output Clock Enable port
     output                       SDODT, // output ODT port
 
-    inout                 [15:0] SDD,       // DQ  I/O pads
-    inout                        SDDML,      // LDM  I/O pad (actually only output)
-    inout                        DQSL,     // LDQS I/O pad
-    inout                        NDQSL,    // ~LDQS I/O pad
-    inout                        SDDMU,      // UDM  I/O pad (actually only output)
-    inout                        DQSU,     // UDQS I/O pad
-    inout                        NDQSU,    // ~UDQS I/O pad
+    inout                 [15:0] SDD,   // DQ  I/O pads
+    inout                        SDDML, // LDM  I/O pad (actually only output)
+    inout                        DQSL,  // LDQS I/O pad
+    inout                        NDQSL, // ~LDQS I/O pad
+    inout                        SDDMU, // UDM  I/O pad (actually only output)
+    inout                        DQSU,  // UDQS I/O pad
+    inout                        NDQSU, // ~UDQS I/O pad
 // clocks, reset
     input                        clk_in,
     input                        rst_in,
     output                       mclk,     // global clock, half DDR3 clock, synchronizes all I/O thorough the command port
-// command port 0 (filled by software - 32w->64r) - used for mode set, refresh, write levelling, ...
+// command port 0 (filled by software - 32w->32r) - used for mode set, refresh, write levelling, ...
+    input                        cmd0_clk,
     input                        cmd0_we,
     input                [9:0]   cmd0_addr,
     input               [31:0]   cmd0_data,
-// TODO: add automatic command port1 , filled by the PL, 36w 36r, used for actual page R/W
+// automatic command port1 , filled by the PL, 32w 32r, used for actual page R/W
+    input                        cmd1_clk,
     input                        cmd1_we,
     input                [9:0]   cmd1_addr,
-    input               [35:0]   cmd1_data,
+    input               [31:0]   cmd1_data,
 // Controller run interface, posedge mclk
-    input               [10:0]   run_addr, // controller sequencer start address (0..11'h1ff - cmd0, 11'h400..11'h7ff - cmd1)
+    input               [10:0]   run_addr, // controller sequencer start address (0..11'h3ff - cmd0, 11'h400..11'h7ff - cmd1)
     input                [3:0]   run_chn,  // data channel to use
     input                        run_seq,  // start controller sequence 
     output                       run_done, // controller sequence finished   
@@ -116,12 +115,174 @@ module  ddr3c16   #(
 );
     localparam ADDRESS_NUMBER = 15;
     
-    wire                 [35:0]  phy_cmd; // input[35:0] 
-    wire                  [6:0]  buf_addr; // output[6:0] 
-    wire                 [63:0]  buf_wdata; // output[63:0] 
-    wire                 [63:0]  buf_rdata; // input[63:0] 
+    
+//    wire                 [35:0]  phy_cmd; // input[35:0] 
+    wire                 [31:0]  phy_cmd_word;  // selected output from eithe cmd0 buffer or cmd1 buffer 
+    wire                 [31:0]  phy_cmd0_word; // cmd0 buffer output
+    wire                 [31:0]  phy_cmd1_word; // cmd1 buffer output
+    reg                  [ 8:0]  buf_raddr;
+    reg                  [ 8:0]  buf_waddr_negedge;
+    reg                          buf_wr_negedge; 
+    wire                 [63:0]  buf_wdata; // output[63:0]
+    reg                  [63:0]  buf_wdata_negedge; // output[63:0]
+    wire                 [63:0]  buf_rdata; // multiplexed input from one of the write channels buffer
+    wire                 [63:0]  buf1_rdata;
     wire                         buf_wr; // output
-    wire                         buf_rd; // output
+    wire                         buf_rd; // read next 64 bytes from the buffer, need one extra pre-read
+    
+    wire                         rst=rst_in;
+  
+//    wire                 [ 9:0]  next_cmd_addr;
+    reg                  [ 9:0]  cmd_addr;      // command word adderss  
+    reg                          cmd_sel;
+    reg                  [ 2:0]  cmd_busy;      // bit 0 - immediately,
+    wire                         phy_cmd_nop;   // decoded command (ras, cas, we) was NOP
+    wire                         sequence_done;
+    wire   [CMD_PAUSE_BITS-1:0]  pause_len;
+    reg                          cmd_fetch;     // previous cycle command was read from the command memory, current: command valid
+    wire                         pause;         // do not register new data from the command memory
+    reg    [CMD_PAUSE_BITS-1:0]  pause_cntr;
+    
+    reg                   [1:0]  buf_page;      // one of 4 pages in the channel buffer to use for R/W
+    reg                  [15:0]  buf_sel_1hot; // 1 hot channel buffer select
+    
+    reg                   [3:0]  run_chn_d;
+    reg                          run_seq_d; 
+    
+    assign run_done=sequence_done;
+    
+    assign  pause=cmd_fetch? (phy_cmd_nop && (pause_len != 0)): (cmd_busy[2] && (pause_cntr[CMD_PAUSE_BITS-1:1]!=0));
+    assign phy_cmd_word = phy_cmd_word?phy_cmd1_word:phy_cmd0_word;
+     
+    assign buf_rdata[63:0] = ({64{buf_sel_1hot[1]}} & buf1_rdata[63:0]); // ORR with other read channels terms   
+    
+    always @ (posedge mclk or posedge rst) begin
+        if (rst)                cmd_busy <= 0;
+        else if (sequence_done) cmd_busy <= 0;
+        else cmd_busy <= {cmd_busy[1:0],run_seq}; 
+        // Pause counter
+        if (rst)                           pause_cntr <= 0;
+        else if (!cmd_busy[1])             pause_cntr <= 0; // not needed?
+        else if (cmd_fetch && phy_cmd_nop) pause_cntr <= pause_len;
+        else if (pause_cntr!=0)            pause_cntr <= pause_cntr-1;
+        // Fetch - command data valid
+        if (rst) cmd_fetch <= 0;
+        else     cmd_fetch <= cmd_busy[0] && !pause;
+        // Command read adderss
+        if (rst)                        cmd_addr <= 0;
+        else  if (run_seq)              cmd_addr <= run_addr[9:0];
+        else if (cmd_busy[0] && !pause) cmd_addr <= cmd_addr + 1;
+        // command bank select (0 - "manual" (software programmed sequences), 1 - "auto" (normal block r/w)
+        if (rst)            cmd_sel <= 0;
+        else  if (run_seq)  cmd_sel <= run_addr[10];
+        
+        if (rst)            buf_page <= 0;
+        else  if (run_seq)  case (run_chn)
+            4'h0:    buf_page <= port0_int_page;
+            4'h1:    buf_page <= port1_int_page;
+            // Add other channles later
+            default: buf_page <= 2'bxx; 
+        endcase
+        
+        if (rst)            buf_sel_1hot <= 0;
+        else buf_sel_1hot <= {
+            (run_chn_d==4'hf)?1'b1:1'b0,
+            (run_chn_d==4'he)?1'b1:1'b0,
+            (run_chn_d==4'hd)?1'b1:1'b0,
+            (run_chn_d==4'hc)?1'b1:1'b0,
+            (run_chn_d==4'hb)?1'b1:1'b0,
+            (run_chn_d==4'ha)?1'b1:1'b0,
+            (run_chn_d==4'h9)?1'b1:1'b0,
+            (run_chn_d==4'h8)?1'b1:1'b0,
+            (run_chn_d==4'h7)?1'b1:1'b0,
+            (run_chn_d==4'h6)?1'b1:1'b0,
+            (run_chn_d==4'h5)?1'b1:1'b0,
+            (run_chn_d==4'h4)?1'b1:1'b0,
+            (run_chn_d==4'h3)?1'b1:1'b0,
+            (run_chn_d==4'h2)?1'b1:1'b0,
+            (run_chn_d==4'h1)?1'b1:1'b0,
+            (run_chn_d==4'h0)?1'b1:1'b0 };
+        if (rst)                   buf_raddr <= 9'h0;
+        else if (run_seq_d)        buf_raddr <= {buf_page,7'h0};
+        else if (buf_wr || buf_rd) buf_raddr <= buf_raddr +1; // Separate read/write address? read address re-registered @ negedge
+    end
+    // re-register buffer write address to match DDR3 data
+    always @ (negedge mclk) begin
+        buf_waddr_negedge <= buf_raddr;
+        buf_wr_negedge <= buf_wr;
+        buf_wdata_negedge <= buf_wdata;
+    end
+
+    always @ (posedge mclk) begin
+        run_chn_d <= run_chn;
+        run_seq_d <= run_seq;
+    end
+    
+// Command sequence memories:
+// Command sequence memory 0 ("manual"):
+    ram_1kx32_1kx32 #(
+        .REGISTERS(1) // register output
+    ) cmd0_buf_i (
+        .rclk     (mclk), // input
+        .raddr    (cmd_addr), // input[9:0] 
+        .ren      (!cmd_sel && cmd_busy && !pause), // input
+        .regen    (!cmd_sel && cmd_busy && !pause), // input
+        .data_out (phy_cmd0_word), // output[31:0] 
+        .wclk     (cmd0_clk), // input
+        .waddr    (cmd0_addr), // input[9:0] 
+        .we       (cmd0_we), // input
+        .web      (4'hf), // input[3:0] 
+        .data_in  (cmd0_data) // input[31:0] 
+    );
+
+// Command sequence memory 0 ("manual"):
+    ram_1kx32_1kx32 #(
+        .REGISTERS(1) // register output
+    ) cmd1_buf_i (
+        .rclk     (mclk), // input
+        .raddr    (cmd_addr), // input[9:0] 
+        .ren      ( cmd_sel && cmd_busy && !pause), // input
+        .regen    ( cmd_sel && cmd_busy && !pause), // input
+        .data_out (phy_cmd1_word), // output[31:0] 
+        .wclk     (cmd1_clk), // input
+        .waddr    (cmd1_addr), // input[9:0] 
+        .we       (cmd1_we), // input
+        .web      (4'hf), // input[3:0] 
+        .data_in  (cmd1_data) // input[31:0] 
+    );
+// Port memory buffer (4 pages each, R/W fixed, port 0 - AXI read from DDR, port 1 - AXI write to DDR
+// Port 0 (read DDR to AXI) buffer
+    ram_512x64w_1kx32r #(
+        .REGISTERS(1)
+    ) port0_buf_i (
+        .rclk     (port0_clk), // input
+        .raddr    ({port0_page,port0_addr}), // input[9:0] 
+        .ren      (port0_re), // input
+        .regen    (port0_regen), // input
+        .data_out (port0_data), // output[31:0] 
+        .wclk     (!mclk), // input
+        .waddr    (buf_waddr_negedge), // input[8:0] 
+        .we       (buf_sel_1hot[0] && buf_wr_negedge), // input
+        .web      (8'hff), // input[7:0] 
+        .data_in  (buf_wdata_negedge) // input[63:0] 
+    );
+    
+// Port 1 (write DDR from AXI) buffer
+    ram_1kx32w_512x64r #(
+        .REGISTERS(1)
+    ) port1_buf_i (
+        .rclk(mclk), // input
+        .raddr(buf_raddr), // input[8:0] 
+        .ren(buf_sel_1hot[1] && buf_rd), // input
+        .regen(buf_sel_1hot[1] && buf_rd), // input
+        .data_out(buf1_rdata), // output[63:0] 
+        .wclk(port1_clk), // input
+        .waddr({port1_page,port1_addr}), // input[9:0] 
+        .we(port1_we), // input
+        .web(4'hf), // input[3:0] 
+        .data_in(port1_data) // input[31:0] 
+    );
+    
     
     
     phy_cmd #(
@@ -147,7 +308,10 @@ module  ddr3c16   #(
         .REF_JITTER1           (REF_JITTER1),
         .SS_EN                 (SS_EN),
         .SS_MODE               (SS_MODE),
-        .SS_MOD_PERIOD         (SS_MOD_PERIOD)
+        .SS_MOD_PERIOD         (SS_MOD_PERIOD),
+        .CMD_PAUSE_BITS        (CMD_PAUSE_BITS), // numer of (address) bits to encode pause
+        .CMD_DONE_BIT          (CMD_DONE_BIT)    // bit number (address) to signal sequence done
+        
     ) phy_cmd_i (
         .SDCLK               (SDCLK), // output
         .SDNCLK              (SDNCLK), // output
@@ -175,8 +339,11 @@ module  ddr3c16   #(
         .locked              (locked), // output
         .ps_rdy              (ps_rdy), // output
         .ps_out              (ps_out[7:0]), // output[7:0] 
-        .phy_cmd             (phy_cmd[35:0]), // input[35:0] 
-        .buf_addr            (buf_addr[6:0]), // output[6:0] 
+        .phy_cmd_word        (phy_cmd_word[31:0]), // input[35:0]
+        .phy_cmd_nop         (phy_cmd_nop), // output
+        .pause_len           (pause_len),     // output  [CMD_PAUSE_BITS-1:0]
+        .sequence_done       (sequence_done), // output
+//        .buf_addr            (buf_addr[6:0]), // output[6:0] 
         .buf_wdata           (buf_wdata[63:0]), // output[63:0] 
         .buf_rdata           (buf_rdata[63:0]), // input[63:0] 
         .buf_wr              (buf_wr), // output

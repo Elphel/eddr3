@@ -70,7 +70,7 @@
 */
 module  ram_1kx32_1kx32
 #(
-  parameter integer registers = 0 // 1 - registered output
+  parameter integer REGISTERS = 0 // 1 - registered output
  )
    (
       input         rclk,     // clock for read port
@@ -89,8 +89,8 @@ module  ram_1kx32_1kx32
     #(
     .RSTREG_PRIORITY_A("RSTREG"), // Valid: "RSTREG" or "REGCE"
     .RSTREG_PRIORITY_B("RSTREG"), // Valid: "RSTREG" or "REGCE"
-    .DOA_REG(registers),          // Valid: 0 (no output registers) and 1 - one output register (in SDP - to lower 36)
-    .DOB_REG(registers),          // Valid: 0 (no output registers) and 1 - one output register (in SDP - to lower 36)
+    .DOA_REG(REGISTERS),          // Valid: 0 (no output registers) and 1 - one output register (in SDP - to lower 36)
+    .DOB_REG(REGISTERS),          // Valid: 0 (no output registers) and 1 - one output register (in SDP - to lower 36)
     .RAM_EXTENSION_A("NONE"),     // Cascading, valid: "NONE","UPPER", LOWER"
     .RAM_EXTENSION_B("NONE"),     // Cascading, valid: "NONE","UPPER", LOWER"
     .READ_WIDTH_A(36),            // Valid: 0,1,2,4,9,18,36 and in SDP mode - 72 (should be 0 if port is not used)

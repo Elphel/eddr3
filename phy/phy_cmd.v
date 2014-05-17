@@ -44,8 +44,9 @@ module  phy_cmd#(
     parameter REF_JITTER1 =         0.010,
     parameter SS_EN =              "FALSE",
     parameter SS_MODE =      "CENTER_HIGH",
-    parameter SS_MOD_PERIOD =       10000
-    
+    parameter SS_MOD_PERIOD =       10000,
+    parameter CMD_PAUSE_BITS=       6, // numer of (address) bits to encode pause
+    parameter CMD_DONE_BIT=         6  // bit number (address) to signal sequence done
 )(
     // DDR3 interface
     output                       SDCLK, // DDR3 clock differential output, positive
@@ -78,9 +79,13 @@ module  phy_cmd#(
     output                       ps_rdy,
     output     [PHASE_WIDTH-1:0] ps_out, 
 // command port
-    input                 [35:0] phy_cmd,
+//    input                 [35:0] phy_cmd,
+    input                 [31:0] phy_cmd_word,
+    output                       phy_cmd_nop,
+    output  [CMD_PAUSE_BITS-1:0] pause_len,
+    output                       sequence_done,
 // external memory buffer (cs- channel select, high addresses- page addresses are decoded externally)
-    output                [ 6:0] buf_addr,
+//    output                [ 6:0] buf_addr,
     output                [63:0] buf_wdata, // data to be written to the buffer (from DDR3), valid @ negedge mclk
     input                 [63:0] buf_rdata, // data read from the buffer (to DDR3)
     output                       buf_wr,    // write buffer (next cycle!)
@@ -106,7 +111,7 @@ module  phy_cmd#(
     wire                         phy_dq_tri_in;   // tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
     wire                         phy_dqs_tri_in;  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
     wire                         phy_dci_in;      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
-    wire                  [ 6:0] phy_buf_addr; // connect to extrenal buffer
+//    wire                  [ 6:0] phy_buf_addr; // connect to extrenal buffer
     wire                         phy_buf_wr;   // connect to extrenal buffer
     wire                         phy_buf_rd;   // connect to extrenal buffer
     
@@ -138,8 +143,8 @@ module  phy_cmd#(
     wire                  [63:0] phy_rdata; // data read from ddr3 iserdese2 at posedge clk_div
     reg                   [63:0] phy_rdata_r; // registered @ posedge mclk
 //    output                [63:0] buf_wdata, // data to be written to the buffer (from DDR3)
-    
-    
+    // SuppressWarnings VEditor 
+  (* keep = "true" *)  wire  [2:0] phy_spare;
     assign {
         phy_addr_in,
         phy_bank_in,
@@ -150,12 +155,16 @@ module  phy_cmd#(
         phy_dq_tri_in,   // tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
         phy_dqs_tri_in,  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
         phy_dci_in,      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
-        phy_buf_addr, // connect to extrenal buffer
-        phy_buf_wr,   // connect to extrenal buffer
-        phy_buf_rd    // connect to extrenal buffer
-    } = phy_cmd;
+//        phy_buf_addr, // connect to external buffer (is it needed? maybe just autoincrement?)
+        phy_buf_wr,   // connect to external buffer (but only if not paused)
+        phy_buf_rd,    // connect to external buffer (but only if not paused)
+        phy_spare      // Reserved for future use
+    } = phy_cmd_word;
+    assign phy_cmd_nop=   (phy_rcw_in==0);
+    assign sequence_done= (phy_rcw_in==0) && phy_addr_in[CMD_DONE_BIT];
+    assign pause_len=      phy_addr_in[CMD_PAUSE_BITS-1:0];
     
-    assign buf_addr = phy_buf_addr;
+//    assign buf_addr = phy_buf_addr;
     assign buf_wr =   phy_buf_wr;
     assign buf_rd =   phy_buf_rd;
     

@@ -49,7 +49,7 @@ module  cmd_addr #(
     input                        in_tri,   // tristate command/address outputs - same timing, but no odelay
     input                  [7:0] dly_data, // delay value (3 LSB - fine delay)
     input                  [4:0] dly_addr, // select which delay to program
-    input                        ld_delay, // load delay data to selected iodelayl (clk_iv synchronous)
+    input                        ld_delay, // load delay data to selected iodelayl (clk_div synchronous)
     input                        set       // clk_div synchronous set all delays from previously loaded values
 );
 reg  [2*ADDRESS_NUMBER-1:0] in_a_r=0;
@@ -110,7 +110,7 @@ generate
     .clk_div(clk_div),      // free-running half clk frequency, front aligned to clk (shared for R/W)
     .rst(rst),
     .dly_data(dly_data_r[7:0]),     // delay value (3 LSB - fine delay)
-    .din(in_a_r[2*i+1:2*i]),      // parallel data to be sent out
+    .din({in_a_r[ADDRESS_NUMBER+i],in_a_r[i]}),      // parallel data to be sent out
 //    .tin(in_tri_r[1:0]),          // tristate for data out (sent out earlier than data!) 
     .tin(in_tri_r),          // tristate for data out (sent out earlier than data!) 
     .set_delay(set_r),             // clk_div synchronous load odelay value from dly_data
@@ -132,7 +132,7 @@ endgenerate
     .clk_div(clk_div),
     .rst(rst),
     .dly_data(dly_data_r[7:0]),
-    .din(in_ba_r[1:0]),
+    .din({in_ba_r[3],in_ba_r[0]}),
 //    .tin(in_tri_r[1:0]), 
     .tin(in_tri_r), 
     .set_delay(set_r),
@@ -150,7 +150,7 @@ endgenerate
     .clk_div(clk_div),
     .rst(rst),
     .dly_data(dly_data_r[7:0]),
-    .din(in_ba_r[3:2]),
+    .din({in_ba_r[4],in_ba_r[1]}),
 //    .tin(in_tri_r[1:0]), 
     .tin(in_tri_r), 
     .set_delay(set_r),
@@ -168,7 +168,7 @@ endgenerate
     .clk_div(clk_div),
     .rst(rst),
     .dly_data(dly_data_r[7:0]),
-    .din(in_ba_r[5:4]),
+    .din({in_ba_r[5],in_ba_r[2]}),
 //    .tin(in_tri_r[1:0]), 
     .tin(in_tri_r), 
     .set_delay(set_r),

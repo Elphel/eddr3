@@ -46,7 +46,7 @@ module  phy_top #(
     parameter ICLK_PHASE =          0.000,
     parameter CLK_PHASE =           0.000,
     parameter CLK_DIV_PHASE =       0.000,
-    parameter MCLK_PHASE =          0.000,  
+    parameter MCLK_PHASE =          90.000,  
     parameter REF_JITTER1 =         0.010,
     parameter SS_EN =              "FALSE",
     parameter SS_MODE =      "CENTER_HIGH",
@@ -100,7 +100,7 @@ module  phy_top #(
     
     input                  [7:0] dly_data, // delay value (3 LSB - fine delay)
     input                  [6:0] dly_addr, // select which delay to program
-    input                        ld_delay, // load delay data to selected iodelayl (clk_iv synchronous)
+    input                        ld_delay, // load delay data to selected iodelayl (clk_div synchronous)
     input                        set,       // clk_div synchronous set all delays from previously loaded values
     output                       locked,
     output                       ps_rdy,
@@ -148,7 +148,7 @@ module  phy_top #(
     .in_tri   (in_tri),             // tristate command/address outputs - same timing, but no odelay
     .dly_data (dly_data[7:0]),           // delay value (3 LSB - fine delay)
     .dly_addr (dly_addr[4:0]),           // select which delay to program
-    .ld_delay (ld_cmda),               // load delay data to selected iodelayl (clk_iv synchronous)
+    .ld_delay (ld_cmda),               // load delay data to selected iodelayl (clk_div synchronous)
     .set      (set)                      // clk_div synchronous set all delays from previously loaded values
 );
 

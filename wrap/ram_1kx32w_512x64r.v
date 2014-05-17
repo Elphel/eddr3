@@ -1,11 +1,11 @@
 /*******************************************************************************
  * Copyright (c) 2014 Elphel, Inc.
- * ram_1kx32_1kx32.v is free software; you can redistribute it and/or modify
+ * ram_1kx32w_512x64r.v is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * ram_1kx32_1kx32.v is distributed in the hope that it will be useful,
+ * ram_1kx32w_512x64r.v is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -68,16 +68,16 @@
    |   64/ 72   | A[14:6] | D[63:0] | DP[7:0] |
    +------------+---------+---------+---------+
 */
-module  ram_1kx32_1kx32
+module  ram_1kx32w_512x64r
 #(
   parameter integer registers = 0 // 1 - registered output
  )
    (
       input         rclk,     // clock for read port
-      input  [ 9:0] raddr,    // read address
+      input  [ 8:0] raddr,    // read address
       input         ren,      // read port enable
       input         regen,    // output register enable
-      output [31:0] data_out, // data out
+      output [63:0] data_out, // data out
       
       input         wclk,     // clock for read port
       input  [ 9:0] waddr,    // write address
@@ -93,11 +93,11 @@ module  ram_1kx32_1kx32
     .DOB_REG(registers),          // Valid: 0 (no output registers) and 1 - one output register (in SDP - to lower 36)
     .RAM_EXTENSION_A("NONE"),     // Cascading, valid: "NONE","UPPER", LOWER"
     .RAM_EXTENSION_B("NONE"),     // Cascading, valid: "NONE","UPPER", LOWER"
-    .READ_WIDTH_A(36),            // Valid: 0,1,2,4,9,18,36 and in SDP mode - 72 (should be 0 if port is not used)
+    .READ_WIDTH_A(72),            // Valid: 0,1,2,4,9,18,36 and in SDP mode - 72 (should be 0 if port is not used)
     .READ_WIDTH_B(0),             // Valid: 0,1,2,4,9,18,36 and in SDP mode - 72 (should be 0 if port is not used)
     .WRITE_WIDTH_A(0),            // Valid: 0,1,2,4,9,18,36 and in SDP mode - 72 (should be 0 if port is not used)
     .WRITE_WIDTH_B(36),            // Valid: 0,1,2,4,9,18,36 and in SDP mode - 72 (should be 0 if port is not used)
-    .RAM_MODE("TDP"),             // Valid "TDP" (true dual-port) and "SDP" - simple dual-port
+    .RAM_MODE("SDP"),             // Valid "TDP" (true dual-port) and "SDP" - simple dual-port
     .WRITE_MODE_A("WRITE_FIRST"), // Valid: "WRITE_FIRST", "READ_FIRST", "NO_CHANGE"
     .WRITE_MODE_B("WRITE_FIRST"), // Valid: "WRITE_FIRST", "READ_FIRST", "NO_CHANGE"
     .RDADDR_COLLISION_HWCONFIG("DELAYED_WRITE"),// Valid: "DELAYED_WRITE","PERFORMANCE" (no access to the same page)
@@ -125,11 +125,11 @@ module  ram_1kx32_1kx32
     ) RAMB36E1_i
     (
         // Port A (Read port in SDP mode):
-        .DOADO(data_out[31:0]), // Port A data/LSB data[31:0], output
-        .DOPADOP(),             // Port A parity/LSB parity[3:0], output
+        .DOADO(data_out[31:0]), // Port A data/LSB data[63:0], output
+        .DOPADOP(),             // Port A parity/LSB parity[7:0], output
         .DIADI(32'h0),          // Port A data/LSB data[31:0], input
         .DIPADIP(4'h0),         // Port A parity/LSB parity[3:0], input
-        .ADDRARDADDR({1'b1,raddr[9:0],5'b11111}),  // Port A (read port in SDP) address [15:0]. used from [14] down, unused should be high, input
+        .ADDRARDADDR({1'b1,raddr[8:0],6'b111111}),  // Port A (read port in SDP) address [15:0]. used from [14] down, unused should be high, input
         .CLKARDCLK(rclk),       // Port A (read port in SDP) clock, input
         .ENARDEN(ren),          // Port A (read port in SDP) Enable, input
         .REGCEAREGCE(regen),    // Port A (read port in SDP) register enable, input
@@ -137,10 +137,10 @@ module  ram_1kx32_1kx32
         .RSTREGARSTREG(1'b0),   // Port A (read port in SDP) register set/reset, input
         .WEA(4'b0),             // Port A (read port in SDP) Write Enable[3:0], input
         // Port B
-        .DOBDO(),               // Port B data/MSB data[31:0], output
-        .DOPBDOP(),             // Port B parity/MSB parity[3:0], output
-        .DIBDI(data_in[31:0]),  // Port B data/MSB data[31:0], input
-        .DIPBDIP(4'b0),         // Port B parity/MSB parity[3:0], input
+        .DOBDO(data_out[63:32]), // Port B data/MSB data[31:0], output
+        .DOPBDOP(),              // Port B parity/MSB parity[3:0], output
+        .DIBDI(data_in[31:0]),   // Port B data/MSB data[31:0], input
+        .DIPBDIP(4'b0),          // Port B parity/MSB parity[3:0], input
         .ADDRBWRADDR({1'b1,waddr[9:0],5'b11111}), // Port B (write port in SDP) address [15:0]. used from [14] down, unused should be high, input
         .CLKBWRCLK(wclk),        // Port B (write port in SDP) clock, input
         .ENBWREN(we),            // Port B (write port in SDP) Enable, input

@@ -105,7 +105,7 @@ module  test_phy_top_01#(
     reg                        dci_disable_dq;  // disable DCI termination during writes and idle for dq and dm signals
     reg                  [7:0] dly_data; // delay value (3 LSB - fine delay)
     reg                  [6:0] dly_addr; // select which delay to program
-    reg                        ld_delay; // load delay data to selected iodelayl (clk_iv synchronous)
+    reg                        ld_delay; // load delay data to selected iodelayl (clk_div synchronous)
     reg                        set;       // clk_div synchronous set all delays from previously loaded values
     
     reg                 [63:0] dout_r;

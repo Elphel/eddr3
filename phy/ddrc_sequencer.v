@@ -1,16 +1,16 @@
 /*******************************************************************************
- * Module: ddr3c16
+ * Module: ddrc_sequencer
  * Date:2014-05-16  
  * Author: Andrey Filippov
- * Description: ddr3 controller, 16 channel
+ * Description: ddr3 sequnecer
  *
  * Copyright (c) 2014 Elphel, Inc.
- * ddr3c16.v is free software; you can redistribute it and/or modify
+ * ddrc_sequencer.v is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- *  ddr3c16.v is distributed in the hope that it will be useful,
+ *  ddrc_sequencer.v is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -20,7 +20,7 @@
  *******************************************************************************/
 `timescale 1ns/1ps
 
-module  ddr3c16   #(
+module  ddrc_sequencer   #(
     parameter PHASE_WIDTH =     8,
     parameter SLEW_DQ =         "SLOW",
     parameter SLEW_DQS =        "SLOW",

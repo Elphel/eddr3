@@ -18,11 +18,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/> .
  *******************************************************************************/
-module  axibram_read#(
+module  axibram_read #(
     parameter ADDRESS_BITS = 10 // number of memory address bits
 )(
    input         aclk,    // clock - should be buffered
-   input         aresetn, // reset, active low
+//   input         aresetn, // reset, active low
+   input         rst, // reset, active high
 // AXI Read Address   
    input  [31:0] araddr,  // ARADDR[31:0], input 
    input         arvalid, // ARVALID, input
@@ -42,7 +43,12 @@ module  axibram_read#(
    output reg [11:0] rid,     // RID[11:0], output
    output reg    rlast,   // RLAST, output
    output [ 1:0] rresp,
-// BRAM interface   
+// External memory synchronization
+   output [ADDRESS_BITS-1:0] pre_araddr, // same as awaddr_out, early address to decode and return dev_ready
+   output        start_burst, // start of read burst, valid pre_araddr, save externally to control ext. dev_ready multiplexer
+   input         dev_ready,   // extrernal combinatorial ready signal, multiplexed from different sources according to pre_araddr@start_burst
+   
+// External memory interface   
    output        bram_rclk,  //      .rclk(aclk),                  // clock for read port
    output  [ADDRESS_BITS-1:0] bram_raddr, //   .raddr(read_in_progress?read_address[9:0]:10'h3ff),    // read address
    output        bram_ren,   //      .ren(bram_reg_re_w) ,      // read port enable
@@ -60,7 +66,7 @@ module  axibram_read#(
     wire [ 3:0] arlen_out;
     wire [ADDRESS_BITS-1:0] araddr_out;
     wire [11:0] arid_out;
-    wire rst=~aresetn;
+//    wire rst=~aresetn;
     reg  read_in_progress=0;
     reg  read_in_progress_d=0; // delayed by one active cycle (not skipped)
     reg  read_in_progress_or=0; // read_in_progress || read_in_progress_d
@@ -101,17 +107,25 @@ module  axibram_read#(
     wire pre_rvalid_w;
     assign  pre_rvalid_w=bram_reg_re_w || (rvalid && !rready);
     
-    reg bram_reg_re_0;
-
     wire pre_left_zero_w;
+    // TODO: Speed up by moving registers
+    // SuppressWarnings VEditor all - not yet used 
+    reg bram_reg_re_0;
+    // SuppressWarnings VEditor all - not yet used 
     reg last_in_burst_1;
+    // SuppressWarnings VEditor all - not yet used 
     reg last_in_burst_0;
+    // SuppressWarnings VEditor all - not yet used 
     reg start_read_burst_0;
+    // SuppressWarnings VEditor all - not yet used 
     reg start_read_burst_1;
     reg [11:0] pre_rid0;
     reg [11:0] pre_rid;
-
-// Block RAM interface
+// External memory interface - synchronization with ready
+   assign pre_araddr=  araddr_out[ADDRESS_BITS-1:0];
+   assign start_burst= start_read_burst_w;
+   //input dev_ready,   // extrernal combinatorial ready signal, multiplexed from different sources according to pre_araddr@start_burst 
+// External memory interface
    assign  bram_rclk =  aclk;  // clock for read port
    assign  bram_raddr = read_in_progress?read_address[ADDRESS_BITS-1:0]:{ADDRESS_BITS{1'b1}};  // read address
    assign  bram_ren =   bram_reg_re_w;     // read port enable
@@ -184,7 +198,7 @@ module  axibram_read#(
     assign  pre_left_zero_w=start_read_burst_w?(arlen_out[3:0]==4'b0):(bram_reg_re_w && (read_left==4'b0001));
 //    assign bram_reg_re_w=     read_in_progress && (!rvalid || rready);
 
-    assign bram_reg_re_w=   read_in_progress_or && (!rvalid || rready); // slower/simplier
+    assign bram_reg_re_w=   dev_ready && read_in_progress_or && (!rvalid || rready); // slower/simplier
 //    assign bram_reg_re_w=   rready? read_in_progress : bram_reg_re_0; // faster - more verification
     
     

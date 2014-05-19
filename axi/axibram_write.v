@@ -19,11 +19,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/> .
  *******************************************************************************/
-module  axibram_write#(
+module  axibram_write #(
     parameter ADDRESS_BITS = 10 // number of memory address bits
 )(
    input         aclk,    // clock - should be buffered
-   input         aresetn, // reset, active low
+//   input         aresetn, // reset, active low
+   input         rst,     // reset, active highw
    
 // AXI Write Address
    input  [31:0] awaddr,  // AWADDR[31:0], input
@@ -50,14 +51,18 @@ module  axibram_write#(
    output [11:0] bid,     // BID[11:0], output
    output [ 1:0] bresp,    // BRESP[1:0], output
    
-// BRAM interface   
+// BRAM (and other write modules) interface
+   output [ADDRESS_BITS-1:0] pre_awaddr, // same as awaddr_out, early address to decode and return dev_ready
+   output        start_burst, // start of write burst, valid pre_awaddr, save externally to control ext. dev_ready multiplexer
+   input         dev_ready,   // extrernal combinatorial ready signal, multiplexed from different sources according to pre_awaddr@start_burst
+    
    output        bram_wclk,
    output  [ADDRESS_BITS-1:0] bram_waddr,
-   output        bram_wen,
+   output        bram_wen,    // external memory wreite enable, (internally combined with registered dev_ready
    output  [3:0] bram_wstb, 
    output [31:0] bram_wdata
 );
-    wire rst=~aresetn;
+//    wire rst=~aresetn;
 // **** Write channel: ****
     wire aw_nempty;
     wire aw_half_full;
@@ -87,12 +92,13 @@ module  axibram_write#(
     wire        bram_we_w;          // write BRAM memory 
     wire        start_write_burst_w;
     wire        write_in_progress_w;
+    reg         dev_ready_r;        // device, selected at start burst
     assign      next_wr_address_w=
       wburst[1]?
         (wburst[0]? {ADDRESS_BITS{1'b0}}:((write_address[ADDRESS_BITS-1:0]+1) & {{(ADDRESS_BITS-4){1'b1}}, ~wlen[3:0]})):
         (wburst[0]? (write_address[ADDRESS_BITS-1:0]+1):(write_address[ADDRESS_BITS-1:0]));
         
-    assign      bram_we_w= w_nempty &&  write_in_progress;
+    assign      bram_we_w= w_nempty &&  write_in_progress && dev_ready_r;
     assign start_write_burst_w=aw_nempty && (!write_in_progress || (w_nempty && (write_left[3:0]==4'b0)));
     assign write_in_progress_w=aw_nempty || (write_in_progress && !(w_nempty && (write_left[3:0]==4'b0))); 
     
@@ -113,6 +119,9 @@ module  axibram_write#(
       if   (rst)                    write_address <= {ADDRESS_BITS{1'b0}};
       else if (start_write_burst_w) write_address <= awaddr_out[ADDRESS_BITS-1:0]; // precedence over inc
       else if (bram_we_w)           write_address <= next_wr_address_w;
+      
+      if (rst) dev_ready_r <= 1'b0;
+      else     dev_ready_r <= dev_ready;
     end
 // **** Write responce channel ****    
     wire [ 1:0] bresp_in;
@@ -132,7 +141,10 @@ module  axibram_write#(
     end
 */
 
-// BRAM interface   
+// external memory interface (write only)
+   assign pre_awaddr=awaddr_out[ADDRESS_BITS-1:0];
+   assign start_burst=start_write_burst_w;
+   
    assign  bram_wclk  = aclk;
    assign  bram_waddr = write_address[ADDRESS_BITS-1:0];
    assign  bram_wen   = bram_we_w; 

@@ -89,7 +89,7 @@ module  axibram_write #(
     reg  [ 1:0] wburst;             // registered burst type
     reg  [ 3:0] wlen;               // registered awlen type (for wrapped over transfers)
     wire [ADDRESS_BITS-1:0] next_wr_address_w;  // next transfer address;
-    wire        bram_we_w;          // write BRAM memory 
+    wire        bram_we_w; //,bram_we_nonmasked;   // write BRAM memory non-masked - should be combined with  
     wire        start_write_burst_w;
     wire        write_in_progress_w;
     reg         dev_ready_r;        // device, selected at start burst
@@ -98,7 +98,8 @@ module  axibram_write #(
         (wburst[0]? {ADDRESS_BITS{1'b0}}:((write_address[ADDRESS_BITS-1:0]+1) & {{(ADDRESS_BITS-4){1'b1}}, ~wlen[3:0]})):
         (wburst[0]? (write_address[ADDRESS_BITS-1:0]+1):(write_address[ADDRESS_BITS-1:0]));
         
-    assign      bram_we_w= w_nempty &&  write_in_progress && dev_ready_r;
+    assign      bram_we_w=         w_nempty &&  write_in_progress && dev_ready_r;
+//    assign      bram_we_nonmasked= w_nempty &&  write_in_progress;
     assign start_write_burst_w=aw_nempty && (!write_in_progress || (w_nempty && (write_left[3:0]==4'b0)));
     assign write_in_progress_w=aw_nempty || (write_in_progress && !(w_nempty && (write_left[3:0]==4'b0))); 
     

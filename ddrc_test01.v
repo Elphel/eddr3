@@ -46,7 +46,16 @@ module  ddrc_test01 #(
     parameter CMD_PAUSE_BITS=       6,
     parameter CMD_DONE_BIT=         6,
     parameter AXI_WR_ADDR_BITS =   12,
-    parameter AXI_RD_ADDR_BITS =   12
+    parameter AXI_RD_ADDR_BITS =   12,
+    parameter SELECT_WR_ADDR =      'h800, // AXI write address to select this module
+    parameter SELECT_WR_ADDR_MASK = 'h800, // AXI write address mask to select this  module
+    parameter BUSY_WR_ADDR =        'hc00, // AXI write address to generate busy
+    parameter BUSY_WR_ADDR_MASK =   'hc00, // AXI write address mask to generate busy
+    parameter SELECT_RD_ADDR =      'h800, // AXI read address to select this module
+    parameter SELECT_RD_ADDR_MASK = 'h800, // AXI read address mask to select this  module
+    parameter BUSY_RD_ADDR =        'hc00, // AXI read address to generate busy
+    parameter BUSY_RD_ADDR_MASK =   'hc00  // AXI read address mask to generate busy
+    
 )(
     // DDR3 interface
     output                       SDCLK, // DDR3 clock differential output, positive
@@ -68,6 +77,7 @@ module  ddrc_test01 #(
     inout                        NDQSU // ~UDQS I/O pad
     // AXI write (ps -> pl)
 );
+    localparam ADDRESS_NUMBER=15;
 // Source for reset and clock
    wire    [3:0]     fclk;      // PL Clocks [3:0], output
    wire    [3:0]     frst;      // PL Clocks [3:0], output
@@ -109,7 +119,8 @@ module  ddrc_test01 #(
    wire           axiwr_dev_ready;   // extrernal combinatorial ready signal, multiplexed from different sources according to pre_awaddr@start_burst
    wire           axiwr_bram_wclk;
    wire  [AXI_WR_ADDR_BITS-1:0] axiwr_bram_waddr;
-   wire           axiwr_bram_wen;    // external memory wreite enable, (internally combined with registered dev_ready
+   wire           axiwr_bram_wen;    // external memory write enable, (internally combined with registered dev_ready
+// SuppressWarnings VEditor unused (yet?) 
    wire    [3:0]  axiwr_bram_wstb; 
    wire   [31:0]  axiwr_bram_wdata;
 
@@ -138,6 +149,7 @@ module  ddrc_test01 #(
    wire           axird_start_burst; // start of read burst, valid pre_araddr, save externally to control ext. dev_ready multiplexer
    wire           axird_dev_ready;   // extrernal combinatorial ready signal, multiplexed from different sources according to pre_araddr@start_burst
 // External memory interface   
+// SuppressWarnings VEditor unused (yet?) - use mclk 
    wire           axird_bram_rclk;  //      .rclk(aclk),                  // clock for read port
    wire  [AXI_RD_ADDR_BITS-1:0] axird_bram_raddr; //   .raddr(read_in_progress?read_address[9:0]:10'h3ff),    // read address
    wire           axird_bram_ren;   //      .ren(bram_reg_re_w) ,      // read port enable
@@ -214,6 +226,7 @@ wire [10:0] run_addr; // input[10:0]
 wire [ 3:0] run_chn;  // input[3:0] 
 wire        run_seq;  // input
 wire        run_done; // output
+wire        run_busy; // TODO: add to ddrc_sequencer 
 wire [ 7:0] dly_data; // input[7:0] 
 wire [ 6:0] dly_addr; // input[6:0] 
 wire        ld_delay; // input
@@ -223,9 +236,87 @@ wire        locked; // output
 wire        ps_rdy; // output
 wire [ 7:0] ps_out; // output[7:0] 
 
+wire        en_port0_rd;
+wire        en_port0_regen;
+wire        en_port1_wr;
 
-assign en_cmd0_wr= axiwr_bram_wen && (axiwr_bram_waddr[11:10]==3);
+wire [ 1:0] port0_page; // input[1:0] 
+wire [ 1:0] port0_int_page; // input[1:0] 
 
+wire [ 1:0] port1_page; // input[1:0] 
+wire [ 1:0] port1_int_page;// input[1:0] 
+
+// additional control signals
+wire        cmda_tri; // input
+wire        inv_clk_div; // input
+wire [ 7:0] dqs_pattern; // input[7:0] 8'h55 
+wire [ 7:0] dqm_pattern; // input[7:0] 8'h00
+
+
+assign en_cmd0_wr=     axiwr_bram_wen   && (axiwr_bram_waddr[11:10]==2'h1);
+assign en_port0_rd=    axird_bram_ren   && (axird_bram_raddr[11:10]==2'h0);
+assign en_port0_regen= axird_bram_regen && (axird_bram_raddr[11:10]==2'h0);
+assign en_port1_wr=    axiwr_bram_wen   && (axiwr_bram_waddr[11:10]==2'h0);
+wire axiwr_dev_busy;
+assign axiwr_dev_ready = ~axiwr_dev_busy; //may combine (AND) multiple sources if needed
+
+wire axird_dev_busy;
+assign axird_dev_ready = ~axird_dev_busy; //may combine (AND) multiple sources if needed
+    ddrc_control #(
+        .AXI_WR_ADDR_BITS (AXI_WR_ADDR_BITS),
+        .SELECT_ADDR      (SELECT_WR_ADDR),
+        .SELECT_ADDR_MASK (SELECT_WR_ADDR_MASK),
+        .BUSY_ADDR        (BUSY_WR_ADDR),
+        .BUSY_ADDR_MASK   (BUSY_WR_ADDR_MASK)
+    ) ddrc_control_i (
+        .clk              (axi_aclk),               // input
+        .mclk             (axiwr_bram_wclk),        // input
+        .rst              (axi_rst),                // input
+        .pre_waddr        (axiwr_pre_awaddr[AXI_WR_ADDR_BITS-1:0]), // input[11:0] 
+        .start_wburst     (axiwr_start_burst),      // input
+        .waddr            (axiwr_bram_waddr[AXI_WR_ADDR_BITS-1:0]), // input[11:0] 
+        .wr_en            (axiwr_bram_wen),         // input
+        .wdata            (axiwr_bram_wdata[31:0]), // input[31:0] (no input for wstb here) 
+        .busy             (axiwr_dev_busy),         // output
+        .run_addr         (run_addr[10:0]),         // output[10:0] 
+        .run_chn          (run_chn[3:0]),           // output[3:0] 
+        .run_seq          (run_seq),                // output
+        .dly_data         (dly_data[7:0]),          // output[7:0] 
+        .dly_addr         (dly_addr[6:0]),          // output[6:0] 
+        .ld_delay         (ld_delay),               // output
+        .set              (set),                    // output
+        .cmda_tri         (cmda_tri),               // output
+        .inv_clk_div      (inv_clk_div),            // output
+        .dqs_pattern      (dqs_pattern[7:0]),       // output[7:0] 
+        .dqm_pattern      (dqm_pattern[7:0]),       // output[7:0] 
+        .port0_page       (port0_page[1:0]),        // output[1:0] 
+        .port0_int_page   (port0_int_page[1:0]),    // output[1:0] 
+        .port1_page       (port1_page[1:0]),        // output[1:0] 
+        .port1_int_page   (port1_int_page[1:0])     // output[1:0] 
+    );
+    
+    ddrc_status #(
+        .AXI_RD_ADDR_BITS (AXI_RD_ADDR_BITS),
+        .SELECT_ADDR      (SELECT_RD_ADDR),
+        .SELECT_ADDR_MASK (SELECT_RD_ADDR_MASK),
+        .BUSY_ADDR        (BUSY_RD_ADDR),
+        .BUSY_ADDR_MASK   (BUSY_RD_ADDR_MASK)
+    ) ddrc_status_i (
+        .clk              (axi_aclk), // input
+        .mclk             (mclk), // input
+        .rst              (axi_rst), // input
+        .pre_raddr        (axird_pre_araddr[AXI_RD_ADDR_BITS-1:0]), // input[11:0] 
+        .start_rburst     (axird_start_burst), // input
+        .raddr            (axird_bram_raddr[AXI_RD_ADDR_BITS-1:0]), // input[11:0] 
+        .rd_en            (axird_bram_regen), // input
+        .rdata            (axird_bram_rdata[31:0]), // output[31:0] 
+        .busy             (axird_dev_busy), // output
+        .run_done         (run_done), // input
+        .run_busy         (run_busy), // input
+        .locked           (locked), // input
+        .ps_rdy           (ps_rdy), // input
+        .ps_out           (ps_out[7:0]) // input[7:0] 
+    );
 
 
     ddrc_sequencer #(
@@ -254,63 +345,65 @@ assign en_cmd0_wr= axiwr_bram_wen && (axiwr_bram_waddr[11:10]==3);
         .CMD_PAUSE_BITS   (CMD_PAUSE_BITS),
         .CMD_DONE_BIT     (CMD_DONE_BIT)
     ) ddrc_sequencer_i (
-        .SDCLK     (SDCLK), // output
-        .SDNCLK    (SDNCLK), // output
-        .SDA       (SDA), // output[14:0] 
-        .SDBA      (SDBA), // output[2:0] 
-        .SDWE      (SDWE), // output
-        .SDRAS     (SDRAS), // output
-        .SDCAS     (SDCAS), // output
-        .SDCKE     (SDCKE), // output
-        .SDODT     (SDODT), // output
-        .SDD       (SDD), // inout[15:0] 
-        .SDDML     (SDDML), // inout
-        .DQSL      (DQSL), // inout
-        .NDQSL     (NDQSL), // inout
-        .SDDMU     (SDDMU), // inout
-        .DQSU      (DQSU), // inout
-        .NDQSU     (NDQSU), // inout
-        .clk_in    (axi_aclk), // input
-        .rst_in    (axi_rst), // input
-        .mclk      (mclk), // output
-        .cmd0_clk  (axi_aclk), // input
-        .cmd0_we   (en_cmd0_wr), // input
-        .cmd0_addr (axiwr_bram_waddr[9:0]), // input[9:0] 
-        .cmd0_data (axiwr_bram_wdata[31:0]), // input[31:0] 
-        .cmd1_clk  (mclk), // input
-        .cmd1_we     (1'b0), // input
-        .cmd1_addr   (10'b0), // input[9:0] 
-        .cmd1_data   (32'b0), // input[31:0]
+        .SDCLK          (SDCLK), // output
+        .SDNCLK         (SDNCLK), // output
+        .SDA            (SDA[14:0]), // output[14:0] // BUG with localparam - fixed
+        .SDBA           (SDBA[2:0]), // output[2:0] 
+        .SDWE           (SDWE), // output
+        .SDRAS          (SDRAS), // output
+        .SDCAS          (SDCAS), // output
+        .SDCKE          (SDCKE), // output
+        .SDODT          (SDODT), // output
+        .SDD            (SDD[15:0]), // inout[15:0] 
+        .SDDML          (SDDML), // inout
+        .DQSL           (DQSL), // inout
+        .NDQSL          (NDQSL), // inout
+        .SDDMU          (SDDMU), // inout
+        .DQSU           (DQSU), // inout
+        .NDQSU          (NDQSU), // inout
+        .clk_in         (axi_aclk), // input
+        .rst_in         (axi_rst), // input
+        .mclk           (mclk), // output
+        .cmd0_clk       (axi_aclk), // input
+        .cmd0_we        (en_cmd0_wr), // input
+        .cmd0_addr      (axiwr_bram_waddr[9:0]), // input[9:0] 
+        .cmd0_data      (axiwr_bram_wdata[31:0]), // input[31:0] 
+        .cmd1_clk       (mclk), // input
+        // TODO: add - from PL generation of the command sequences
+        .cmd1_we          (1'b0), // input
+        .cmd1_addr        (10'b0), // input[9:0] 
+        .cmd1_data        (32'b0), // input[31:0]
          
-        .run_addr  (run_addr[10:0]), // input[10:0] 
-        .run_chn   (run_chn[3:0]), // input[3:0] 
-        .run_seq   (run_seq), // input
-        .run_done  (run_done), // output
-        .dly_data  (dly_data[7:0]), // input[7:0] 
-        .dly_addr  (dly_addr[6:0]), // input[6:0] 
-        .ld_delay  (ld_delay), // input
-        .set       (set), // input
-        .locked    (locked), // output
-        .ps_rdy    (ps_rdy), // output
-        .ps_out    (ps_out[7:0]), // output[7:0]
+        .run_addr       (run_addr[10:0]), // input[10:0] 
+        .run_chn        (run_chn[3:0]), // input[3:0] 
+        .run_seq        (run_seq), // input
+        .run_done       (run_done), // output
+        .run_busy       (run_busy), // output
+        .dly_data       (dly_data[7:0]), // input[7:0] 
+        .dly_addr       (dly_addr[6:0]), // input[6:0] 
+        .ld_delay       (ld_delay), // input
+        .set            (set), // input
+        .locked         (locked), // output
+        .ps_rdy         (ps_rdy), // output
+        .ps_out         (ps_out[7:0]), // output[7:0]
          
-        .port0_clk(), // input
-        .port0_re(), // input
-        .port0_regen(), // input
-        .port0_page(), // input[1:0] 
-        .port0_int_page(), // input[1:0] 
-        .port0_addr(), // input[7:0] 
-        .port0_data(), // output[31:0] 
-        .port1_clk(), // input
-        .port1_we(), // input
-        .port1_page(), // input[1:0] 
-        .port1_int_page(), // input[1:0] 
-        .port1_addr(), // input[7:0] 
-        .port1_data(), // input[31:0] 
-        .cmda_tri(), // input
-        .inv_clk_div(), // input
-        .dqs_pattern(), // input[7:0] 
-        .dqm_pattern() // input[7:0] 
+        .port0_clk      (axi_aclk), // input
+        .port0_re       (en_port0_rd), // input
+        .port0_regen    (en_port0_regen), // input
+        .port0_page     (port0_page[1:0]), // input[1:0] 
+        .port0_int_page (port0_int_page[1:0]), // input[1:0] 
+        .port0_addr     (axird_bram_raddr[7:0]), // input[7:0] 
+        .port0_data     (axird_bram_rdata[31:0]), // output[31:0] 
+        .port1_clk      (axi_aclk), // input
+        .port1_we       (en_port1_wr), // input
+        .port1_page     (port1_page[1:0]), // input[1:0] 
+        .port1_int_page (port1_int_page[1:0]), // input[1:0] 
+        .port1_addr     (axiwr_bram_waddr[7:0]), // input[7:0] 
+        .port1_data     (axiwr_bram_wdata[31:0]), // input[31:0] 
+        .cmda_tri       (cmda_tri), // input
+        .inv_clk_div    (inv_clk_div), // input
+        .dqs_pattern    (dqs_pattern), // input[7:0] 
+        .dqm_pattern    (dqm_pattern) // input[7:0] 
     );
 
 

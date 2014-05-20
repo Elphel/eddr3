@@ -82,7 +82,8 @@ module  ddrc_sequencer   #(
     input               [10:0]   run_addr, // controller sequencer start address (0..11'h3ff - cmd0, 11'h400..11'h7ff - cmd1)
     input                [3:0]   run_chn,  // data channel to use
     input                        run_seq,  // start controller sequence 
-    output                       run_done, // controller sequence finished   
+    output                       run_done, // controller sequence finished
+    output                       run_busy, // controller sequence in progress  
 // inteface to control I/O delays and mmcm
     input                  [7:0] dly_data, // delay value (3 LSB - fine delay)
     input                  [6:0] dly_addr, // select which delay to program
@@ -150,7 +151,7 @@ module  ddrc_sequencer   #(
     reg                          run_seq_d; 
     
     assign run_done=sequence_done;
-    
+    assign run_busy=cmd_busy[0]; //earliest
     assign  pause=cmd_fetch? (phy_cmd_nop && (pause_len != 0)): (cmd_busy[2] && (pause_cntr[CMD_PAUSE_BITS-1:1]!=0));
     assign phy_cmd_word = phy_cmd_word?phy_cmd1_word:phy_cmd0_word;
      

@@ -1,3 +1,4 @@
   // This file may be used to define same pre-processor macros to be included into each parsed file
   // It can be used to check different `ifdef branches
-  `define XIL_TIMING //Simprim 
+  //`define XIL_TIMING //Simprim 
+  `define IVERILOG

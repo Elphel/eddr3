@@ -223,7 +223,7 @@ module  axibram_read #(
 */    
 //    assign start_read_burst_w=  ar_nempty && (rready?start_read_burst_1:start_read_burst_0);
 
-fifo_reg_W_D   #( .DATA_WIDTH(ADDRESS_BITS+20),.DATA_DEPTH(4))    
+fifo_same_clock   #( .DATA_WIDTH(ADDRESS_BITS+20),.DATA_DEPTH(4))    
     raddr_i (
         .rst(rst),
         .clk(aclk),

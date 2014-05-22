@@ -20,31 +20,35 @@
  *******************************************************************************/
 `timescale 1ns/1ps
 
-module  ddrc_status#(
-    parameter AXI_RD_ADDR_BITS=   12,
-    parameter SELECT_ADDR =      'h800, // address to select this module
-    parameter SELECT_ADDR_MASK = 'h800, // address mask to select this  module
-    parameter BUSY_ADDR =        'hc00, // address to generate busy
-    parameter BUSY_ADDR_MASK =   'hc00  // address mask to generate busy
-)(
-    input                         clk,
-    input                         mclk,
-    input                         rst,
-    input  [AXI_RD_ADDR_BITS-1:0] pre_raddr,     // AXI reade address, before actual reads (to generate busy), valid@start_burst
-    input                         start_rburst,  // burst start - should generate ~ready (should be AND-ed with !busy internally) 
-    input  [AXI_RD_ADDR_BITS-1:0] raddr,         // read address, valid with rd_en
-    input                         rd_en,         // read enable
+module  ddrc_status
+//#(
+//    parameter AXI_RD_ADDR_BITS=   12
+//    parameter SELECT_ADDR =      'h800, // address to select this module
+//    parameter SELECT_ADDR_MASK = 'h800, // address mask to select this  module
+//    parameter BUSY_ADDR =        'hc00, // address to generate busy
+//    parameter BUSY_ADDR_MASK =   'hc00  // address mask to generate busy
+//)
+ (
+//    input                         clk,
+//    input                         mclk,
+//    input                         rst,
+//    input  [AXI_RD_ADDR_BITS-1:0] pre_raddr,     // AXI reade address, before actual reads (to generate busy), valid@start_burst
+//    input                         start_rburst,  // burst start - should generate ~ready (should be AND-ed with !busy internally) 
+//    input  [AXI_RD_ADDR_BITS-1:0] raddr,         // read address, valid with rd_en
+//    input                         rd_en,         // read enable
     output                 [31:0] rdata,         // read data, should valid with raddr and rd_en
     output                        busy,          // interface busy (combinatorial delay from start_wburst and pre_addr
 // status/readback signals
-    input                         run_done,      // sequencer done (add busy?)
+//    input                         run_done,      // sequencer done (add busy?)
     input                         run_busy,      // sequencer busy
 
     input                         locked,        // MMCM and PLL locked
     input                         ps_rdy,        // MMCM phase shift control ready
     input                  [ 7:0] ps_out         // MMCM phase shift value (in 1/56 of the Fvco period)
 );
-
+    assign busy=0;
+    assign rdata={21'b0,run_busy,locked,ps_rdy,ps_out[7:0]};
+    
 
 endmodule
 

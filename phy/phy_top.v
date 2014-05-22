@@ -284,7 +284,8 @@ BUFG mclk_i (.O(mclk),.I(mclk_pre) );
     ) mmcm_phase_cntr_i (
         .clkin               (clk_in), // input
         .clkfbin             (clk_fb), // input
-        .rst                 (rst), // input
+//        .rst                 (rst), // input
+        .rst                 (rst_in), // input
         .pwrdwn                 (1'b0), // input
         .psclk               (clk_div), // input
         .ps_we               (ld_mmcm), // input
@@ -318,7 +319,8 @@ BUFG mclk_i (.O(mclk),.I(mclk_pre) );
     ) pll_base_i (
         .clkin(clk_in), // input
         .clkfbin(clkfb_ref), // input
-        .rst(rst), // input
+//        .rst(rst), // input
+        .rst(rst_in), // input
         .pwrdwn(1'b0), // input
         .clkout0(clk_ref_pre), // output
         .clkout1(), // output

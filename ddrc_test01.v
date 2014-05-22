@@ -25,7 +25,7 @@ module  ddrc_test01 #(
     parameter SLEW_DQ =         "SLOW",
     parameter SLEW_DQS =        "SLOW",
     parameter SLEW_CMDA =       "SLOW",
-    parameter SLEW_CLK =       "SLOW",
+    parameter SLEW_CLK =        "SLOW",
     parameter IBUF_LOW_PWR =    "TRUE",
     parameter real REFCLK_FREQUENCY = 300.0,
     parameter HIGH_PERFORMANCE_MODE = "FALSE",
@@ -45,16 +45,36 @@ module  ddrc_test01 #(
     parameter SS_MOD_PERIOD =       10000,
     parameter CMD_PAUSE_BITS=       6,
     parameter CMD_DONE_BIT=         6,
-    parameter AXI_WR_ADDR_BITS =   12,
-    parameter AXI_RD_ADDR_BITS =   12,
-    parameter SELECT_WR_ADDR =      'h800, // AXI write address to select this module
-    parameter SELECT_WR_ADDR_MASK = 'h800, // AXI write address mask to select this  module
-    parameter BUSY_WR_ADDR =        'hc00, // AXI write address to generate busy
-    parameter BUSY_WR_ADDR_MASK =   'hc00, // AXI write address mask to generate busy
-    parameter SELECT_RD_ADDR =      'h800, // AXI read address to select this module
-    parameter SELECT_RD_ADDR_MASK = 'h800, // AXI read address mask to select this  module
-    parameter BUSY_RD_ADDR =        'hc00, // AXI read address to generate busy
-    parameter BUSY_RD_ADDR_MASK =   'hc00  // AXI read address mask to generate busy
+    parameter AXI_WR_ADDR_BITS =   13,
+    parameter AXI_RD_ADDR_BITS =   13,
+    parameter CONTROL_ADDR =        'h1000, // AXI write address of control write registers
+    parameter CONTROL_ADDR_MASK =   'h1400, // AXI write address of control registers
+    parameter STATUS_ADDR =         'h1400, // AXI write address of status read registers
+    parameter STATUS_ADDR_MASK =    'h1400, // AXI write address of status registers
+    parameter BUSY_WR_ADDR =        'h1800, // AXI write address to generate busy
+    parameter BUSY_WR_ADDR_MASK =   'h1c00, // AXI write address mask to generate busy
+    parameter CMD0_ADDR =           'h0800, // AXI write to command sequence memory
+    parameter CMD0_ADDR_MASK =      'h1800, // AXI read address mask for the command sequence memory
+    parameter PORT0_RD_ADDR =       'h0000, // AXI read address to generate busy
+    parameter PORT0_RD_ADDR_MASK =  'h1c00, // AXI read address mask to generate busy
+    parameter PORT1_WR_ADDR =       'h0400, // AXI read address to generate busy
+    parameter PORT1_WR_ADDR_MASK =  'h1c00,  // AXI read address mask to generate busy
+    // parameters below to be ORed with CONTROL_ADDR and CONTROL_ADDR_MASK respectively
+    parameter DLY_LD_REL =          'h080,  // address to generate delay load
+    parameter DLY_LD_REL_MASK =     'h380,  // address mask to generate delay load
+    parameter DLY_SET_REL =         'h070,  // address to generate delay set
+    parameter DLY_SET_REL_MASK =    'h3ff,  // address mask to generate delay set
+    parameter RUN_CHN_REL =         'h000,  // address to set sequnecer channel and  run (4 LSB-s - channel)
+    parameter RUN_CHN_REL_MASK =    'h3f0,  // address mask to generate sequencer channel/run
+    parameter PATTERNS_REL =        'h020,  // address to set DQM and DQS patterns (16'h0055)
+    parameter PATTERNS_REL_MASK =   'h3ff,  // address mask to set DQM and DQS patterns
+    parameter PAGES_REL =           'h021,  // address to set buffer pages {port1_page[1:0],port1_int_page[1:0],port0_page[1:0],port0_int_page[1:0]}
+    parameter PAGES_REL_MASK =      'h3ff,  // address mask to set DQM and DQS patterns
+    parameter CMDA_EN_REL =         'h022,  // address to enable('h823)/disable('h822) command/address outputs  
+    parameter CMDA_EN_REL_MASK =    'h3fe,  // address mask for command/address outputs
+    parameter EXTRA_REL =           'h024,  // address to set extra parameters (currently just inv_clk_div)
+    parameter EXTRA_REL_MASK =      'h3ff   // address mask for extra parameters
+    
     
 )(
     // DDR3 interface
@@ -155,6 +175,67 @@ module  ddrc_test01 #(
    wire           axird_bram_ren;   //      .ren(bram_reg_re_w) ,      // read port enable
    wire           axird_bram_regen; //   .regen(bram_reg_re_w),        // output register enable
    wire  [31:0]   axird_bram_rdata;  //      .data_out(rdata[31:0]),       // data out
+   wire  [31:0]   port0_rdata;  //
+   wire  [31:0]   status_rdata;  //
+
+   wire        mclk;
+   wire        en_cmd0_wr;
+   wire [10:0] run_addr; // input[10:0] 
+   wire [ 3:0] run_chn;  // input[3:0] 
+   wire        run_seq;  // input
+//   wire        run_done; // output
+   wire        run_busy; // TODO: add to ddrc_sequencer 
+   wire [ 7:0] dly_data; // input[7:0] 
+   wire [ 6:0] dly_addr; // input[6:0] 
+   wire        ld_delay; // input
+   wire        set; // input
+
+   wire        locked; // output
+   wire        ps_rdy; // output
+   wire [ 7:0] ps_out; // output[7:0] 
+
+   wire        en_port0_rd;
+   wire        en_port0_regen;
+   wire        en_port1_wr;
+
+   wire [ 1:0] port0_page; // input[1:0] 
+   wire [ 1:0] port0_int_page; // input[1:0] 
+
+   wire [ 1:0] port1_page; // input[1:0] 
+   wire [ 1:0] port1_int_page;// input[1:0] 
+
+// additional control signals
+   wire        cmda_tri; // input
+   wire        inv_clk_div; // input
+   wire [ 7:0] dqs_pattern; // input[7:0] 8'h55 
+   wire [ 7:0] dqm_pattern; // input[7:0] 8'h00
+
+   reg    select_port0;
+   reg    select_status;
+   wire axiwr_dev_busy;
+   wire axird_dev_busy;
+
+//   assign en_cmd0_wr=     axiwr_bram_wen   && (axiwr_bram_waddr[11:10]==2'h1);
+//   assign en_port0_rd=    axird_bram_ren   && (axird_bram_raddr[11:10]==2'h0);
+//   assign en_port0_regen= axird_bram_regen && (axird_bram_raddr[11:10]==2'h0);
+//   assign en_port1_wr=    axiwr_bram_wen   && (axiwr_bram_waddr[11:10]==2'h0);
+
+   assign en_cmd0_wr=     axiwr_bram_wen   && (((axiwr_bram_waddr ^ CMD0_ADDR) & CMD0_ADDR_MASK)==0);
+   assign en_port0_rd=    axird_bram_ren   && (((axird_bram_raddr ^ PORT0_RD_ADDR) & PORT0_RD_ADDR_MASK)==0);
+   assign en_port0_regen= axird_bram_regen && (((axird_bram_raddr ^ PORT0_RD_ADDR) & PORT0_RD_ADDR_MASK)==0);
+   assign en_port1_wr=    axiwr_bram_wen   && (((axiwr_bram_waddr ^ PORT1_WR_ADDR) & PORT1_WR_ADDR_MASK)==0);
+   
+   
+   assign axiwr_dev_ready = ~axiwr_dev_busy; //may combine (AND) multiple sources if needed
+   assign axird_bram_rdata= select_port0? port0_rdata[31:0]:(select_status?status_rdata[31:0]:32'bx);
+   assign axird_dev_ready = ~axird_dev_busy; //may combine (AND) multiple sources if needed
+
+always @ (posedge axi_rst or posedge axi_aclk) begin
+    if (axi_rst) select_port0 <= 1'b0;
+    else if (axird_start_burst) select_port0 <= (((axird_pre_araddr[11:10]^ PORT0_RD_ADDR) & PORT0_RD_ADDR_MASK)==0);
+    if (axi_rst) select_status <= 1'b0;
+    else if (axird_start_burst) select_status <= (((axird_pre_araddr[11:10]^ STATUS_ADDR) & STATUS_ADDR_MASK)==0);
+end
    
 // Clock and reset from PS
 BUFG axi_rst_i  (.O(axi_rst),.I(~frst[0]));
@@ -219,58 +300,31 @@ BUFG axi_aclk_i (.O(axi_aclk),.I(~fclk[0]));
         .bram_regen  (axird_bram_regen), // output
         .bram_rdata  (axird_bram_rdata) // input[31:0] 
     );
-
-wire        mclk;
-wire        en_cmd0_wr;
-wire [10:0] run_addr; // input[10:0] 
-wire [ 3:0] run_chn;  // input[3:0] 
-wire        run_seq;  // input
-wire        run_done; // output
-wire        run_busy; // TODO: add to ddrc_sequencer 
-wire [ 7:0] dly_data; // input[7:0] 
-wire [ 6:0] dly_addr; // input[6:0] 
-wire        ld_delay; // input
-wire        set; // input
-
-wire        locked; // output
-wire        ps_rdy; // output
-wire [ 7:0] ps_out; // output[7:0] 
-
-wire        en_port0_rd;
-wire        en_port0_regen;
-wire        en_port1_wr;
-
-wire [ 1:0] port0_page; // input[1:0] 
-wire [ 1:0] port0_int_page; // input[1:0] 
-
-wire [ 1:0] port1_page; // input[1:0] 
-wire [ 1:0] port1_int_page;// input[1:0] 
-
-// additional control signals
-wire        cmda_tri; // input
-wire        inv_clk_div; // input
-wire [ 7:0] dqs_pattern; // input[7:0] 8'h55 
-wire [ 7:0] dqm_pattern; // input[7:0] 8'h00
-
-
-assign en_cmd0_wr=     axiwr_bram_wen   && (axiwr_bram_waddr[11:10]==2'h1);
-assign en_port0_rd=    axird_bram_ren   && (axird_bram_raddr[11:10]==2'h0);
-assign en_port0_regen= axird_bram_regen && (axird_bram_raddr[11:10]==2'h0);
-assign en_port1_wr=    axiwr_bram_wen   && (axiwr_bram_waddr[11:10]==2'h0);
-wire axiwr_dev_busy;
-assign axiwr_dev_ready = ~axiwr_dev_busy; //may combine (AND) multiple sources if needed
-
-wire axird_dev_busy;
-assign axird_dev_ready = ~axird_dev_busy; //may combine (AND) multiple sources if needed
     ddrc_control #(
-        .AXI_WR_ADDR_BITS (AXI_WR_ADDR_BITS),
-        .SELECT_ADDR      (SELECT_WR_ADDR),
-        .SELECT_ADDR_MASK (SELECT_WR_ADDR_MASK),
-        .BUSY_ADDR        (BUSY_WR_ADDR),
-        .BUSY_ADDR_MASK   (BUSY_WR_ADDR_MASK)
+        .AXI_WR_ADDR_BITS  (AXI_WR_ADDR_BITS),
+        .CONTROL_ADDR      (CONTROL_ADDR),
+        .CONTROL_ADDR_MASK (CONTROL_ADDR_MASK),
+//        .STATUS_ADDR       (STATUS_ADDR),
+//        .STATUS_ADDR_MASK  (STATUS_ADDR_MASK),
+        .BUSY_WR_ADDR      (BUSY_WR_ADDR),
+        .BUSY_WR_ADDR_MASK (BUSY_WR_ADDR_MASK),
+        .DLY_LD_REL        (DLY_LD_REL),
+        .DLY_LD_REL_MASK   (DLY_LD_REL_MASK),
+        .DLY_SET_REL       (DLY_SET_REL),
+        .DLY_SET_REL_MASK  (DLY_SET_REL_MASK),
+        .RUN_CHN_REL       (RUN_CHN_REL),
+        .RUN_CHN_REL_MASK  (RUN_CHN_REL_MASK),
+        .PATTERNS_REL      (PATTERNS_REL),
+        .PATTERNS_REL_MASK (PATTERNS_REL_MASK),
+        .PAGES_REL         (PAGES_REL),
+        .PAGES_REL_MASK    (PAGES_REL_MASK),
+        .CMDA_EN_REL       (CMDA_EN_REL),
+        .CMDA_EN_REL_MASK  (CMDA_EN_REL_MASK),
+        .EXTRA_REL         (EXTRA_REL),
+        .EXTRA_REL_MASK    (EXTRA_REL_MASK)
     ) ddrc_control_i (
-        .clk              (axi_aclk),               // input
-        .mclk             (axiwr_bram_wclk),        // input
+        .clk              (axiwr_bram_wclk),        // same as axi_aclk
+        .mclk             (mclk),                   // input
         .rst              (axi_rst),                // input
         .pre_waddr        (axiwr_pre_awaddr[AXI_WR_ADDR_BITS-1:0]), // input[11:0] 
         .start_wburst     (axiwr_start_burst),      // input
@@ -284,7 +338,7 @@ assign axird_dev_ready = ~axird_dev_busy; //may combine (AND) multiple sources i
         .dly_data         (dly_data[7:0]),          // output[7:0] 
         .dly_addr         (dly_addr[6:0]),          // output[6:0] 
         .ld_delay         (ld_delay),               // output
-        .set              (set),                    // output
+        .dly_set          (set),                    // output
         .cmda_tri         (cmda_tri),               // output
         .inv_clk_div      (inv_clk_div),            // output
         .dqs_pattern      (dqs_pattern[7:0]),       // output[7:0] 
@@ -295,23 +349,25 @@ assign axird_dev_ready = ~axird_dev_busy; //may combine (AND) multiple sources i
         .port1_int_page   (port1_int_page[1:0])     // output[1:0] 
     );
     
-    ddrc_status #(
-        .AXI_RD_ADDR_BITS (AXI_RD_ADDR_BITS),
-        .SELECT_ADDR      (SELECT_RD_ADDR),
-        .SELECT_ADDR_MASK (SELECT_RD_ADDR_MASK),
-        .BUSY_ADDR        (BUSY_RD_ADDR),
-        .BUSY_ADDR_MASK   (BUSY_RD_ADDR_MASK)
-    ) ddrc_status_i (
-        .clk              (axi_aclk), // input
-        .mclk             (mclk), // input
-        .rst              (axi_rst), // input
-        .pre_raddr        (axird_pre_araddr[AXI_RD_ADDR_BITS-1:0]), // input[11:0] 
-        .start_rburst     (axird_start_burst), // input
-        .raddr            (axird_bram_raddr[AXI_RD_ADDR_BITS-1:0]), // input[11:0] 
-        .rd_en            (axird_bram_regen), // input
-        .rdata            (axird_bram_rdata[31:0]), // output[31:0] 
+    ddrc_status
+//     #(
+//        .AXI_RD_ADDR_BITS (AXI_RD_ADDR_BITS),
+//        .SELECT_ADDR      (SELECT_RD_ADDR),
+//        .SELECT_ADDR_MASK (SELECT_RD_ADDR_MASK),
+//        .BUSY_ADDR        (BUSY_RD_ADDR),
+//        .BUSY_ADDR_MASK   (BUSY_RD_ADDR_MASK)
+//    )
+     ddrc_status_i (
+//        .clk              (axi_aclk), // input
+//        .mclk             (mclk), // input
+//        .rst              (axi_rst), // input
+//        .pre_raddr        (axird_pre_araddr[AXI_RD_ADDR_BITS-1:0]), // input[11:0] 
+//        .start_rburst     (axird_start_burst), // input
+//        .raddr            (axird_bram_raddr[AXI_RD_ADDR_BITS-1:0]), // input[11:0] 
+//        .rd_en            (axird_bram_regen), // input
+        .rdata            (status_rdata[31:0]), // output[31:0] 
         .busy             (axird_dev_busy), // output
-        .run_done         (run_done), // input
+//        .run_done         (run_done), // input
         .run_busy         (run_busy), // input
         .locked           (locked), // input
         .ps_rdy           (ps_rdy), // input
@@ -377,7 +433,8 @@ assign axird_dev_ready = ~axird_dev_busy; //may combine (AND) multiple sources i
         .run_addr       (run_addr[10:0]), // input[10:0] 
         .run_chn        (run_chn[3:0]), // input[3:0] 
         .run_seq        (run_seq), // input
-        .run_done       (run_done), // output
+//        .run_done       (run_done), // output
+        .run_done       (), // output
         .run_busy       (run_busy), // output
         .dly_data       (dly_data[7:0]), // input[7:0] 
         .dly_addr       (dly_addr[6:0]), // input[6:0] 
@@ -393,7 +450,7 @@ assign axird_dev_ready = ~axird_dev_busy; //may combine (AND) multiple sources i
         .port0_page     (port0_page[1:0]), // input[1:0] 
         .port0_int_page (port0_int_page[1:0]), // input[1:0] 
         .port0_addr     (axird_bram_raddr[7:0]), // input[7:0] 
-        .port0_data     (axird_bram_rdata[31:0]), // output[31:0] 
+        .port0_data     (port0_rdata[31:0]), // output[31:0] 
         .port1_clk      (axi_aclk), // input
         .port1_we       (en_port1_wr), // input
         .port1_page     (port1_page[1:0]), // input[1:0] 

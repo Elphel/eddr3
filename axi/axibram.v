@@ -308,7 +308,7 @@ ram_1kx32_1kx32
       .data_in(wdata_out[31:0])     // data out
     );
     
-fifo_reg_W_D   #( .DATA_WIDTH(30),.DATA_DEPTH(4))    
+fifo_same_clock   #( .DATA_WIDTH(30),.DATA_DEPTH(4))    
     raddr_i (
         .rst(rst),
         .clk(aclk),
@@ -320,7 +320,7 @@ fifo_reg_W_D   #( .DATA_WIDTH(30),.DATA_DEPTH(4))
         .full(),
         .half_full(ar_half_full)
     );
-fifo_reg_W_D   #( .DATA_WIDTH(30),.DATA_DEPTH(4))    
+fifo_same_clock   #( .DATA_WIDTH(30),.DATA_DEPTH(4))    
     waddr_i (
         .rst(rst),
         .clk(aclk),
@@ -332,7 +332,7 @@ fifo_reg_W_D   #( .DATA_WIDTH(30),.DATA_DEPTH(4))
         .full(),
         .half_full(aw_half_full)
     );
-fifo_reg_W_D   #( .DATA_WIDTH(49),.DATA_DEPTH(4))    
+fifo_same_clock   #( .DATA_WIDTH(49),.DATA_DEPTH(4))    
     wdata_i (
         .rst(rst),
         .clk(aclk),
@@ -344,7 +344,7 @@ fifo_reg_W_D   #( .DATA_WIDTH(49),.DATA_DEPTH(4))
         .full(),
         .half_full(w_half_full)
     );
-fifo_reg_W_D  #( .DATA_WIDTH(14),.DATA_DEPTH(4))    
+fifo_same_clock  #( .DATA_WIDTH(14),.DATA_DEPTH(4))    
     wresp_i (
         .rst(rst),
         .clk(aclk),

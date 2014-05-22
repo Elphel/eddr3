@@ -92,16 +92,25 @@ module  axibram_write #(
     wire        bram_we_w; //,bram_we_nonmasked;   // write BRAM memory non-masked - should be combined with  
     wire        start_write_burst_w;
     wire        write_in_progress_w;
+    
+    wire        aw_nempty_ready; // aw_nempty and device ready
+    wire        w_nempty_ready; // w_nempty and device ready
+    assign aw_nempty_ready=aw_nempty && dev_ready_r; // should it be dev_ready?
+    assign w_nempty_ready=w_nempty && dev_ready_r; // should it be dev_ready?
+    
     reg         dev_ready_r;        // device, selected at start burst
     assign      next_wr_address_w=
       wburst[1]?
         (wburst[0]? {ADDRESS_BITS{1'b0}}:((write_address[ADDRESS_BITS-1:0]+1) & {{(ADDRESS_BITS-4){1'b1}}, ~wlen[3:0]})):
         (wburst[0]? (write_address[ADDRESS_BITS-1:0]+1):(write_address[ADDRESS_BITS-1:0]));
         
-    assign      bram_we_w=         w_nempty &&  write_in_progress && dev_ready_r;
+    assign      bram_we_w=         w_nempty_ready &&  write_in_progress;
 //    assign      bram_we_nonmasked= w_nempty &&  write_in_progress;
-    assign start_write_burst_w=aw_nempty && (!write_in_progress || (w_nempty && (write_left[3:0]==4'b0)));
-    assign write_in_progress_w=aw_nempty || (write_in_progress && !(w_nempty && (write_left[3:0]==4'b0))); 
+//    assign start_write_burst_w=aw_nempty && (!write_in_progress || (w_nempty && (write_left[3:0]==4'b0)));
+//    assign start_write_burst_w=aw_nempty_ready && (!write_in_progress || (w_nempty_ready && (write_left[3:0]==4'b0)));
+    assign start_write_burst_w=w_nempty_ready && aw_nempty_ready && (!write_in_progress || (w_nempty_ready && (write_left[3:0]==4'b0)));
+//    assign write_in_progress_w=aw_nempty || (write_in_progress && !(w_nempty && (write_left[3:0]==4'b0))); 
+    assign write_in_progress_w=aw_nempty_ready || (write_in_progress && !(w_nempty_ready && (write_left[3:0]==4'b0))); 
     
     always @ (posedge  aclk or posedge  rst) begin
       if   (rst)                    wburst[1:0] <= 0;
@@ -152,7 +161,7 @@ module  axibram_write #(
    assign  bram_wstb   = wstb_out[3:0]; 
    assign  bram_wdata = wdata_out[31:0];
     
-fifo_reg_W_D   #( .DATA_WIDTH(20+ADDRESS_BITS),.DATA_DEPTH(4))    
+fifo_same_clock   #( .DATA_WIDTH(20+ADDRESS_BITS),.DATA_DEPTH(4))    
     waddr_i (
         .rst(rst),
         .clk(aclk),
@@ -164,7 +173,7 @@ fifo_reg_W_D   #( .DATA_WIDTH(20+ADDRESS_BITS),.DATA_DEPTH(4))
         .full(),
         .half_full(aw_half_full)
     );
-fifo_reg_W_D   #( .DATA_WIDTH(49),.DATA_DEPTH(4))    
+fifo_same_clock   #( .DATA_WIDTH(49),.DATA_DEPTH(4))    
     wdata_i (
         .rst(rst),
         .clk(aclk),
@@ -176,7 +185,7 @@ fifo_reg_W_D   #( .DATA_WIDTH(49),.DATA_DEPTH(4))
         .full(),
         .half_full(w_half_full)
     );
-fifo_reg_W_D  #( .DATA_WIDTH(14),.DATA_DEPTH(4))    
+fifo_same_clock  #( .DATA_WIDTH(14),.DATA_DEPTH(4))    
     wresp_i (
         .rst(rst),
         .clk(aclk),

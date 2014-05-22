@@ -39,7 +39,7 @@ module fifo_cross_clocks
     reg  [DATA_WIDTH-1:0]   ram [0:DATA_2DEPTH];
     reg  [DATA_DEPTH-1:0] raddr;
     reg  [DATA_DEPTH-1:0] waddr;
-    reg  [DATA_DEPTH-1:0] waddr_gray;
+    reg  [DATA_DEPTH-1:0] waddr_gray; //VivadoSynthesis: [Synth 8-3332] Sequential element ddrc_test01.ddrc_control_i.fifo_cross_clocks_i.waddr_gray_reg[3] is unused and will be removed from module ddrc_test01.
     reg  [DATA_DEPTH-1:0] waddr_gray_rclk;
     wire [DATA_DEPTH-1:0] waddr_plus1 = waddr +1;   
     wire [DATA_DEPTH-1:0] waddr_plus1_gray = waddr_plus1 ^ {1'b0,waddr_plus1[DATA_DEPTH-1:1]};
@@ -47,7 +47,7 @@ module fifo_cross_clocks
     wire [DATA_DEPTH-1:0] raddr_gray = raddr ^ {1'b0,raddr[DATA_DEPTH-1:1]};
     wire [DATA_DEPTH-1:0] raddr_plus1 = raddr +1;   
     wire [2:0] raddr_plus1_gray_top3 = raddr_plus1[DATA_DEPTH-1:DATA_DEPTH-3] ^ {1'b0,raddr_plus1[DATA_DEPTH-1:DATA_DEPTH-2]};
-    reg  [2:0] raddr_gray_top3;
+    reg  [2:0] raddr_gray_top3; //VivadoSynthesis: [Synth 8-3332] Sequential element ddrc_test01.ddrc_control_i.fifo_cross_clocks_i.raddr_gray_top3_reg[2] is unused and will be removed from module ddrc_test01.
     reg  [2:0] raddr_gray_top3_wclk;
        wire [2:0] raddr_top3_wclk = {
         raddr_gray_top3_wclk[2],
@@ -66,13 +66,16 @@ module fifo_cross_clocks
     // a) it is transitioning from empty to non-empty due to we pulse
     // b) it is transitioning to overrun - too bad already
     // false negative - OK, just wait fro the next rclk 
-    assign nempty=waddr_gray_rclk != raddr_gray;
+//    assign nempty=waddr_gray_rclk != raddr_gray;
+    assign nempty=waddr_gray_rclk[3:0] != raddr_gray[3:0];
     assign data_out=ram[raddr];
     always @ (posedge  wclk or posedge rst) begin
         if (rst)     waddr <= 0;
         else if (we) waddr <= waddr_plus1;
         if (rst)     waddr_gray <= 0;
-        else if (we) waddr_gray <= waddr_plus1_gray;
+ //       else if (we) waddr_gray <= waddr_plus1_gray;
+        else if (we) waddr_gray [3:0] <= waddr_plus1_gray[3:0];
+        
     end
     
     always @ (posedge  rclk or posedge rst) begin
@@ -83,11 +86,14 @@ module fifo_cross_clocks
     end
     
     always @ (posedge  rclk) begin
-        waddr_gray_rclk <= waddr_gray;
+ //       waddr_gray_rclk <= waddr_gray;
+        waddr_gray_rclk[3:0] <= waddr_gray[3:0];
+        
     end
 
     always @ (posedge  wclk) begin
-          raddr_gray_top3_wclk <= raddr_gray_top3;
+ //         raddr_gray_top3_wclk <= raddr_gray_top3;
+          raddr_gray_top3_wclk[2:0] <= raddr_gray_top3[2:0];
           if (we) ram[waddr] <= data_in;
     end
     

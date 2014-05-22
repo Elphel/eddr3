@@ -35,7 +35,7 @@ module  ddrc_sequencer   #(
     parameter CLKFBOUT_DIV_REF =    3, // To get 300MHz for the reference clock
     parameter DIVCLK_DIVIDE=        1,
     parameter CLKFBOUT_PHASE =      0.000,
-    parameter ICLK_PHASE =          0.000,
+    parameter SDCLK_PHASE =         0.000,
     parameter CLK_PHASE =           0.000,
     parameter CLK_DIV_PHASE =       0.000,
     parameter MCLK_PHASE =          90.000,
@@ -302,7 +302,7 @@ module  ddrc_sequencer   #(
         .CLKFBOUT_DIV_REF      (CLKFBOUT_DIV_REF),
         .DIVCLK_DIVIDE         (DIVCLK_DIVIDE),
         .CLKFBOUT_PHASE        (CLKFBOUT_PHASE),
-        .ICLK_PHASE            (ICLK_PHASE),
+        .SDCLK_PHASE           (SDCLK_PHASE),
         .CLK_PHASE             (CLK_PHASE),
         .CLK_DIV_PHASE         (CLK_DIV_PHASE),
         .MCLK_PHASE            (MCLK_PHASE),

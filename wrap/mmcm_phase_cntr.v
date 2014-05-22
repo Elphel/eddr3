@@ -104,7 +104,8 @@ module  mmcm_phase_cntr#(
     reg [PHASE_WIDTH-1:0] ps_target;
     reg ps_busy=0;
 // TODO: find out why it was optimized out!    
-    (* keep = "true" *) reg ps_start0, ps_start; // debugging
+//    (* keep = "true" *)
+    reg ps_start0, ps_start; // debugging
     assign ps_ready=!ps_busy && locked && !ps_start0 && !ps_start;
     assign psen=ps_start && (diff != 0);
 //    wire [PHASE_WIDTH:0] diff= ps_target-ps_dout_r;

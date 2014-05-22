@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.49 (w)1999-2013 BSI
-[*] Thu May 22 07:54:47 2014
+[*] Thu May 22 08:13:51 2014
 [*]
-[dumpfile] "/data/vdt/vdt-projects/eddr3/simulation/ddrc_test01_testbench-20140522015055672.lxt"
-[dumpfile_mtime] "Thu May 22 07:51:58 2014"
-[dumpfile_size] 63157569
+[dumpfile] "/data/vdt/vdt-projects/eddr3/simulation/ddrc_test01_testbench-20140522015451433.lxt"
+[dumpfile_mtime] "Thu May 22 07:55:55 2014"
+[dumpfile_size] 62511235
 [savefile] "/data/vdt/vdt-projects/eddr3/ddrc_test01_testbench.sav"
-[timestart] 98147000
-[size] 1920 1180
-[pos] -1921 -1
-*-20.053656 101463750 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[timestart] 103533370
+[size] 1830 1145
+[pos] -1 -1
+*-11.053656 103539375 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] ddrc_test01_testbench.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.
@@ -742,7 +742,9 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.mmcm_ph
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.mmcm_phase_cntr_i.clkfbout[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.mmcm_phase_cntr_i.clkfboutb[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.mmcm_phase_cntr_i.clkin[0]
+@29
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.mmcm_phase_cntr_i.clkout0[0]
+@28
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.mmcm_phase_cntr_i.clkout0b[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.mmcm_phase_cntr_i.clkout1[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.mmcm_phase_cntr_i.clkout1b[0]
@@ -762,9 +764,8 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.mmcm_ph
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.mmcm_phase_cntr_i.ps_din[7:0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.mmcm_phase_cntr_i.ps_dout[7:0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.mmcm_phase_cntr_i.ps_dout_r[7:0]
-@29
-ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.mmcm_phase_cntr_i.ps_ready[0]
 @28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.mmcm_phase_cntr_i.ps_ready[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.mmcm_phase_cntr_i.ps_start0[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.mmcm_phase_cntr_i.ps_start[0]
 @22

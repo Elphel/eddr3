@@ -43,7 +43,7 @@ module  phy_top #(
     parameter CLKFBOUT_DIV_REF =    3, // To get 300MHz for the reference clock
     parameter DIVCLK_DIVIDE=        1,
     parameter CLKFBOUT_PHASE =      0.000,
-    parameter ICLK_PHASE =          0.000,
+    parameter SDCLK_PHASE =          0.000,
     parameter CLK_PHASE =           0.000,
     parameter CLK_DIV_PHASE =       0.000,
     parameter MCLK_PHASE =          90.000,  
@@ -216,12 +216,12 @@ module  phy_top #(
     .set             (set)               // clk_div synchronous set all delays from previously loaded values
 );
 //ddr3_clk
-wire iclk; // BUFIO
+wire sdclk; // BUFIO
     oddr_ds #(
         .IOSTANDARD(IOSTANDARD_CLK),
         .SLEW(SLEW_CLK)
     ) oddr_ds_i (
-        .clk(iclk), // input
+        .clk(sdclk), // input
         .ce(1'b1), // input
         .rst(1'b0), // input
         .set(1'b0), // input
@@ -235,10 +235,10 @@ wire iclk; // BUFIO
 // mclk - same frequency as clk_div (same dynamic phase adjust), but with BUFG to be used in other regions. Phase to be
 // statically adjusted for clock boundary crossing
 // Phase control included, allowing setting phase in +/- 127 steps, each 1/56 of 1/Fvco (~22ps for Fvco=800MHz)
-wire clk_pre, clk_div_pre, iclk_pre, mclk_pre, clk_fb;
+wire clk_pre, clk_div_pre, sdclk_pre, mclk_pre, clk_fb;
 BUFR clk_bufr_i (.O(clk), .CE(), .CLR(), .I(clk_pre));
 BUFR clk_div_bufr_i (.O(clk_div), .CE(), .CLR(), .I(clk_div_pre));
-BUFIO iclk_bufio_i (.O(iclk), .I(iclk_pre) );
+BUFIO iclk_bufio_i (.O(sdclk), .I(sdclk_pre) );
 //BUFIO clk_ref_i (.O(clk_ref), .I(clk_ref_pre));
 //assign clk_ref=clk_ref_pre;
 //BUFH clk_ref_i (.O(clk_ref), .I(clk_ref_pre));
@@ -252,7 +252,7 @@ BUFG mclk_i (.O(mclk),.I(mclk_pre) );
         .CLKFBOUT_MULT_F     (CLKFBOUT_MULT),
         .DIVCLK_DIVIDE       (DIVCLK_DIVIDE),
         .CLKFBOUT_PHASE      (CLKFBOUT_PHASE),
-        .CLKOUT0_PHASE       (ICLK_PHASE),
+        .CLKOUT0_PHASE       (SDCLK_PHASE),
         .CLKOUT1_PHASE       (CLK_PHASE),
         .CLKOUT2_PHASE       (CLK_DIV_PHASE),
         .CLKOUT3_PHASE       (MCLK_PHASE),
@@ -292,7 +292,7 @@ BUFG mclk_i (.O(mclk),.I(mclk_pre) );
         .ps_din              (dly_data), // input[7:0] 
         .ps_ready            (ps_rdy), // output
         .ps_dout             (ps_out), // output[7:0] reg 
-        .clkout0             (iclk_pre), // output
+        .clkout0             (sdclk_pre), // output
         .clkout1             (clk_pre), // output
         .clkout2             (clk_div_pre), // output
         .clkout3             (mclk_pre), // output

@@ -114,7 +114,8 @@ module  ddrc_control #(
     reg busy_r=0;
     reg selected=0;
     reg selected_busy=0;
-(* keep = "true" *)    wire fifo_half_empty; // just debugging with (* keep = "true" *)
+//(* keep = "true" *)
+    wire fifo_half_empty; // just debugging with (* keep = "true" *)
     wire [AXI_WR_ADDR_BITS-1:0] waddr_fifo_out;
     wire                 [31:0] wdata_fifo_out;
 //    reg                         fifo_re; // wrong, need to have (fifo!=1) || !re 

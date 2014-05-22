@@ -35,7 +35,7 @@ module  ddrc_test01 #(
     parameter CLKFBOUT_DIV_REF =    3, // To get 300MHz for the reference clock
     parameter DIVCLK_DIVIDE=        1,
     parameter CLKFBOUT_PHASE =      0.000,
-    parameter ICLK_PHASE =          0.000,
+    parameter SDCLK_PHASE =         0.000,
     parameter CLK_PHASE =           0.000,
     parameter CLK_DIV_PHASE =       0.000,
     parameter MCLK_PHASE =          90.000,
@@ -45,8 +45,8 @@ module  ddrc_test01 #(
     parameter SS_MOD_PERIOD =       10000,
     parameter CMD_PAUSE_BITS=       6,
     parameter CMD_DONE_BIT=         6,
-    parameter AXI_WR_ADDR_BITS =   13,
-    parameter AXI_RD_ADDR_BITS =   13,
+    parameter AXI_WR_ADDR_BITS =    13,
+    parameter AXI_RD_ADDR_BITS =    13,
     parameter CONTROL_ADDR =        'h1000, // AXI write address of control write registers
     parameter CONTROL_ADDR_MASK =   'h1400, // AXI write address of control registers
     parameter STATUS_ADDR =         'h1400, // AXI write address of status read registers
@@ -99,14 +99,18 @@ module  ddrc_test01 #(
 );
     localparam ADDRESS_NUMBER=15;
 // Source for reset and clock
+(* keep = "true" *)
    wire    [3:0]     fclk;      // PL Clocks [3:0], output
+(* keep = "true" *)
    wire    [3:0]     frst;      // PL Clocks [3:0], output
    
    
     
 // AXI write interface signals
+(* keep = "true" *)
    wire           axi_aclk;    // clock - should be buffered
 //   wire           axi_aresetn; // reset, active low
+(* keep = "true" *)
    wire           axi_rst;     // reset, active high
 // AXI Write Address
    wire   [31:0]  axi_awaddr;  // AWADDR[31:0], input
@@ -238,8 +242,9 @@ always @ (posedge axi_rst or posedge axi_aclk) begin
 end
    
 // Clock and reset from PS
-BUFG axi_rst_i  (.O(axi_rst),.I(~frst[0]));
-BUFG axi_aclk_i (.O(axi_aclk),.I(~fclk[0]));
+BUFG bufg_axi_rst_i  (.O(axi_rst),.I(~frst[0]));
+BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
+
     axibram_write #(
         .ADDRESS_BITS(AXI_WR_ADDR_BITS)
     ) axibram_write_i (
@@ -390,7 +395,7 @@ BUFG axi_aclk_i (.O(axi_aclk),.I(~fclk[0]));
         .CLKFBOUT_DIV_REF (CLKFBOUT_DIV_REF),
         .DIVCLK_DIVIDE    (DIVCLK_DIVIDE),
         .CLKFBOUT_PHASE   (CLKFBOUT_PHASE),
-        .ICLK_PHASE       (ICLK_PHASE),
+        .SDCLK_PHASE      (SDCLK_PHASE),
         .CLK_PHASE        (CLK_PHASE),
         .CLK_DIV_PHASE    (CLK_DIV_PHASE),
         .MCLK_PHASE       (MCLK_PHASE),

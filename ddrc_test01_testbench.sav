@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.49 (w)1999-2013 BSI
-[*] Wed May 28 04:28:28 2014
+[*] Wed May 28 07:13:39 2014
 [*]
-[dumpfile] "/data/vdt/vdt-projects/eddr3/simulation/ddrc_test01_testbench-20140527222157916.lxt"
-[dumpfile_mtime] "Wed May 28 04:22:46 2014"
-[dumpfile_size] 27032362
+[dumpfile] "/data/vdt/vdt-projects/eddr3/simulation/ddrc_test01_testbench-20140528005647850.lxt"
+[dumpfile_mtime] "Wed May 28 07:00:13 2014"
+[dumpfile_size] 48289383
 [savefile] "/data/vdt/vdt-projects/eddr3/ddrc_test01_testbench.sav"
-[timestart] 104472690
+[timestart] 109441730
 [size] 1920 1180
 [pos] -1920 108
-*-13.962209 104565000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-13.962209 109532898 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] ddrc_test01_testbench.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.axibram_read_i.
@@ -878,7 +878,7 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_control_i.fifo_cross_clocks_i.wclk[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_control_i.fifo_cross_clocks_i.we[0]
 @1401200
 -fifo_cross_clocks
-@c00200
+@800200
 -phy_cmd_i
 @28
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.SDRST[0]
@@ -912,6 +912,8 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.clk_div[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.clk_in[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.cmda_en[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.cmda_tri[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.ddr_cke[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.ddr_rst[0]
 @22
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.dly_addr[6:0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.dly_addr_r[6:0]
@@ -941,6 +943,9 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_bank_in[2:0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_buf_rd[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_buf_wr[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_cke[1:0]
+@29
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_cke_dis[0]
+@28
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_cke_in[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_cmd_nop[0]
 @22
@@ -987,7 +992,7 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.rst_in[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.sequence_done[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.set[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.set_r[0]
-@1401200
+@1000200
 -phy_cmd_i
 @c00200
 -ddrc_sequencer
@@ -1127,9 +1132,8 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.set[0]
 -ddrc_sequencer
 @800200
 -ddr_sequencer_i_selected
-@29
-ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.SDCLK[0]
 @28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.SDCLK[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.SDCKE[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.SDBA[2:0]
 @22

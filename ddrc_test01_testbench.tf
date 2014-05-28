@@ -95,25 +95,15 @@ module  ddrc_test01_testbench #(
 `endif
 `define DEBUG_WR_SINGLE 1  
   // DDR3 signals
-// SuppressWarnings VEditor
   wire        SDRST;
-// SuppressWarnings VEditor
   wire        SDCLK;  // output
-// SuppressWarnings VEditor
   wire        SDNCLK; // output
-// SuppressWarnings VEditor
   wire [ADDRESS_NUMBER-1:0] SDA;    // output[14:0] 
-// SuppressWarnings VEditor
   wire [ 2:0] SDBA;   // output[2:0] 
-// SuppressWarnings VEditor
   wire        SDWE;   // output
-// SuppressWarnings VEditor
   wire        SDRAS;  // output
-// SuppressWarnings VEditor
   wire        SDCAS;  // output
-// SuppressWarnings VEditor
   wire        SDCKE;  // output
-// SuppressWarnings VEditor
   wire        SDODT;  // output
   wire [15:0] SDD;    // inout[15:0] 
   wire        SDDML;  // inout
@@ -276,6 +266,7 @@ always #(CLKIN_PERIOD/2) CLK <= ~CLK;
     enable_cmda(1);
     repeat (16) @(posedge CLK) ;
     activate_sdrst(0); // was enabled at system reset
+    #5000; // actually 500 usec required
     repeat (16) @(posedge CLK) ;
     enable_cke(1);
     repeat (16) @(posedge CLK) ;
@@ -432,6 +423,194 @@ assign bresp=                              ddrc_test01_i.ps7_i.MAXIGP0BRESP;
         .SDDMU   (SDDMU), // inout
         .DQSU    (DQSU), // inout
         .NDQSU   (NDQSU) // inout
+    );
+// Micron DDR3 memory model
+    /* Instance of Micron DDR3 memory model */
+    ddr3 #(
+        .TCK_MIN             (2500),
+        .TJIT_PER            (100),
+        .TJIT_CC             (200),
+        .TERR_2PER           (147),
+        .TERR_3PER           (175),
+        .TERR_4PER           (194),
+        .TERR_5PER           (209),
+        .TERR_6PER           (222),
+        .TERR_7PER           (232),
+        .TERR_8PER           (241),
+        .TERR_9PER           (249),
+        .TERR_10PER          (257),
+        .TERR_11PER          (263),
+        .TERR_12PER          (269),
+        .TDS                 (125),
+        .TDH                 (150),
+        .TDQSQ               (200),
+        .TDQSS               (0.25),
+        .TDSS                (0.20),
+        .TDSH                (0.20),
+        .TDQSCK              (400),
+        .TQSH                (0.38),
+        .TQSL                (0.38),
+        .TDIPW               (600),
+        .TIPW                (900),
+        .TIS                 (350),
+        .TIH                 (275),
+        .TRAS_MIN            (37500),
+        .TRC                 (52500),
+        .TRCD                (15000),
+        .TRP                 (15000),
+        .TXP                 (7500),
+        .TCKE                (7500),
+        .TAON                (400),
+        .TWLS                (325),
+        .TWLH                (325),
+        .TWLO                (9000),
+        .TAA_MIN             (15000),
+        .CL_TIME             (15000),
+        .TDQSCK_DLLDIS       (400),
+        .TRRD                (10000),
+        .TFAW                (40000),
+        .CL_MIN              (5),
+        .CL_MAX              (14),
+        .AL_MIN              (0),
+        .AL_MAX              (2),
+        .WR_MIN              (5),
+        .WR_MAX              (16),
+        .BL_MIN              (4),
+        .BL_MAX              (8),
+        .CWL_MIN             (5),
+        .CWL_MAX             (10),
+        .TCK_MAX             (3300),
+        .TCH_AVG_MIN         (0.47),
+        .TCL_AVG_MIN         (0.47),
+        .TCH_AVG_MAX         (0.53),
+        .TCL_AVG_MAX         (0.53),
+        .TCH_ABS_MIN         (0.43),
+        .TCL_ABS_MIN         (0.43),
+        .TCKE_TCK            (3),
+        .TAA_MAX             (20000),
+        .TQH                 (0.38),
+        .TRPRE               (0.90),
+        .TRPST               (0.30),
+        .TDQSH               (0.45),
+        .TDQSL               (0.45),
+        .TWPRE               (0.90),
+        .TWPST               (0.30),
+        .TCCD                (4),
+        .TCCD_DG             (2),
+        .TRAS_MAX            (60e9),
+        .TWR                 (15000),
+        .TMRD                (4),
+        .TMOD                (15000),
+        .TMOD_TCK            (12),
+        .TRRD_TCK            (4),
+        .TRRD_DG             (3000),
+        .TRRD_DG_TCK         (2),
+        .TRTP                (7500),
+        .TRTP_TCK            (4),
+        .TWTR                (7500),
+        .TWTR_DG             (3750),
+        .TWTR_TCK            (4),
+        .TWTR_DG_TCK         (2),
+        .TDLLK               (512),
+        .TRFC_MIN            (260000),
+        .TRFC_MAX            (70200000),
+        .TXP_TCK             (3),
+        .TXPDLL              (24000),
+        .TXPDLL_TCK          (10),
+        .TACTPDEN            (1),
+        .TPRPDEN             (1),
+        .TREFPDEN            (1),
+        .TCPDED              (1),
+        .TPD_MAX             (70200000),
+        .TXPR                (270000),
+        .TXPR_TCK            (5),
+        .TXS                 (270000),
+        .TXS_TCK             (5),
+        .TXSDLL              (512),
+        .TISXR               (350),
+        .TCKSRE              (10000),
+        .TCKSRE_TCK          (5),
+        .TCKSRX              (10000),
+        .TCKSRX_TCK          (5),
+        .TCKESR_TCK          (4),
+        .TAOF                (0.7),
+        .TAONPD              (8500),
+        .TAOFPD              (8500),
+        .ODTH4               (4),
+        .ODTH8               (6),
+        .TADC                (0.7),
+        .TWLMRD              (40),
+        .TWLDQSEN            (25),
+        .TWLOE               (2000),
+        .DM_BITS             (2),
+        .ADDR_BITS           (15),
+        .ROW_BITS            (15),
+        .COL_BITS            (10),
+        .DQ_BITS             (16),
+        .DQS_BITS            (2),
+        .BA_BITS             (3),
+        .MEM_BITS            (10),
+        .AP                  (10),
+        .BC                  (12),
+        .BL_BITS             (3),
+        .BO_BITS             (2),
+        .CS_BITS             (1),
+        .RANKS               (1),
+        .RZQ                 (240),
+        .PRE_DEF_PAT         (8'hAA),
+        .STOP_ON_ERROR       (1),
+        .DEBUG               (1),
+        .BUS_DELAY           (0),
+        .RANDOM_OUT_DELAY    (0),
+        .RANDOM_SEED         (31913),
+        .RDQSEN_PRE          (2),
+        .RDQSEN_PST          (1),
+        .RDQS_PRE            (2),
+        .RDQS_PST            (1),
+        .RDQEN_PRE           (0),
+        .RDQEN_PST           (0),
+        .WDQS_PRE            (2),
+        .WDQS_PST            (1),
+        .check_strict_mrbits (1),
+        .check_strict_timing (1),
+        .feature_pasr        (1),
+        .feature_truebl4     (0),
+        .feature_odt_hi      (0),
+        .PERTCKAVG           (512),
+        .LOAD_MODE           (4'b0000),
+        .REFRESH             (4'b0001),
+        .PRECHARGE           (4'b0010),
+        .ACTIVATE            (4'b0011),
+        .WRITE               (4'b0100),
+        .READ                (4'b0101),
+        .ZQ                  (4'b0110),
+        .NOP                 (4'b0111),
+        .PWR_DOWN            (4'b1000),
+        .SELF_REF            (4'b1001),
+        .RFF_BITS            (128),
+        .RFF_CHUNK           (32),
+        .SAME_BANK           (2'd0),
+        .DIFF_BANK           (2'd1),
+        .DIFF_GROUP          (2'd2),
+        .SIMUL_500US         (5),
+        .SIMUL_200US         (2)
+    ) ddr3_i (
+        .rst_n   (SDRST),         // input 
+        .ck      (SDCLK),         // input 
+        .ck_n    (SDNCLK),        // input 
+        .cke     (SDCKE),         // input 
+        .cs_n    (1'b0),          // input 
+        .ras_n   (SDRAS),         // input 
+        .cas_n   (SDCAS),         // input 
+        .we_n    (SDWE),          // input 
+        .dm_tdqs ({SDDMU,SDDML}), // inout[1:0] 
+        .ba      (SDBA[2:0]),     // input[2:0] 
+        .addr    (SDA[14:0]),     // input[14:0] 
+        .dq      (SDD[15:0]),     // inout[15:0] 
+        .dqs     ({DQSU,DQSL}),   // inout[1:0] 
+        .dqs_n   ({NDQSU,NDQSL}), // inout[1:0] 
+        .tdqs_n  (),              // output[1:0] 
+        .odt     (SDODT)          // input 
     );
     
     
@@ -683,7 +862,7 @@ simul_axi_read simul_axi_read_i(
                 mr2[17:15],             // [ 2:0] phy_bank_in; //TODO: debug!
                 3'b111,                               // [ 2:0] phy_rcw_in; // {ras,cas,we}, positive
                 1'b0,                                 //        phy_odt_in; // may be optimized?
-                1'b1,                                 // phy_cke_in; // may be optimized?
+                1'b0,                                 // phy_cke_inv; // may be optimized?
                 1'b0,                                 // phy_sel_in; // first/second half-cycle, oter will be nop (cke+odt applicable to both)
                 1'b0,                                 // phy_dq_en_in;
                 1'b0,                                 // phy_dqs_ddrc_sequenceren_in;
@@ -705,7 +884,7 @@ simul_axi_read simul_axi_read_i(
                 mr3[17:15],             // [ 2:0] phy_bank_in; //TODO: debug!
                 3'b111,                               // [ 2:0] phy_rcw_in; // {ras,cas,we}, positive
                 1'b0,                                 //        phy_odt_in; // may be optimized?
-                1'b1,                                 // phy_cke_in; // may be optimized?
+                1'b0,                                 // phy_cke_inv; // may be optimized?
                 1'b0,                                 // phy_sel_in; // first/second half-cycle, other will be nop (cke+odt applicable to both)
                 1'b0,                                 // phy_dq_eddrc_sequencern_in;
                 1'b0,                                 // phy_dqs_en_in;
@@ -728,7 +907,7 @@ simul_axi_read simul_axi_read_i(
                 mr1[17:15],             // [ 2:0] phy_bank_in; //TODO: debug!
                 3'b111,                               // [ 2:0] phy_rcw_in; // {ras,cas,we}, positive
                 1'b0,                                 //        phy_odt_in; // may be optimized?
-                1'b1,                                 // phy_cke_in; // may be optimized?
+                1'b0,                                 // phy_cke_inv; // may be optimized?
                 1'b1,                                 // phy_sel_in == 1 (test); // first/second half-cycle,
                 1'b0,                                 // phy_dq_en_in;
                 1'b0,                                 // phy_dqs_en_in;
@@ -750,7 +929,7 @@ simul_axi_read simul_axi_read_i(
                 mr0[17:15],             // [ 2:0] phy_bank_in; //TODO: debug!
                 3'b111,                               // [ 2:0] phy_rcw_in; // {ras,cas,we}, positive
                 1'b0,                                 //        phy_odt_in; // may be optimized?
-                1'b1,                                 // phy_cke_in; // may be optimized?
+                1'b0,                                 // phy_cke_inv; // may be optimized?
                 1'b0,                                 // phy_sel_in; // first/second half-cycle, other will be nop (cke+odt applicable to both)
                 1'b0,                                 // phy_dq_en_in;
                 1'b0,                                 // phy_dqs_en_in;
@@ -762,7 +941,7 @@ simul_axi_read simul_axi_read_i(
              cmd_addr <= cmd_addr + 4;
 
              wait (~CLK);                
-             data <= encode_seq_skip(10,1);
+             data <= encode_seq_skip(10,1); // sequence done bit, skip length is ignored
              wait (CLK);                
              axi_write_single(cmd_addr, data);
              cmd_addr <= cmd_addr + 4;
@@ -777,7 +956,7 @@ simul_axi_read simul_axi_read_i(
                 mr2[17:15],             // [ 2:0] phy_bank_in; //TODO: debug!
                 3'b111,                               // [ 2:0] phy_rcw_in; // {ras,cas,we}, positive
                 1'b0,                                 //        phy_odt_in; // may be optimized?
-                1'b1,                                 // phy_cke_in; // may be optimized?
+                1'b0,                                 // phy_cke_inv; // may be optimized?
                 1'b0,                                 // phy_sel_in; // first/second half-cycle, other will be nop (cke+odt applicable to both)
                 1'b0,                                 // phy_dq_en_in;
                 1'b0,                                 // phy_dqs_en_in;

@@ -49,9 +49,10 @@ module  phy_cmd#(
     parameter CMD_DONE_BIT=         6  // bit number (address) to signal sequence done
 )(
     // DDR3 interface
+    output                       SDRST, // DDR3 reset (active low)
     output                       SDCLK, // DDR3 clock differential output, positive
     output                       SDNCLK,// DDR3 clock differential output, negative
-    output  [ADDRESS_NUMBER-1:0] SDA,   // output address ports (14:0) for 4Gb device
+    output  [ADDRESS_NUMBER-1:0] SDA,   // output address ports (14:0) for 4Gb deviceencode_seq_word
     output                 [2:0] SDBA,  // output bank address ports
     output                       SDWE,  // output WE port
     output                       SDRAS, // output RAS port
@@ -91,7 +92,10 @@ module  phy_cmd#(
     output                       buf_wr,    // write buffer (next cycle!)
     output                       buf_rd,     // read buffer  (ready next cycle)
     // extras
-    input                        cmda_tri, // tristate command and address lines // not likely to be used
+//    input                        cmda_tri, // tristate command and address lines // not likely to be used
+    input                        cmda_en, // tristate command and address lines // not likely to be used
+    input                        ddr_rst, // generate reset to DDR3 memory (active high)
+    input                        ddr_cke, // DDR clock enable , XOR-ed with command bit
     input                        inv_clk_div,
     input                 [7:0]  dqs_pattern, // 8'h55
     input                 [7:0]  dqm_pattern  // 8'h00
@@ -104,16 +108,22 @@ module  phy_cmd#(
 // Decoding phy_cmd[35:0] into individual fields;
     wire    [ADDRESS_NUMBER-1:0] phy_addr_in;  // also provides pause length when the command is NOP
     wire                  [ 2:0] phy_bank_in;
-    wire                  [ 2:0] phy_rcw_in; // {ras,cas,we}
+    wire                  [ 2:0] phy_rcw_pos; // positive lof=gic for RAS, CAS, WE (0 - NOP)
+    wire                  [ 2:0]   phy_rcw_in; // {ras,cas,we}
+    
     wire                         phy_odt_in; // may be optimized?
+    wire                         phy_cke_dis; // command bit 0: enable CKE, 1 - disable CKE 
     wire                         phy_cke_in; // may be optimized?
-    wire                         phy_sel_in; // fitst/second half-cycle, oter will be nop (cke+odt applicable to both)
-    wire                         phy_dq_tri_in;   // tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
-    wire                         phy_dqs_tri_in;  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
-    wire                         phy_dci_in;      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
-//    wire                  [ 6:0] phy_buf_addr; // connect to extrenal buffer
+    wire                         phy_sel_in; // first/second half-cycle, oter will be nop (cke+odt applicable to both)
+    wire                         phy_dq_en_in;
+    wire                         phy_dqs_en_in;
+    wire                           phy_dq_tri_in;   // tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
+    wire                           phy_dqs_tri_in;  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
+    wire                         phy_dci_en_in;      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+    wire                           phy_dci_in;      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
     wire                         phy_buf_wr;   // connect to extrenal buffer
     wire                         phy_buf_rd;   // connect to extrenal buffer
+    wire                         cmda_tri;
     
 //    wire                         clk;
     wire                         clk_div;
@@ -127,7 +137,7 @@ module  phy_cmd#(
     wire                  [ 5:0] phy_bank;
     wire                  [ 5:0] phy_rcw; // {ras,cas,we}
     wire                   [1:0] phy_odt; // may be optimized?
-    wire                   [1:0] phy_cke; // may be optimized?
+    wire                   [1:0] phy_cke; // may be optphy_dqs_tri_inimized?
     wire                   [7:0] phy_dq_tri;   // tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
     wire                   [7:0] phy_dqs_tri;  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
     wire                         phy_dci_dis_dq; 
@@ -148,20 +158,25 @@ module  phy_cmd#(
     assign {
         phy_addr_in,
         phy_bank_in,
-        phy_rcw_in,      // {ras,cas,we}
+        phy_rcw_pos,      // {ras,cas,we}
         phy_odt_in,      // may be optimized?
-        phy_cke_in,      // may be optimized?
+        phy_cke_dis,     // disable cke (0 - enable), also controlled by a command bit ddr_cke (XOR-ed)
         phy_sel_in,      // fitst/second half-cycle, oter will be nop (cke+odt applicable to both)
-        phy_dq_tri_in,   // tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
-        phy_dqs_tri_in,  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
-        phy_dci_in,      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+        phy_dq_en_in, //phy_dq_tri_in,   // tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
+        phy_dqs_en_in, //phy_dqs_tri_in,  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
+        phy_dci_en_in, //phy_dci_in,      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
 //        phy_buf_addr, // connect to external buffer (is it needed? maybe just autoincrement?)
         phy_buf_wr,   // connect to external buffer (but only if not paused)
         phy_buf_rd,    // connect to external buffer (but only if not paused)
         phy_spare      // Reserved for future use
-    } = phy_cmd_word;
-    assign phy_cmd_nop=   (phy_rcw_in==0);
-    assign sequence_done= (phy_rcw_in==0) && phy_addr_in[CMD_DONE_BIT];
+    } =  phy_cmd_word;
+    assign phy_cke_in=     phy_cke_dis ^ ddr_cke;
+    assign phy_dq_tri_in= ~phy_dq_en_in;
+    assign phy_dqs_tri_in=~phy_dqs_en_in;
+    assign phy_dci_in=    ~phy_dci_en_in;
+    assign phy_rcw_in=    ~phy_rcw_pos;
+    assign phy_cmd_nop=   (phy_rcw_pos==0);
+    assign sequence_done= phy_cmd_nop && phy_addr_in[CMD_DONE_BIT];
     assign pause_len=      phy_addr_in[CMD_PAUSE_BITS-1:0];
     
 //    assign buf_addr = phy_buf_addr;
@@ -170,7 +185,7 @@ module  phy_cmd#(
     
     assign  phy_addr=   {phy_addr_in,phy_addr_in};       // also provides pause length when the command is NOP
     assign  phy_bank=   {phy_bank_in,phy_bank_in};
-    assign  phy_rcw=    {phy_sel_in?phy_rcw_in:3'h0, phy_sel_in?3'h0:phy_rcw_in}; // {ras,cas,we}
+    assign  phy_rcw=    {phy_sel_in?phy_rcw_in:3'h7, phy_sel_in?3'h7:phy_rcw_in}; // {ras,cas,we}
     assign  phy_odt=    {phy_odt_in,phy_odt_in};         // may be optimized?
     assign  phy_cke=    {phy_cke_in,phy_cke_in};         // may be optimized?
     
@@ -188,6 +203,8 @@ module  phy_cmd#(
     assign  ps_out = ps_out_r2;
     
     assign buf_wdata[63:0] = phy_rdata_r[63:0];
+    
+    assign cmda_tri=!cmda_en;
     
     always @ (posedge mclk) begin
         dqs_tri_prev <= phy_dqs_tri_in;
@@ -274,6 +291,7 @@ phy_rdata
         .SS_MODE          (SS_MODE),
         .SS_MOD_PERIOD    (SS_MOD_PERIOD)
     ) phy_top_i (
+        .ddr3_nrst       (SDRST), // output
         .ddr3_clk        (SDCLK), // output
         .ddr3_nclk       (SDNCLK), // output
         .ddr3_a          (SDA[ADDRESS_NUMBER-1:0]), // output[14:0] 
@@ -295,7 +313,9 @@ phy_rdata
         .clk             (), // output
         .clk_div         (clk_div), // output
         .mclk            (mclk), // output
-        .rst_in          (rst_in), // input
+
+        .rst_in          (rst_in),   // input
+        .ddr_rst         (ddr_rst),  // input
         .in_a            (phy_addr[2*ADDRESS_NUMBER-1:0]), // input[29:0] 
         .in_ba           (phy_bank[5:0]), // input[5:0] 
         .in_we           ({phy_rcw[3],phy_rcw[0]}), // input[1:0] 

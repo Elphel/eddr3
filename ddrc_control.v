@@ -61,7 +61,11 @@ module  ddrc_control #(
     parameter PAGES_REL_MASK =    'h3ff,  // address mask to set DQM and DQS patterns
     parameter CMDA_EN_REL =       'h022,  // address to enable('h823)/disable('h822) command/address outputs  
     parameter CMDA_EN_REL_MASK =  'h3fe,  // address mask for command/address outputs
-    parameter EXTRA_REL =         'h024,  // address to set extra parameters (currently just inv_clk_div)
+    parameter SDRST_ACT_REL =     'h024,  // address to activate('h825)/deactivate('h8242) active-low reset signal to DDR3 memory  
+    parameter SDRST_ACT_REL_MASK ='h3fe,  // address mask for reset DDR3
+    parameter CKE_EN_REL =        'h026,  // address to enable('h827)/disable('h826) CKE signal to memory   
+    parameter CKE_EN_REL_MASK =   'h3fe,  // address mask for command/address outputs
+    parameter EXTRA_REL =         'h028,  // address to set extra parameters (currently just inv_clk_div)
     parameter EXTRA_REL_MASK =    'h3ff   // address mask for extra parameters
 )(
     input                         clk,
@@ -85,7 +89,10 @@ module  ddrc_control #(
     output                        ld_delay, // write dly_data to dly_address, one mclk active pulse
     output                        dly_set,      // transfer (activate) all delays simultaneosly, 1 mclk pulse 
 // control: additional signals
-    output                        cmda_tri,    // tri-state all command and address lines to DDR chip
+    output                        cmda_en,  // tri-state all command and address lines to DDR chip
+    output                        ddr_rst,  // generate DDR3 memory reset signal
+    output                        ddr_cke,  // control DDR3 memory CKE signal
+    
     output                        inv_clk_div, // invert clk_div to ISERDES
     output                 [ 7:0] dqs_pattern, // DQS pattern during write (normally 8'h55)
     output                 [ 7:0] dqm_pattern, // DQM pattern (just for testing, should be 8'h0)
@@ -108,6 +115,12 @@ module  ddrc_control #(
     localparam PAGES_ADDR_MASK =    CONTROL_ADDR_MASK | PAGES_REL_MASK;   // address mask to set DQM and DQS patterns
     localparam CMDA_EN_ADDR =       CONTROL_ADDR |      CMDA_EN_REL;      // address to enable('h823)/disable('h822) command/address outputs  
     localparam CMDA_EN_ADDR_MASK =  CONTROL_ADDR_MASK | CMDA_EN_REL_MASK; // address mask for command/address outputs
+
+    localparam SDRST_ACT_ADDR =     CONTROL_ADDR |      SDRST_ACT_REL;      // address to activate('h825)/deactivate('h8242) active-low reset signal to DDR3 memory    
+    localparam SDRST_ACT_ADDR_MASK =CONTROL_ADDR_MASK | SDRST_ACT_REL_MASK; // address mask for reset DDR3
+    localparam CKE_EN_ADDR =        CONTROL_ADDR |      CKE_EN_REL;       // address to enable('h827)/disable('h826) CKE signal to memory  
+    localparam CKE_EN_ADDR_MASK =   CONTROL_ADDR_MASK | CKE_EN_REL_MASK;  // address mask for CKE
+
     localparam EXTRA_ADDR =         CONTROL_ADDR |      EXTRA_REL;        // address to set extra parameters (currently just inv_clk_div)
     localparam EXTRA_ADDR_MASK =    CONTROL_ADDR_MASK | EXTRA_REL_MASK;   // address mask for extra parameters
 
@@ -133,6 +146,9 @@ module  ddrc_control #(
     reg                  [ 1:0] port1_page_r;     // port 1 buffer write page (to be controlled by arbiter later, set to 2'b0)
     reg                  [ 1:0] port1_int_page_r; // port 1 PHY-side buffer read page (to be controlled by arbiter later, set to 2'b0) 
     reg                         cmda_en_r;        // enable (tri-state off) all command and address lines to DDR chip
+    reg                         ddr_rst_r;        // generate DDR3 memory reset
+    reg                         ddr_cke_r;         // enable CKE to memory
+
     reg                         inv_clk_div_r;    // invert clk_div to ISERDES
 
     assign ld_delay = dly_ld_r;
@@ -141,7 +157,7 @@ module  ddrc_control #(
     assign dly_addr = waddr_fifo_out_r[ 6:0]; //WARNING: [Synth 8-3936] Found unconnected internal register 'waddr_fifo_out_r_reg' and it is trimmed from '12' to '7' bits. [ddrc_control.v:101]
     assign run_addr = wdata_fifo_out_r[10:0];
     assign run_chn =  waddr_fifo_out_r[3:0];
-    assign run_seq =  run_seq_r;
+    assign run_seq =  run_seq_r && !ddr_rst;
 
     assign busy=busy_r && (start_wburst?(((pre_waddr ^ BUSY_WR_ADDR) & BUSY_WR_ADDR_MASK)==0): selected_busy);
 
@@ -151,7 +167,9 @@ module  ddrc_control #(
     assign port0_int_page = port0_int_page_r[1:0];
     assign port1_page =     port1_page_r[1:0];
     assign port1_int_page = port1_int_page_r[1:0];
-    assign cmda_tri =       ~cmda_en_r;
+    assign cmda_en =        cmda_en_r;
+    assign ddr_rst=         ddr_rst_r;
+    assign ddr_cke=         ddr_cke_r;
     assign inv_clk_div =    inv_clk_div_r;
 
     always @ (posedge clk or posedge rst) begin
@@ -201,6 +219,14 @@ module  ddrc_control #(
         if (rst) cmda_en_r <= 1'b0;
         else if (fifo_re && (((waddr_fifo_out ^ CMDA_EN_ADDR) & CMDA_EN_ADDR_MASK)==0))
                  cmda_en_r <= waddr_fifo_out[0];
+
+        if (rst) ddr_rst_r <= 1'b1; // enable DDR3 reset at system reset
+        else if (fifo_re && (((waddr_fifo_out ^ SDRST_ACT_ADDR) & SDRST_ACT_ADDR_MASK)==0))
+                 ddr_rst_r <= waddr_fifo_out[0];
+
+        if (rst) ddr_cke_r <= 1'b0;
+        else if (fifo_re && (((waddr_fifo_out ^ CKE_EN_ADDR) & CKE_EN_ADDR_MASK)==0))
+                 ddr_cke_r <= waddr_fifo_out[0];
 
         if (rst) inv_clk_div_r <= 1'b0;
         else if (fifo_re && (((waddr_fifo_out ^ EXTRA_ADDR) & EXTRA_ADDR_MASK)==0))

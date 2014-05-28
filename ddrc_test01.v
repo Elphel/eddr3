@@ -72,12 +72,15 @@ module  ddrc_test01 #(
     parameter PAGES_REL_MASK =      'h3ff,  // address mask to set DQM and DQS patterns
     parameter CMDA_EN_REL =         'h022,  // address to enable('h823)/disable('h822) command/address outputs  
     parameter CMDA_EN_REL_MASK =    'h3fe,  // address mask for command/address outputs
-    parameter EXTRA_REL =           'h024,  // address to set extra parameters (currently just inv_clk_div)
+    parameter SDRST_ACT_REL =       'h024,  // address to activate('h825)/deactivate('h824) active-low reset signal to DDR3 memory  
+    parameter SDRST_ACT_REL_MASK =  'h3fe,  // address mask for reset DDR3
+    parameter CKE_EN_REL =          'h026,  // address to enable('h827)/disable('h826) CKE signal to memory   
+    parameter CKE_EN_REL_MASK =     'h3fe,  // address mask for command/address outputs
+    parameter EXTRA_REL =           'h028,  // address to set extra parameters (currently just inv_clk_div)
     parameter EXTRA_REL_MASK =      'h3ff   // address mask for extra parameters
-    
-    
 )(
     // DDR3 interface
+    output                       SDRST, // DDR3 reset (active low)
     output                       SDCLK, // DDR3 clock differential output, positive
     output                       SDNCLK,// DDR3 clock differential output, negative
     output  [ADDRESS_NUMBER-1:0] SDA,   // output address ports (14:0) for 4Gb device
@@ -99,9 +102,7 @@ module  ddrc_test01 #(
 );
     localparam ADDRESS_NUMBER=15;
 // Source for reset and clock
-(* keep = "true" *)
    wire    [3:0]     fclk;      // PL Clocks [3:0], output
-(* keep = "true" *)
    wire    [3:0]     frst;      // PL Clocks [3:0], output
    
    
@@ -110,7 +111,7 @@ module  ddrc_test01 #(
 (* keep = "true" *)
    wire           axi_aclk;    // clock - should be buffered
 //   wire           axi_aresetn; // reset, active low
-(* keep = "true" *)
+(* dont_touch = "true" *)
    wire           axi_rst;     // reset, active high
 // AXI Write Address
    wire   [31:0]  axi_awaddr;  // AWADDR[31:0], input
@@ -209,7 +210,10 @@ module  ddrc_test01 #(
    wire [ 1:0] port1_int_page;// input[1:0] 
 
 // additional control signals
-   wire        cmda_tri; // input
+   wire        cmda_en; // enable DDR3 memory control and addreee outputs
+   wire        ddr_rst; // generate DDR3 memory reset (active hight)
+   wire        ddr_cke; // control of the DDR3 memory CKE signal
+   
    wire        inv_clk_div; // input
    wire [ 7:0] dqs_pattern; // input[7:0] 8'h55 
    wire [ 7:0] dqm_pattern; // input[7:0] 8'h00
@@ -236,13 +240,26 @@ module  ddrc_test01 #(
 
 always @ (posedge axi_rst or posedge axi_aclk) begin
     if (axi_rst) select_port0 <= 1'b0;
-    else if (axird_start_burst) select_port0 <= (((axird_pre_araddr[11:10]^ PORT0_RD_ADDR) & PORT0_RD_ADDR_MASK)==0);
+    else if (axird_start_burst) select_port0 <= (((axird_pre_araddr^ PORT0_RD_ADDR) & PORT0_RD_ADDR_MASK)==0);
     if (axi_rst) select_status <= 1'b0;
-    else if (axird_start_burst) select_status <= (((axird_pre_araddr[11:10]^ STATUS_ADDR) & STATUS_ADDR_MASK)==0);
+    else if (axird_start_burst) select_status <= (((axird_pre_araddr^ STATUS_ADDR) & STATUS_ADDR_MASK)==0);
 end
-   
+/*   
 // Clock and reset from PS
-BUFG bufg_axi_rst_i  (.O(axi_rst),.I(~frst[0]));
+reg frst_inv;
+always @ (negedge frst[0] or posedge axi_aclk) begin
+    if (!frst[0]) frst_inv <= 1'b1;
+    else          frst_inv <= 1'b0; 
+end
+*/
+`ifndef IVERILOG
+(* dont_touch = "true" *)
+`endif
+ wire frst_inv= ~frst[0];
+
+
+//BUFG bufg_axi_rst_i  (.O(axi_rst),.I(~frst[0]));
+BUFG bufg_axi_rst_i  (.O(axi_rst),.I(frst_inv));
 BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
 
     axibram_write #(
@@ -325,6 +342,10 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
         .PAGES_REL_MASK    (PAGES_REL_MASK),
         .CMDA_EN_REL       (CMDA_EN_REL),
         .CMDA_EN_REL_MASK  (CMDA_EN_REL_MASK),
+        .SDRST_ACT_REL     (SDRST_ACT_REL),  
+        .SDRST_ACT_REL_MASK(SDRST_ACT_REL_MASK),
+        .CKE_EN_REL        (CKE_EN_REL),   
+        .CKE_EN_REL_MASK   (CKE_EN_REL_MASK),
         .EXTRA_REL         (EXTRA_REL),
         .EXTRA_REL_MASK    (EXTRA_REL_MASK)
     ) ddrc_control_i (
@@ -344,7 +365,9 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
         .dly_addr         (dly_addr[6:0]),          // output[6:0] 
         .ld_delay         (ld_delay),               // output
         .dly_set          (set),                    // output
-        .cmda_tri         (cmda_tri),               // output
+        .cmda_en          (cmda_en),                // output
+        .ddr_rst          (ddr_rst),                // output
+        .ddr_cke          (ddr_cke),                // output
         .inv_clk_div      (inv_clk_div),            // output
         .dqs_pattern      (dqs_pattern[7:0]),       // output[7:0] 
         .dqm_pattern      (dqm_pattern[7:0]),       // output[7:0] 
@@ -406,6 +429,7 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
         .CMD_PAUSE_BITS   (CMD_PAUSE_BITS),
         .CMD_DONE_BIT     (CMD_DONE_BIT)
     ) ddrc_sequencer_i (
+        .SDRST          (SDRST), // output
         .SDCLK          (SDCLK), // output
         .SDNCLK         (SDNCLK), // output
         .SDA            (SDA[14:0]), // output[14:0] // BUG with localparam - fixed
@@ -437,7 +461,8 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
          
         .run_addr       (run_addr[10:0]), // input[10:0] 
         .run_chn        (run_chn[3:0]), // input[3:0] 
-        .run_seq        (run_seq), // input
+        .run_seq        (run_seq), // input #################### DISABLED ####################
+//        .run_seq        (1'b0 && run_seq), // input #################### DISABLED ####################
 //        .run_done       (run_done), // output
         .run_done       (), // output
         .run_busy       (run_busy), // output
@@ -462,7 +487,9 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
         .port1_int_page (port1_int_page[1:0]), // input[1:0] 
         .port1_addr     (axiwr_bram_waddr[7:0]), // input[7:0] 
         .port1_data     (axiwr_bram_wdata[31:0]), // input[31:0] 
-        .cmda_tri       (cmda_tri), // input
+        .cmda_en        (cmda_en), // input
+        .ddr_rst        (ddr_rst), // input
+        .ddr_cke        (ddr_cke), // input
         .inv_clk_div    (inv_clk_div), // input
         .dqs_pattern    (dqs_pattern), // input[7:0] 
         .dqm_pattern    (dqm_pattern) // input[7:0] 

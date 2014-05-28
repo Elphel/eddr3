@@ -72,14 +72,19 @@ module  ddrc_test01_testbench #(
     parameter PAGES_REL_MASK =      'h3ff,  // address mask to set DQM and DQS patterns
     parameter CMDA_EN_REL =         'h022,  // address to enable('h823)/disable('h822) command/address outputs  
     parameter CMDA_EN_REL_MASK =    'h3fe,  // address mask for command/address outputs
-    parameter EXTRA_REL =           'h024,  // address to set extra parameters (currently just inv_clk_div)
-    parameter EXTRA_REL_MASK =      'h3ff,   // address mask for extra parameters
+    parameter SDRST_ACT_REL =       'h024,  // address to activate('h825)/deactivate('h8242) active-low reset signal to DDR3 memory  
+    parameter SDRST_ACT_REL_MASK =  'h3fe,  // address mask for reset DDR3
+    parameter CKE_EN_REL =          'h026,  // address to enable('h827)/disable('h826) CKE signal to memory   
+    parameter CKE_EN_REL_MASK =     'h3fe,  // address mask for command/address outputs
+    parameter EXTRA_REL =           'h028,  // address to set extra parameters (currently just inv_clk_div)
+    parameter EXTRA_REL_MASK =      'h3ff,  // address mask for extra parameters
     
     // simulation-specific parameters
     parameter integer AXI_RDADDR_LATENCY=2,
     parameter integer AXI_WRADDR_LATENCY=4,
     parameter integer AXI_WRDATA_LATENCY=1,
-    parameter integer AXI_TASK_HOLD=1.0 
+    parameter integer AXI_TASK_HOLD=1.0,
+    parameter integer ADDRESS_NUMBER=15 
 )();
 `ifdef IVERILOG              
 //    $display("IVERILOG is defined");
@@ -90,14 +95,25 @@ module  ddrc_test01_testbench #(
 `endif
 `define DEBUG_WR_SINGLE 1  
   // DDR3 signals
+// SuppressWarnings VEditor
+  wire        SDRST;
+// SuppressWarnings VEditor
   wire        SDCLK;  // output
+// SuppressWarnings VEditor
   wire        SDNCLK; // output
-  wire [14:0] SDA;    // output[14:0] 
+// SuppressWarnings VEditor
+  wire [ADDRESS_NUMBER-1:0] SDA;    // output[14:0] 
+// SuppressWarnings VEditor
   wire [ 2:0] SDBA;   // output[2:0] 
+// SuppressWarnings VEditor
   wire        SDWE;   // output
+// SuppressWarnings VEditor
   wire        SDRAS;  // output
+// SuppressWarnings VEditor
   wire        SDCAS;  // output
+// SuppressWarnings VEditor
   wire        SDCKE;  // output
+// SuppressWarnings VEditor
   wire        SDODT;  // output
   wire [15:0] SDD;    // inout[15:0] 
   wire        SDDML;  // inout
@@ -125,14 +141,18 @@ module  ddrc_test01_testbench #(
   reg [ 3:0] WSTRB_IN_r;
   reg        WLAST_IN_r;
 
-  wire [ 9:0] SIMUL_AXI_ADDR_W; 
   // SuppressWarnings VEditor : assigned in $readmem() system task
+  wire [ 9:0] SIMUL_AXI_ADDR_W; 
+  // SuppressWarnings VEditor
   wire        SIMUL_AXI_MISMATCH;
+  // SuppressWarnings VEditor
   reg  [31:0] SIMUL_AXI_READ;
+  // SuppressWarnings VEditor
   reg  [ 9:0] SIMUL_AXI_ADDR;
+  // SuppressWarnings VEditor
   reg         SIMUL_AXI_FULL; // some data available
 
-
+  reg  [31:0] registered_rdata;
 
   reg        CLK;
   reg        RST;
@@ -172,7 +192,7 @@ module  ddrc_test01_testbench #(
   wire [3:0]  arlen;
   wire [2:0]  arsize;
   wire [1:0]  arburst;
-  // SuppressWarnings VEditor : assigned in $readmem() system task
+  // SuppressWarnings VEditor : assigned in $readmem(14) system task
   wire [3:0]  arcache;
   // SuppressWarnings VEditor : assigned in $readmem() system task
   wire [2:0]  arprot;
@@ -216,7 +236,6 @@ module  ddrc_test01_testbench #(
   wire        bready;
   
 always #(CLKIN_PERIOD/2) CLK <= ~CLK;
-
   initial begin
 `ifdef IVERILOG              
     $display("IVERILOG is defined");
@@ -248,6 +267,26 @@ always #(CLKIN_PERIOD/2) CLK <= ~CLK;
 //    test_axi_1;
     // read memory
 //    test_axi_2;
+    read_status; // ps ready goes false with some delay
+//    read_status;
+    wait_phase_shifter_ready;
+//    repeat (40) begin
+//    read_status;
+//    end
+    enable_cmda(1);
+    repeat (16) @(posedge CLK) ;
+    activate_sdrst(0); // was enabled at system reset
+    repeat (16) @(posedge CLK) ;
+    enable_cke(1);
+    repeat (16) @(posedge CLK) ;
+    set_mrs(1);
+    #100;
+//    $finish;
+    run_sequence(0);
+//#100;
+    $display("finish testbench 0");
+    $finish;
+    
     repeat (512) @(posedge CLK) ;
     
 #100;
@@ -368,12 +407,17 @@ assign bresp=                              ddrc_test01_i.ps7_i.MAXIGP0BRESP;
         .PAGES_REL_MASK        (PAGES_REL_MASK),
         .CMDA_EN_REL           (CMDA_EN_REL),
         .CMDA_EN_REL_MASK      (CMDA_EN_REL_MASK),
+        .SDRST_ACT_REL         (SDRST_ACT_REL),  
+        .SDRST_ACT_REL_MASK    (SDRST_ACT_REL_MASK),
+        .CKE_EN_REL            (CKE_EN_REL),   
+        .CKE_EN_REL_MASK       (CKE_EN_REL_MASK),
         .EXTRA_REL             (EXTRA_REL),
         .EXTRA_REL_MASK        (EXTRA_REL_MASK)
         
     ) ddrc_test01_i (
-        .SDCLK   (SDCLK), // output
-        .SDNCLK  (SDNCLK), // output
+        .SDRST   (SDRST), // DDR3 reset (active low)
+        .SDCLK   (SDCLK), // output 
+        .SDNCLK  (SDNCLK), // outputread_and_wait(BASEADDR_STATUS)
         .SDA     (SDA[14:0]), // output[14:0] 
         .SDBA    (SDBA[2:0]), // output[2:0] 
         .SDWE    (SDWE), // output
@@ -492,7 +536,7 @@ simul_axi_slow_ready simul_axi_slow_ready_write_resp_i(
     .clk(CLK),
     .reset(RST), //input         reset,
     .delay(B_LAG), //input  [3:0]  delay,
-    .valid(bvalid), // input         valid,
+    .valid(bvalid), // input       ADDRESS_NUMBER+2:0  valid,
     .ready(bready)  //output        ready
     );
 
@@ -515,8 +559,11 @@ simul_axi_read simul_axi_read_i(
   
 //  Tasks
 // top simulation tasks
-// base addresses  
+// base addresses 
+ 
+// SuppressWarnings VEditor
     localparam BASEADDR_PORT0_RD = PORT0_RD_ADDR << 2; // 'h0000  << 2
+// SuppressWarnings VEditor
     localparam BASEADDR_PORT1_WR = PORT1_WR_ADDR << 2; // 'h0000 << 2 = 'h000
     localparam BASEADDR_CMD0 =     CMD0_ADDR << 2;     // 'h0800 << 2 = 'h2000
 //    localparam BASEADDR_CTRL =     CONTROL_ADDR << 2;
@@ -525,14 +572,21 @@ simul_axi_read simul_axi_read_i(
     localparam BASEADDR_DLY_LD =  BASEADDR_CTRL | (DLY_LD_REL <<2);  // 'h080, address to generate delay load
     localparam BASEADDR_DLY_SET = BASEADDR_CTRL | (DLY_SET_REL<<2);  // 'h070, address to generate delay set
     localparam BASEADDR_RUN_CHN = BASEADDR_CTRL | (RUN_CHN_REL<<2);  // 'h000, address to set sequnecer channel and  run (4 LSB-s - channel)
+// SuppressWarnings VEditor
     localparam BASEADDR_PATTERNS =BASEADDR_CTRL | (PATTERNS_REL<<2); // 'h020, address to set DQM and DQS patterns (16'h0055)
+// SuppressWarnings VEditor
     localparam BASEADDR_PAGES =   BASEADDR_CTRL | (PAGES_REL<<2);    // 'h021, address to set buffer pages {port1_page[1:0],port1_int_page[1:0],port0_page[1:0],port0_int_page[1:0]}
     localparam BASEADDR_CMDA_EN = BASEADDR_CTRL | (CMDA_EN_REL<<2);  // 'h022, address to enable('h823)/disable('h822) command/address outputs  
-    localparam BASEADDR_EXTRA =   BASEADDR_CTRL | (EXTRA_REL<<2);    // 'h024, address to set extra parameters (currently just inv_clk_div)
+    localparam BASEADDR_SDRST_ACT = BASEADDR_CTRL | (SDRST_ACT_REL<<2); // address to activate('h825)/deactivate('h824) active-low reset signal to DDR3 memory     
+    localparam BASEADDR_CKE_EN =  BASEADDR_CTRL | (CKE_EN_REL<<2);   //   
+// SuppressWarnings VEditor
+    localparam BASEADDR_EXTRA =   BASEADDR_CTRL | (EXTRA_REL<<2);    // 'h028, address to set extra parameters (currently just inv_clk_div)
+    
     localparam BASEADDRESS_LANE0 = BASEADDR_DLY_LD;  
     localparam BASEADDRESS_LANE1 = BASEADDR_DLY_LD+('h20<<2);  
     localparam BASEADDRESS_CMDA  = BASEADDR_DLY_LD+('h40<<2);
     localparam BASEADDRESS_PHASE = BASEADDR_DLY_LD+('h60<<2);
+    localparam PSHIFTER_RDY_MASK = 'h100;
       
 
     localparam DLY_LANE0= 152'h74737271706f6e6d6c7574737271706f6e6d6c; // idelay dqs, idelay dq[7:0, odelay dqm, odelay ddqs, odelay dq[7:0]
@@ -540,7 +594,391 @@ simul_axi_read simul_axi_read_i(
     localparam DLY_CMDA=  256'h5f5e5d5c5b5a59585756555453525150004e4b4c4b4a49484746454443424140; // odelay odt, cke, cas, ras, we, ba2,ba1,ba0, X, a14,..,a0
 //    localparam DLY_PHASE= 8'h25; // mmcm fine phase shift
     localparam DLY_PHASE= 8'hdb; // mmcm fine phase shift
+
+    task run_sequence;
+        input [7:0] start_addr; // word
+// BASEADDR_RUN_CHN        
+        begin
+            $display("run_sequence 0 @ %t",$time);
+            axi_write_single(BASEADDR_RUN_CHN, {24'h0,start_addr});
+            $display("run_sequence 1 @ %t",$time);
+            #1000; // 90; // 92 - does not work ?
+            $display("run_sequence 2 @ %t",$time);
+        end
+    endtask
+    task enable_cmda;
+        input en;
+        begin
+            if (en) 
+                axi_write_single(BASEADDR_CMDA_EN+4, 0);
+            else 
+                axi_write_single(BASEADDR_CMDA_EN, 0);
+        end
+    endtask
+    task enable_cke;
+        input en;
+        begin
+            if (en) 
+                axi_write_single(BASEADDR_CKE_EN+4, 0);
+            else 
+                axi_write_single(BASEADDR_CKE_EN, 0);
+        //BASEADDR_CMDA_EN
+        end
+    endtask
+
+    task activate_sdrst;
+        input en;
+        begin
+            if (en) 
+                axi_write_single(BASEADDR_SDRST_ACT+4, 0);
+            else 
+                axi_write_single(BASEADDR_SDRST_ACT, 0);
+        //BASEADDR_CMDA_EN
+        end
+    endtask
+
+    task set_mrs;
+        input reset_dll;
+//        reg [ADDRESS_NUMBER+2:0] mr0;
+//        reg [ADDRESS_NUMBER+2:0] mr1;
+//        reg [ADDRESS_NUMBER+2:0] mr2;
+//        reg [ADDRESS_NUMBER+2:0] mr3;
+        reg [17:0] mr0;
+        reg [17:0] mr1;
+        reg [17:0] mr2;
+        reg [17:0] mr3;
+        reg [31:0] cmd_addr;
+        reg [31:0] data;
+        begin
+            mr0 <= ddr3_mr0 (
+               1'h0,      //       pd; // precharge power down 0 - dll off (slow exit), 1 - dll on (fast exit) 
+               3'h2,      // [2:0] wr; // write recovery (encode ceil(tWR/tCK)) // 3'b010:  6
+               reset_dll, //       dll_rst; // 1 - dll reset (self clearing bit)
+               4'h2,      // [3:0] cl; // CAS latency: // 0010:  5
+               1'h0,      //       bt; // read burst type: 0 sequential (nibble), 1 - interleaverun_seqd
+               2'h0);       // [1:0] bl; // burst length: // 2'b00 - fixed BL8
+ 
+             mr1 <= ddr3_mr1 (
+                1'h0,     //       qoff; // output enable: 0 - DQ, DQS operate in normal mode, 1 - DQ, DQS are disabled
+                1'h0,     //       tdqs; // termination data strobe (for x8 devices) 0 - disabled, 1 - enabled
+                3'h2,     // [2:0] rtt;  // on-die termination resistance: //  3'b010 - RZQ/2 (120 Ohm)
+                1'h0,     //       wlev; // write leveling
+                2'h0,     //       ods;  // output drive strength: //  2'b00 - RZQ/6 - 40 Ohm
+                2'h0,     // [1:0] al;   // additive latency: 2'b00 - disabled (AL=0)
+                1'b0);    //       dll;  // 0 - DLL enabled (normal), 1 - DLL disabled
+               
+             mr2 <= ddr3_mr2 (
+                2'h0,     // [1:0] rtt_wr; // Dynamic ODT : //  2'b00 - disabled, 2'b01 - RZQ/4 = 60 Ohm, 2'b10 - RZQ/2 = 120 Ohm
+                1'h0,     //       srt;    // Self-refresh temperature 0 - normal (0-85C), 1 - extended (<=95C)
+                1'h0,     //       asr;    // Auto self-refresh 0 - disabled (manual), 1 - enabled (auto)
+                3'h0);    // [2:0] cwl;    // CAS write latency:3'b000  5CK (tCK >= 2.5ns), 3'b001  6CK (1.875ns <= tCK < 2.5ns)
+
+             mr3 <= ddr3_mr3 (
+                1'h0,     //       mpr;    // MPR mode: 0 - normal, 1 - dataflow from MPR
+                2'h0);    // [1:0] mpr_rf; // MPR read function: 2'b00: predefined pattern 0101...
+             cmd_addr <= BASEADDR_CMD0;   
+             wait (~CLK);
+             data <=  encode_seq_word(
+                mr2[14:0],              // [14:0] phy_addr_in;
+                mr2[17:15],             // [ 2:0] phy_bank_in; //TODO: debug!
+                3'b111,                               // [ 2:0] phy_rcw_in; // {ras,cas,we}, positive
+                1'b0,                                 //        phy_odt_in; // may be optimized?
+                1'b1,                                 // phy_cke_in; // may be optimized?
+                1'b0,                                 // phy_sel_in; // first/second half-cycle, oter will be nop (cke+odt applicable to both)
+                1'b0,                                 // phy_dq_en_in;
+                1'b0,                                 // phy_dqs_ddrc_sequenceren_in;
+                1'b0,                                 // phy_dci_en_in;      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+                1'b0,                                 // phy_buf_wr;   // connect to external buffer
+                1'b0);                               // phy_buf_rd;   // connect to external buffer
+             wait (CLK);
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+             wait (~CLK);                
+//             data <= encode_seq_skip(2,0);
+             data <= encode_seq_skip(1,0);  // 6 cycles between mrs commands
+             wait (CLK);                
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+             wait (~CLK);
+             data <=  encode_seq_word(
+                mr3[14:0],              // [14:0] phy_addr_in;
+                mr3[17:15],             // [ 2:0] phy_bank_in; //TODO: debug!
+                3'b111,                               // [ 2:0] phy_rcw_in; // {ras,cas,we}, positive
+                1'b0,                                 //        phy_odt_in; // may be optimized?
+                1'b1,                                 // phy_cke_in; // may be optimized?
+                1'b0,                                 // phy_sel_in; // first/second half-cycle, other will be nop (cke+odt applicable to both)
+                1'b0,                                 // phy_dq_eddrc_sequencern_in;
+                1'b0,                                 // phy_dqs_en_in;
+                1'b0,                                 // phy_dci_en_in;      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+                1'b0,                                 // phy_buf_wr;   // connect to external buffer
+                1'b0);                               // phy_buf_rd;   // connect to external buffer
+             wait (CLK);                
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+             wait (~CLK);                
+//             data <= encode_seq_skip(2,0); // TODO: function - does not check arguments number
+             data <= encode_seq_skip(0,0); // 5 cycles between mrs commands (next command has phy_sel_in == 1)
+             wait (CLK);                
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+
+             wait (~CLK);
+             data <=  encode_seq_word(
+                mr1[14:0],              // [14:0] phy_addr_in;
+                mr1[17:15],             // [ 2:0] phy_bank_in; //TODO: debug!
+                3'b111,                               // [ 2:0] phy_rcw_in; // {ras,cas,we}, positive
+                1'b0,                                 //        phy_odt_in; // may be optimized?
+                1'b1,                                 // phy_cke_in; // may be optimized?
+                1'b1,                                 // phy_sel_in == 1 (test); // first/second half-cycle,
+                1'b0,                                 // phy_dq_en_in;
+                1'b0,                                 // phy_dqs_en_in;
+                1'b0,                                 // phy_dci_en_in;      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+                1'b0,                                 // phy_buf_wr;   // connect to external buffer
+                1'b0);                               // phy_buf_rd;   // connect to external buffer
+             wait (CLK);                
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+             wait (~CLK);                
+             data <= encode_seq_skip(2,0); //  7 cycles between mrs commands ( prev. command had phy_sel_in == 1)
+             wait (CLK);                
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+
+             wait (~CLK);
+             data <=  encode_seq_word(
+                mr0[14:0],              // [14:0] phy_addr_in;
+                mr0[17:15],             // [ 2:0] phy_bank_in; //TODO: debug!
+                3'b111,                               // [ 2:0] phy_rcw_in; // {ras,cas,we}, positive
+                1'b0,                                 //        phy_odt_in; // may be optimized?
+                1'b1,                                 // phy_cke_in; // may be optimized?
+                1'b0,                                 // phy_sel_in; // first/second half-cycle, other will be nop (cke+odt applicable to both)
+                1'b0,                                 // phy_dq_en_in;
+                1'b0,                                 // phy_dqs_en_in;
+                1'b0,                                 // phy_dci_en_in;      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+                1'b0,                                 // phy_buf_wr;   // connect to external buffer
+                1'b0);                                // phy_buf_rd;   // connect to external buffer
+             wait (CLK);                
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+
+             wait (~CLK);                
+             data <= encode_seq_skip(10,1);
+             wait (CLK);                
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+
+
+             
+// TODO: Function of function does not work - debug             
+/*             
+             axi_write_single(cmd_addr,
+              encode_seq_word(
+                mr2[14:0],              // [14:0] phy_addr_in;
+                mr2[17:15],             // [ 2:0] phy_bank_in; //TODO: debug!
+                3'b111,                               // [ 2:0] phy_rcw_in; // {ras,cas,we}, positive
+                1'b0,                                 //        phy_odt_in; // may be optimized?
+                1'b1,                                 // phy_cke_in; // may be optimized?
+                1'b0,                                 // phy_sel_in; // first/second half-cycle, other will be nop (cke+odt applicable to both)
+                1'b0,                                 // phy_dq_en_in;
+                1'b0,                                 // phy_dqs_en_in;
+                1'b0,                                 // phy_dci_en_in;      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+                1'b0,                                 // phy_buf_wr;   // connect to external buffer
+                1'b0));                               // phy_buf_rd;   // connect to external buffer
+             
+ */            
+        end
+    endtask
+        
+    function [31:0] encode_seq_word;
+        input               [14:0] phy_addr_in;  // also provides pause length when the command is NOP
+        input               [ 2:0] phy_bank_in;
+        input               [ 2:0] phy_rcw_in; // {ras,cas,we}
+        input                      phy_odt_in; // may be optimized?
+        input                      phy_cke_inv; // invert CKE 
+        input                      phy_sel_in; // fitst/second half-cycle, oter will be nop (cke+odt applicable to both)
+        input                      phy_dq_en_in;
+        input                      phy_dqs_en_in;
+        input                      phy_dci_en_in;      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+        input                      phy_buf_wr;   // connect to external buffer
+        input                      phy_buf_rd;   // connect to external buffer
+        begin
+            encode_seq_word={
+            phy_addr_in[14:0],
+            phy_bank_in[2:0],
+            phy_rcw_in[2:0],      // {ras,cas,we}, positive logic (3'b0 - NOP)
+            phy_odt_in,      // may be optimized?
+            phy_cke_inv,     // invert CKE
+            phy_sel_in,      // first/second half-cycle, other will be nop (cke+odt applicable to both)
+            phy_dq_en_in,    //phy_dq_tri_in,   // tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
+            phy_dqs_en_in,   //phy_dqs_tri_in,  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
+            phy_dci_en_in,   //phy_dci_in,      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+            phy_buf_wr,      // connect to external buffer (but only if not paused)
+            phy_buf_rd,      // connect to external buffer (but only if not paused)
+            3'h0      // Reserved for future use
+            };
+        end
+    endfunction
+//    parameter CMD_PAUSE_BITS=       6, // numer of (address) bits to encode pause
+//    parameter CMD_DONE_BIT=         6  // bit number (address) to signal sequence done
     
+    function [31:0] encode_seq_skip;
+        input [CMD_PAUSE_BITS-1:0] skip;
+        input done;
+        begin
+            encode_seq_skip={
+            {14-CMD_DONE_BIT{1'b0}},
+            done,
+            skip[CMD_PAUSE_BITS-1:0],
+            3'b0, //phy_bank_in[2:0],
+            3'b0, // phy_rcw_in[2:0],      // {ras,cas,we}
+            1'b0, // phy_odt_in,      // may be optimized?
+            1'b0, // phy_cke_in,      // may be optimized?
+            1'b0, // phy_sel_in,      // fitst/second half-cycle, oter will be nop (cke+odt applicable to both)
+            1'b0, // phy_dq_en_in, //phy_dq_tri_in,   // tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
+            1'b0, // phy_dqs_en_in, //phy_dqs_tri_in,  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
+            1'b0, // phy_dci_en_in, //phy_dci_in,      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+            1'b0, // phy_buf_wr,   // connect to external buffer (but only if not paused)
+            1'b0, // phy_buf_rd,    // connect to external buffer (but only if not paused)
+            3'h0      // Reserved for future use
+            };
+        
+        end
+        
+    endfunction
+    
+
+    function [ADDRESS_NUMBER+2:0] ddr3_mr0;
+        input       pd; // precharge power down 0 - dll off (slow exit), 1 - dll on (fast exit) 
+        input [2:0] wr; // write recovery:
+                        // 3'b000: 16
+                        // 3'b001:  5
+                        // 3'b010:  6
+                        // 3'b011:  7
+                        // 3'b100:  8
+                        // 3'b101: 10
+                        // 3'b110: 12
+                        // 3'b111: 14
+        input       dll_rst; // 1 - dll reset (self clearing bit)
+        input [3:0] cl; // CAS latency:
+                        // 0000: reserved                   
+                        // 0010:  5                   
+                        // 0100:  6                   
+                        // 0110:  7                 
+                        // 1000:  8                 
+                        // 1010:  9                 
+                        // 1100: 10                   
+                        // 1110: 11                   
+                        // 0001: 12                  
+                        // 0011: 13                  
+                        // 0101: 14
+        input       bt; // read burst type: 0 sequential (nibble), 1 - interleaved
+        input [1:0] bl; // burst length:
+                        // 2'b00 - fixed BL8
+                        // 2'b01 - 4 or 8 on-the-fly by A12                                     
+                        // 2'b10 - fixed BL4 (chop)
+                        // 2'b11 - reserved
+        begin
+          ddr3_mr0 = {
+              3'b0,
+              {ADDRESS_NUMBER-13{1'b0}},
+              pd,       // MR0.12 
+              wr,       // MR0.11_9
+              dll_rst,  // MR0.8
+              1'b0,     // MR0.7
+              cl[3:1],  // MR0.6_4
+              bt,       // MR0.3
+              cl[0],    // MR0.2
+              bl[1:0]}; // MR0.1_0
+        end
+    
+    endfunction
+    
+    function [ADDRESS_NUMBER+2:0] ddr3_mr1;
+        input       qoff; // output enable: 0 - DQ, DQS operate in normal mode, 1 - DQ, DQS are disabled
+        input       tdqs; // termination data strobe (for x8 devices) 0 - disabled, 1 - enabled
+        input [2:0] rtt;  // on-die termination resistance:
+                          //  3'b000 - disabled
+                          //  3'b001 - RZQ/4 (60 Ohm)
+                          //  3'b010 - RZQ/2 (120 Ohm)
+                          //  3'b011 - RZQ/6 (40 Ohm)
+                          //  3'b100 - RZQ/12(20 Ohm)
+                          //  3'b101 - RZQ/8 (30 Ohm)
+                          //  3'b11x - reserved
+        input       wlev; // write leveling
+        input [1:0] ods;  // output drive strength:
+                          //  2'b00 - RZQ/6 - 40 Ohm
+                          //  2'b01 - RZQ/7 - 34 Ohm
+                          //  2'b1x - reserved
+        input [1:0] al;   // additive latency:
+                          //  2'b00 - disabled (AL=0)
+                          //  2'b01 - AL=CL-1;
+                          //  2'b10 - AL=CL-2
+                          //  2'b11 - reserved
+        input       dll;  // 0 - DLL enabled (normal), 1 - DLL disabled
+        begin
+            ddr3_mr1 = {
+              3'h1,
+              {ADDRESS_NUMBER-13{1'b0}},
+              qoff,       // MR1.12 
+              tdqs,       // MR1.11
+              1'b0,       // MR1.10
+              rtt[2],     // MR1.9
+              1'b0,       // MR1.8
+              wlev,       // MR1.7 
+              rtt[1],     // MR1.6 
+              ods[1],     // MR1.5 
+              al[1:0],    // MR1.4_3 
+              rtt[0],     // MR1.2 
+              ods[0],     // MR1.1 
+              dll};       // MR1.0 
+        end                            
+    endfunction
+
+    function [ADDRESS_NUMBER+2:0] ddr3_mr2;
+        input [1:0] rtt_wr; // Dynamic ODT :
+                            //  2'b00 - disabled
+                            //  2'b01 - RZQ/4 = 60 Ohm
+                            //  2'b10 - RZQ/2 = 120 Ohm
+                            //  2'b11 - reserved
+        input       srt;    // Self-refresh temperature 0 - normal (0-85C), 1 - extended (<=95C)
+        input       asr;    // Auto self-refresh 0 - disabled (manual), 1 - enabled (auto)
+        input [2:0] cwl;    // CAS write latency:
+                            //  3'b000  5CK (           tCK >= 2.5ns)  
+                            //  3'b001  6CK (1.875ns <= tCK < 2.5ns)  
+                            //  3'b010  7CK (1.5ns   <= tCK < 1.875ns)  
+                            //  3'b011  8CK (1.25ns  <= tCK < 1.5ns)  
+                            //  3'b100  9CK (1.071ns <= tCK < 1.25ns)  
+                            //  3'b101 10CK (0.938ns <= tCK < 1.071ns)  
+                            //  3'b11x reserved  
+        begin
+            ddr3_mr2 = {
+              3'h2,
+              {ADDRESS_NUMBER-11{1'b0}},
+              rtt_wr[1:0], // MR2.10_9
+              1'b0,        // MR2.8
+              srt,         // MR2.7
+              asr,         // MR2.6
+              cwl[2:0],    // MR2.5_3
+              3'b0};       // MR2.2_0 
+        end                            
+    endfunction
+        
+    function [ADDRESS_NUMBER+2:0] ddr3_mr3;
+        input       mpr;    // MPR mode: 0 - normal, 1 - dataflow from MPR
+        input [1:0] mpr_rf; // MPR read function:
+                            //  2'b00: predefined pattern 0101...
+                            //  2'b1x, 2'bx1 - reserved
+        begin
+            ddr3_mr3 = {
+              3'h3,
+              {ADDRESS_NUMBER-3{1'b0}},
+              mpr,          // MR3.2
+              mpr_rf[1:0]}; // MR3.1_0 
+        end                            
+    endfunction
+
+    
+    reg [7:0] target_phase=0;
 
 // initialize delays
     task axi_set_delays;
@@ -565,11 +1003,60 @@ simul_axi_read simul_axi_read_i(
         input [PHASE_WIDTH-1:0] phase;
         begin
             axi_write_single(BASEADDRESS_PHASE, {{(32-PHASE_WIDTH){1'b0}},phase});
+            target_phase <= phase;
         end
     endtask
+/*
+    assign rdata={21'b0,run_busy,locked,ps_rdy,ps_out[7:0]};
+*/    
+    task wait_phase_shifter_ready;
+        begin
+            read_status;
+            while (((registered_rdata & PSHIFTER_RDY_MASK) == 0) || (((registered_rdata ^ {24'h0,target_phase}) & 'hff) != 0)) read_status;
+        end
+    endtask
+    
+    
+    task read_status;
+        begin
+            read_and_wait(BASEADDR_STATUS);
+        end    
+    endtask
+    
+/*
+   // read memory
+    task test_axi_2;
+        integer i; //,j;
+        begin
+            axi_set_rd_lag(0);
+            for (i=0;i<1024;i=i+16) begin
+                axi_read_addr(
+                    i,    // id
+                    i<<2, // addr
+                    4'hf, // len
+                    1     // burst type - increment
+                );
+                if ((i==256) || (i==384)) begin
+                    repeat (512) @(posedge CLK) ;
+                end
+                if (( i & 'h7f)==0) begin
+                  if (( i & 'h80)==0) axi_set_rd_lag(1);
+                  else axi_set_rd_lag(0);
+                end
+            end
+//            assign aaa=bbb; // task internals were not parsed
+        end
+    endtask    task read_status;
+        begin
+            read_and_wait(BASEADDR_STATUS);
+        end    
+    endtask
+    
 
+*/
 
-// Low-level tasks     
+// Low-level tasks 
+
     task axi_set_rd_lag;
         input [3:0] lag;
         begin
@@ -587,6 +1074,23 @@ simul_axi_read simul_axi_read_i(
     endtask
    
     reg [11:0] GLOBAL_WRITE_ID=0;
+    reg [11:0] GLOBAL_READ_ID=0;
+
+    task read_and_wait;
+    input [31:0] address;
+    begin
+        axi_read_addr(
+            GLOBAL_READ_ID,    // id
+            address & 32'hfffffffc, // addr
+            4'h0, // len - single
+            1     // burst type - increment
+            );
+        GLOBAL_READ_ID <= GLOBAL_READ_ID+1;
+        wait (!CLK && rvalid && rready);
+        wait (CLK);
+        registered_rdata <= rdata;
+    end
+    endtask
     
     task axi_write_single; // address in bytes, not words
         input [31:0] address;
@@ -681,7 +1185,7 @@ simul_axi_read simul_axi_read_i(
             #0.1;
         end
     endtask
-
+// SuppressWarnings VEditor - not yet used
     task axi_write_data;
         input [11:0] id;
         input [31:0] data;
@@ -704,7 +1208,10 @@ simul_axi_read simul_axi_read_i(
         end
     endtask
 
-    task axi_read_addr;
+    task axi_read_addr;`ifndef IVERILOG
+(* dont_touch = "true" *)
+`endif
+    
         input [11:0] id;
         input [31:0] addr;
         input [ 3:0] len;

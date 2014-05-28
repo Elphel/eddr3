@@ -47,6 +47,7 @@ module  ddrc_sequencer   #(
     parameter CMD_DONE_BIT=         6
 )(
     // DDR3 interface
+    output                       SDRST, // DDR3 reset (active low)
     output                       SDCLK, // DDR3 clock differential output, positive
     output                       SDNCLK,// DDR3 clock differential output, negative
     output  [ADDRESS_NUMBER-1:0] SDA,   // output address ports (14:0) for 4Gb device
@@ -81,7 +82,7 @@ module  ddrc_sequencer   #(
 // Controller run interface, posedge mclk
     input               [10:0]   run_addr, // controller sequencer start address (0..11'h3ff - cmd0, 11'h400..11'h7ff - cmd1)
     input                [3:0]   run_chn,  // data channel to use
-    input                        run_seq,  // start controller sequence 
+    input                        run_seq,  // start controller sequence (will and with !ddr_rst for stable mclk)
     output                       run_done, // controller sequence finished
     output                       run_busy, // controller sequence in progress  
 // inteface to control I/O delays and mmcm
@@ -108,7 +109,9 @@ module  ddrc_sequencer   #(
     input                [7:0]   port1_addr,
     input               [31:0]   port1_data,
     // extras
-    input                        cmda_tri, // tristate command and address lines // not likely to be used
+    input                        cmda_en, // enable (!tristate) command and address lines // not likely to be used
+    input                        ddr_rst, // generate reset to DDR3 memory (active high)
+    input                        ddr_cke, // DDR clock enable , XOR-ed with command bit
     input                        inv_clk_div,
     input                 [7:0]  dqs_pattern, // 8'h55
     input                 [7:0]  dqm_pattern  // 8'h00
@@ -153,14 +156,16 @@ module  ddrc_sequencer   #(
     assign run_done=sequence_done;
     assign run_busy=cmd_busy[0]; //earliest
     assign  pause=cmd_fetch? (phy_cmd_nop && (pause_len != 0)): (cmd_busy[2] && (pause_cntr[CMD_PAUSE_BITS-1:1]!=0));
-    assign phy_cmd_word = phy_cmd_word?phy_cmd1_word:phy_cmd0_word;
+/// debugging
+    assign phy_cmd_word = cmd_sel?phy_cmd1_word:phy_cmd0_word; // TODO: hangs even with 0-s in phy_cmd
+///    assign phy_cmd_word = phy_cmd_word?0:0;
      
-    assign buf_rdata[63:0] = ({64{buf_sel_1hot[1]}} & buf1_rdata[63:0]); // ORR with other read channels terms   
+    assign buf_rdata[63:0] = ({64{buf_sel_1hot[1]}} & buf1_rdata[63:0]); // ORed with other read channels terms   
     
     always @ (posedge mclk or posedge rst) begin
         if (rst)                cmd_busy <= 0;
         else if (sequence_done) cmd_busy <= 0;
-        else cmd_busy <= {cmd_busy[1:0],run_seq}; 
+        else cmd_busy <= {cmd_busy[1:0],run_seq | cmd_busy[0]}; 
         // Pause counter
         if (rst)                           pause_cntr <= 0;
         else if (!cmd_busy[1])             pause_cntr <= 0; // not needed?
@@ -169,22 +174,22 @@ module  ddrc_sequencer   #(
         // Fetch - command data valid
         if (rst) cmd_fetch <= 0;
         else     cmd_fetch <= cmd_busy[0] && !pause;
-        // Command read adderss
+        // Command read address
         if (rst)                        cmd_addr <= 0;
         else  if (run_seq)              cmd_addr <= run_addr[9:0];
         else if (cmd_busy[0] && !pause) cmd_addr <= cmd_addr + 1;
         // command bank select (0 - "manual" (software programmed sequences), 1 - "auto" (normal block r/w)
         if (rst)            cmd_sel <= 0;
         else  if (run_seq)  cmd_sel <= run_addr[10];
-        
+   
         if (rst)            buf_page <= 0;
         else  if (run_seq)  case (run_chn)
             4'h0:    buf_page <= port0_int_page;
             4'h1:    buf_page <= port1_int_page;
-            // Add other channles later
+            // Add other channels later
             default: buf_page <= 2'bxx; 
         endcase
-        
+       
         if (rst)            buf_sel_1hot <= 0;
         else buf_sel_1hot <= {
             (run_chn_d==4'hf)?1'b1:1'b0,
@@ -206,6 +211,12 @@ module  ddrc_sequencer   #(
         if (rst)                   buf_raddr <= 9'h0;
         else if (run_seq_d)        buf_raddr <= {buf_page,7'h0};
         else if (buf_wr || buf_rd) buf_raddr <= buf_raddr +1; // Separate read/write address? read address re-registered @ negedge
+
+        if (rst) run_chn_d <= 0;
+        else     run_chn_d <= run_chn;
+        if (rst) run_seq_d <= 0;
+        else run_seq_d <= run_seq;
+        
     end
     // re-register buffer write address to match DDR3 data
     always @ (negedge mclk) begin
@@ -213,21 +224,19 @@ module  ddrc_sequencer   #(
         buf_wr_negedge <= buf_wr;
         buf_wdata_negedge <= buf_wdata;
     end
-
-    always @ (posedge mclk) begin
-        run_chn_d <= run_chn;
-        run_seq_d <= run_seq;
-    end
-    
 // Command sequence memories:
 // Command sequence memory 0 ("manual"):
+    wire ren0=!cmd_sel && cmd_busy[0] && !pause; // cmd_busy - multibit
+    wire ren1= cmd_sel && cmd_busy[0] && !pause;
     ram_1kx32_1kx32 #(
-        .REGISTERS(1) // register output
+        .REGISTERS(1) // (0) // register output
     ) cmd0_buf_i (
         .rclk     (mclk), // input
-        .raddr    (cmd_addr), // input[9:0] 
-        .ren      (!cmd_sel && cmd_busy && !pause), // input
-        .regen    (!cmd_sel && cmd_busy && !pause), // input
+        .raddr    (cmd_addr), // input[9:0]
+///        .ren      (!cmd_sel && cmd_busy && !pause), // input
+///        .regen    (!cmd_sel && cmd_busy && !pause), // input
+        .ren      (ren0), // input TODO: verify cmd_busy[0] is correct (was cmd_busy )
+        .regen    (ren0), // input
         .data_out (phy_cmd0_word), // output[31:0] 
         .wclk     (cmd0_clk), // input
         .waddr    (cmd0_addr), // input[9:0] 
@@ -238,12 +247,14 @@ module  ddrc_sequencer   #(
 
 // Command sequence memory 0 ("manual"):
     ram_1kx32_1kx32 #(
-        .REGISTERS(1) // register output
+        .REGISTERS(1) // (0) // register output
     ) cmd1_buf_i (
         .rclk     (mclk), // input
-        .raddr    (cmd_addr), // input[9:0] 
-        .ren      ( cmd_sel && cmd_busy && !pause), // input
-        .regen    ( cmd_sel && cmd_busy && !pause), // input
+        .raddr    (cmd_addr), // input[9:0]
+///        .ren      ( cmd_sel && cmd_busy && !pause), // input
+///        .regen    ( cmd_sel && cmd_busy && !pause), // input
+        .ren      ( ren1), // input
+        .regen    ( ren1), // input
         .data_out (phy_cmd1_word), // output[31:0] 
         .wclk     (cmd1_clk), // input
         .waddr    (cmd1_addr), // input[9:0] 
@@ -302,7 +313,8 @@ module  ddrc_sequencer   #(
         .CLKFBOUT_DIV_REF      (CLKFBOUT_DIV_REF),
         .DIVCLK_DIVIDE         (DIVCLK_DIVIDE),
         .CLKFBOUT_PHASE        (CLKFBOUT_PHASE),
-        .SDCLK_PHASE           (SDCLK_PHASE),
+        .SDCLK_PHASE           (SDCLK_PHASE),/// debugging
+        
         .CLK_PHASE             (CLK_PHASE),
         .CLK_DIV_PHASE         (CLK_DIV_PHASE),
         .MCLK_PHASE            (MCLK_PHASE),
@@ -314,6 +326,7 @@ module  ddrc_sequencer   #(
         .CMD_DONE_BIT          (CMD_DONE_BIT)    // bit number (address) to signal sequence done
         
     ) phy_cmd_i (
+        .SDRST               (SDRST), // output ****************
         .SDCLK               (SDCLK), // output
         .SDNCLK              (SDNCLK), // output
         .SDA                 (SDA[ADDRESS_NUMBER-1:0]), // output[14:0] 
@@ -339,8 +352,10 @@ module  ddrc_sequencer   #(
         .set                 (set), // input
         .locked              (locked), // output
         .ps_rdy              (ps_rdy), // output
-        .ps_out              (ps_out[7:0]), // output[7:0] 
-        .phy_cmd_word        (phy_cmd_word[31:0]), // input[35:0]
+        .ps_out              (ps_out[7:0]), // output[7:0]
+/// debugging
+//        .phy_cmd_word        (32'h0), //phy_cmd_word[31:0]), // input[31:0]
+        .phy_cmd_word        (phy_cmd_word[31:0]), // input[31:0]
         .phy_cmd_nop         (phy_cmd_nop), // output
         .pause_len           (pause_len),     // output  [CMD_PAUSE_BITS-1:0]
         .sequence_done       (sequence_done), // output
@@ -349,7 +364,9 @@ module  ddrc_sequencer   #(
         .buf_rdata           (buf_rdata[63:0]), // input[63:0] 
         .buf_wr              (buf_wr), // output
         .buf_rd              (buf_rd), // output
-        .cmda_tri            (cmda_tri), // input
+        .cmda_en             (cmda_en), // input
+        .ddr_rst             (ddr_rst), // input ***************
+        .ddr_cke             (ddr_cke), // input ***************
         .inv_clk_div         (inv_clk_div), // input
         .dqs_pattern         (dqs_pattern), // input[7:0] 
         .dqm_pattern         (dqm_pattern) // input[7:0] 

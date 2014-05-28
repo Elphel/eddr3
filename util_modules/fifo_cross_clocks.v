@@ -65,9 +65,10 @@ module fifo_cross_clocks
     // False positive in nempty can only happen if
     // a) it is transitioning from empty to non-empty due to we pulse
     // b) it is transitioning to overrun - too bad already
-    // false negative - OK, just wait fro the next rclk 
+    // false negative - OK, just wait for the next rclk 
 //    assign nempty=waddr_gray_rclk != raddr_gray;
-    assign nempty=waddr_gray_rclk[3:0] != raddr_gray[3:0];
+//    assign nempty=waddr_gray_rclk[3:0] != raddr_gray[3:0];
+    assign nempty= (waddr_gray_rclk[3:0] ^ raddr_gray[3:0]) != 4'b0;
     assign data_out=ram[raddr];
     always @ (posedge  wclk or posedge rst) begin
         if (rst)     waddr <= 0;

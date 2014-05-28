@@ -52,6 +52,7 @@ module  phy_top #(
     parameter SS_MODE =      "CENTER_HIGH",
     parameter SS_MOD_PERIOD =       10000
 )(
+    output                       ddr3_nrst, // output NRST port
     output                       ddr3_clk, // DDR3 clock differential output, positive
     output                       ddr3_nclk,// DDR3 clock differential output, negative
     output  [ADDRESS_NUMBER-1:0] ddr3_a,   // output address ports (14:0) for 4Gb device
@@ -74,8 +75,8 @@ module  phy_top #(
     output                       clk,      // free-running system clock, same frequency as iclk (shared for R/W),     BUFR output
     output                       clk_div,  // free-running half clk frequency, front aligned to clk (shared for R/W), BUFR output
     output                       mclk,     // same as clk_div, through separate BUFG and static phase adjust
-    input                        rst_in,      // reset delays/serdes
-    
+    input                        rst_in,   // reset delays/serdes
+    input                        ddr_rst,  // active high - generate NRST to memory 
     input [2*ADDRESS_NUMBER-1:0] in_a,     // input address, 2 bits per signal (first, second) (29:0) for 4Gb device
     input                  [5:0] in_ba,    // input bank address, 2 bits per signal (first, second)
     input                  [1:0] in_we,    // input WE, 2 bits (first, second)
@@ -119,6 +120,19 @@ module  phy_top #(
   wire  clk_ref; // 200MHz/300Mhz to calibrate I/O delays            
   wire locked_mmcm,locked_pll, dly_ready;
   assign locked=locked_mmcm && locked_pll && dly_ready; // both PLL ready, I/O delay calibrated
+  
+/* memory reset */
+    obuf #(
+        .CAPACITANCE("DONT_CARE"),
+        .DRIVE(12),
+        .IOSTANDARD(IOSTANDARD_CMDA),
+        .SLEW("SLOW")
+    ) obuf_i (
+        .O(ddr3_nrst), // output
+        .I(~ddr_rst)   // input
+    );
+  
+  
   cmd_addr #(
     .IODELAY_GRP(IODELAY_GRP),
     .IOSTANDARD(IOSTANDARD_CMDA),

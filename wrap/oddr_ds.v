@@ -21,11 +21,11 @@
 `timescale 1ns/1ps
 
 module  oddr_ds # (
-        parameter CAPACITANCE ="DONT_CARE",
-        parameter IOSTANDARD = "DIFF_SSTL15",
-        parameter SLEW =       "SLOW",
+        parameter CAPACITANCE =  "DONT_CARE",
+        parameter IOSTANDARD =   "DIFF_SSTL15",
+        parameter SLEW =         "SLOW",
         parameter DDR_CLK_EDGE = "OPPOSITE_EDGE",
-        parameter INIT          = 1'b0,
+        parameter INIT         = 1'b0,
         parameter SRTYPE = "SYNC"
 )(
     input  clk,

@@ -19,6 +19,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/> .
 #################################################################################
 
+#    output                       SDRST, // output SDRST, active low
+set_property IOSTANDARD SSTL15 [get_ports {SDRST}]
+set_property PACKAGE_PIN J4 [get_ports {SDRST}]
+
 #    output                       SDCLK, // DDR3 clock differential output, positive
 set_property IOSTANDARD DIFF_SSTL15 [get_ports {SDCLK}]
 set_property PACKAGE_PIN K3 [get_ports {SDCLK}]

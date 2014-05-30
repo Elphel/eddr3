@@ -45,8 +45,8 @@ module  phy_cmd#(
     parameter SS_EN =              "FALSE",
     parameter SS_MODE =      "CENTER_HIGH",
     parameter SS_MOD_PERIOD =       10000,
-    parameter CMD_PAUSE_BITS=       6, // numer of (address) bits to encode pause
-    parameter CMD_DONE_BIT=         6  // bit number (address) to signal sequence done
+    parameter CMD_PAUSE_BITS=       10, // numer of (address) bits to encode pause
+    parameter CMD_DONE_BIT=         10  // bit number (address) to signal sequence done
 )(
     // DDR3 interface
     output                       SDRST, // DDR3 reset (active low)
@@ -61,10 +61,10 @@ module  phy_cmd#(
     output                       SDODT, // output ODT port
 
     inout                 [15:0] SDD,       // DQ  I/O pads
-    inout                        SDDML,      // LDM  I/O pad (actually only output)
+    output                       SDDML,      // LDM  I/O pad (actually only output)
     inout                        DQSL,     // LDQS I/O pad
     inout                        NDQSL,    // ~LDQS I/O pad
-    inout                        SDDMU,      // UDM  I/O pad (actually only output)
+    output                       SDDMU,      // UDM  I/O pad (actually only output)
     inout                        DQSU,     // UDQS I/O pad
     inout                        NDQSU,    // ~UDQS I/O pad
 // clocks, reset
@@ -121,6 +121,7 @@ module  phy_cmd#(
     wire                           phy_dqs_tri_in;  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
     wire                         phy_dci_en_in;      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
     wire                           phy_dci_in;      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+    wire                         phy_dqs_toggle_en;  //enable toggle DQS according to the pattern
     wire                         phy_buf_wr;   // connect to extrenal buffer
     wire                         phy_buf_rd;   // connect to extrenal buffer
     wire                         cmda_tri;
@@ -152,9 +153,14 @@ module  phy_cmd#(
     reg        [PHASE_WIDTH-1:0] ps_out_r1,ps_out_r2; 
     wire                  [63:0] phy_rdata; // data read from ddr3 iserdese2 at posedge clk_div
     reg                   [63:0] phy_rdata_r; // registered @ posedge mclk
+    
+    reg    [ADDRESS_NUMBER-1:0] phy_addr_prev;
+    reg                  [ 2:0] phy_bank_prev;
+    wire   [ADDRESS_NUMBER-1:0] phy_addr_calm;
+    wire                 [ 2:0] phy_bank_calm;
 //    output                [63:0] buf_wdata, // data to be written to the buffer (from DDR3)
     // SuppressWarnings VEditor 
-  (* keep = "true" *)  wire  [2:0] phy_spare;
+  (* keep = "true" *)  wire  [1:0] phy_spare;
     assign {
         phy_addr_in,
         phy_bank_in,
@@ -164,6 +170,7 @@ module  phy_cmd#(
         phy_sel_in,      // fitst/second half-cycle, oter will be nop (cke+odt applicable to both)
         phy_dq_en_in, //phy_dq_tri_in,   // tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
         phy_dqs_en_in, //phy_dqs_tri_in,  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
+        phy_dqs_toggle_en,   //enable toggle DQS according to the pattern
         phy_dci_en_in, //phy_dci_in,      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
 //        phy_buf_addr, // connect to external buffer (is it needed? maybe just autoincrement?)
         phy_buf_wr,   // connect to external buffer (but only if not paused)
@@ -179,12 +186,16 @@ module  phy_cmd#(
     assign sequence_done= phy_cmd_nop && phy_addr_in[CMD_DONE_BIT];
     assign pause_len=      phy_addr_in[CMD_PAUSE_BITS-1:0];
     
+    assign phy_addr_calm= phy_cmd_nop ? phy_addr_prev : phy_addr_in;
+    assign phy_bank_calm= phy_cmd_nop ? phy_bank_prev : phy_bank_in;
 //    assign buf_addr = phy_buf_addr;
     assign buf_wr =   phy_buf_wr;
     assign buf_rd =   phy_buf_rd;
     
-    assign  phy_addr=   {phy_addr_in,phy_addr_in};       // also provides pause length when the command is NOP
-    assign  phy_bank=   {phy_bank_in,phy_bank_in};
+//    assign  phy_addr=   {phy_addr_in,phy_addr_in};       // also provides pause length when the command is NOP
+//    assign  phy_bank=   {phy_bank_in,phy_bank_in};
+    assign  phy_addr=   {phy_addr_calm,phy_addr_calm};       // also provides pause length when the command is NOP
+    assign  phy_bank=   {phy_bank_calm,phy_bank_calm};
     assign  phy_rcw=    {phy_sel_in?phy_rcw_in:3'h7, phy_sel_in?3'h7:phy_rcw_in}; // {ras,cas,we}
     assign  phy_odt=    {phy_odt_in,phy_odt_in};         // may be optimized?
     assign  phy_cke=    {phy_cke_in,phy_cke_in};         // may be optimized?
@@ -210,6 +221,17 @@ module  phy_cmd#(
         dqs_tri_prev <= phy_dqs_tri_in;
         dq_tri_prev  <= phy_dq_tri_in;
     end 
+
+    always @ (posedge mclk  or posedge rst_in) begin
+        if (rst_in) begin
+            phy_addr_prev <= 0;
+            phy_bank_prev <= 0;
+        end else if (!phy_cmd_nop) begin
+            phy_addr_prev <= phy_addr_in;
+            phy_bank_prev <= phy_bank_in;
+        end
+            
+    end
     
 // cross clock boundary posedge mclk -> posedge clk_div (mclk is later than clk_div)    
     always @ (posedge clk_div or posedge rst_in) begin
@@ -259,7 +281,8 @@ phy_rdata
 
 */
 
-
+    wire [7:0] dqs_data;
+    assign dqs_data=phy_dqs_toggle_en?dqs_pattern[7:0]:8'h0;
     phy_top #(
         .IOSTANDARD_DQ      ("SSTL15_T_DCI"),
         .IOSTANDARD_DQS     ("DIFF_SSTL15_T_DCI"),
@@ -327,7 +350,7 @@ phy_rdata
         .din             (buf_rdata[63:0]), // input[63:0] 
         .din_dm          (dqm_pattern[7:0]), // input[7:0] 
         .tin_dq          (phy_dq_tri[7:0]), // input[7:0] 
-        .din_dqs         (dqs_pattern[7:0]), // input[7:0] 
+        .din_dqs         (dqs_data), // input[7:0] 
         .tin_dqs         (phy_dqs_tri[7:0]), // input[7:0] 
         .dout            (phy_rdata[63:0]), // output[63:0] @posedge clk_div
         .inv_clk_div     (inv_clk_div), // input

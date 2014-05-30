@@ -43,8 +43,8 @@ module  ddrc_test01 #(
     parameter SS_EN =              "FALSE",
     parameter SS_MODE =      "CENTER_HIGH",
     parameter SS_MOD_PERIOD =       10000,
-    parameter CMD_PAUSE_BITS=       6,
-    parameter CMD_DONE_BIT=         6,
+    parameter CMD_PAUSE_BITS=       10,
+    parameter CMD_DONE_BIT=         10,
     parameter AXI_WR_ADDR_BITS =    13,
     parameter AXI_RD_ADDR_BITS =    13,
     parameter CONTROL_ADDR =        'h1000, // AXI write address of control write registers
@@ -92,10 +92,10 @@ module  ddrc_test01 #(
     output                       SDODT, // output ODT port
 
     inout                 [15:0] SDD,   // DQ  I/O pads
-    inout                        SDDML, // LDM  I/O pad (actually only output)
+    output                       SDDML, // LDM  I/O pad (actually only output)
     inout                        DQSL,  // LDQS I/O pad
     inout                        NDQSL, // ~LDQS I/O pad
-    inout                        SDDMU, // UDM  I/O pad (actually only output)
+    output                       SDDMU, // UDM  I/O pad (actually only output)
     inout                        DQSU,  // UDQS I/O pad
     inout                        NDQSU // ~UDQS I/O pad
     // AXI write (ps -> pl)

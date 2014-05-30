@@ -1,8 +1,9 @@
-com.elphel.store.context.iverilog=iverilog_81_TopModulesOther<-@\#\#@->iverilog_83_ExtraFiles<-@\#\#@->iverilog_88_ShowNoProblem<-@\#\#@->iverilog_77_Param_Exe<-@\#\#@->iverilog_78_VVP_Exe<-@\#\#@->iverilog_99_GrepFindErrWarn<-@\#\#@->
+com.elphel.store.context.iverilog=iverilog_81_TopModulesOther<-@\#\#@->iverilog_83_ExtraFiles<-@\#\#@->iverilog_88_ShowNoProblem<-@\#\#@->iverilog_77_Param_Exe<-@\#\#@->iverilog_78_VVP_Exe<-@\#\#@->iverilog_99_GrepFindErrWarn<-@\#\#@->iverilog_84_IncludeDir<-@\#\#@->
 eclipse.preferences.version=1
 iverilog_77_Param_Exe=/usr/local/bin/iverilog
 iverilog_78_VVP_Exe=/usr/local/bin/vvp
 iverilog_81_TopModulesOther=glbl<-@\#\#@->
 iverilog_83_ExtraFiles=glbl.v<-@\#\#@->
+iverilog_84_IncludeDir=/data/vdt/vdt-projects/eddr3/ddr3<-@\#\#@->
 iverilog_88_ShowNoProblem=true
 iverilog_99_GrepFindErrWarn=error|warning|sorry

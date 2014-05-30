@@ -38,12 +38,13 @@ module fifo_same_clock
   );
     localparam integer DATA_2DEPTH=(1<<DATA_DEPTH)-1;
     reg  [DATA_DEPTH  :0] fill=0;
-    reg                   just_one=0;
+    reg                   just_one,two_or_less;
     reg  [DATA_WIDTH-1:0] inreg;
     reg  [DATA_WIDTH-1:0] outreg;
     reg  [DATA_DEPTH-1:0] ra;
     reg  [DATA_DEPTH-1:0] wa;
     wire [DATA_DEPTH  :0] next_fill;
+    wire                  outreg_use_inreg;
     reg  wem;
     wire rem;
     reg  out_full=0; //output register full
@@ -52,10 +53,11 @@ module fifo_same_clock
 //    assign data_out  = just_one?inreg:outreg;
     assign data_out  = out_full?outreg:inreg;
     assign rem = (!out_full || re)&& (just_one? wem : re); 
-
+    assign outreg_use_inreg=(out_full && two_or_less) || just_one;
  //   assign next_fill = fill[4:0]+((we && ~rem)?1:((~we && rem)?5'b11111:5'b00000));
  // TODO: verify rem is not needed instead of re
     assign next_fill = fill[4:0]+((we && ~re)?1:((~we && re)?5'b11111:5'b00000));
+    
 
 
     always @ (posedge  clk or posedge  rst) begin
@@ -79,10 +81,12 @@ module fifo_same_clock
     always @ (posedge  clk) begin
       if (wem) ram[wa] <= inreg;
       just_one <= (next_fill == 1);
+      two_or_less <= (next_fill == 1) | (next_fill == 2);
       half_full <=(fill & (1<<(DATA_DEPTH-1)))!=0;
       full <=     (fill & (1<< DATA_DEPTH   ))!=0;
       if (we)  inreg  <= data_in;
-      if (rem) outreg <= just_one?inreg:ram[ra];
+//      if (rem) outreg <= just_one?inreg:ram[ra];
+      if (rem) outreg <= outreg_use_inreg ? inreg : ram[ra];
       wem <= we;
     end
 endmodule

@@ -115,7 +115,7 @@ module ddr3 (
 `elsif den2048Mb
     `include "2048Mb_ddr3_parameters.vh"
 `elsif den4096Mb
-    `include "ddr3/4096Mb_ddr3_parameters.vh"
+    `include "4096Mb_ddr3_parameters.vh"
 `else
     // NOTE: Intentionally cause a compile fail here to force the users
     //       to select the correct component density before continuing
@@ -606,11 +606,11 @@ module ddr3 (
             floor = number;
     endfunction
 
-    function integer max( input integer a, b );
+    function integer max( input integer a, input integer b );
         max = (a < b) ? b : a;
     endfunction
 
-    function integer min( input integer a, b );
+    function integer min( input integer a, input integer b );
         min = (a > b) ? b : a;
     endfunction
 

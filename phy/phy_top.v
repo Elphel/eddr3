@@ -64,10 +64,10 @@ module  phy_top #(
     output                       ddr3_odt, // output ODT port
 
     inout                 [15:0] dq,       // DQ  I/O pads
-    inout                        dml,      // LDM  I/O pad (actually only output)
+    output                       dml,      // LDM  I/O pad (actually only output)
     inout                        dqsl,     // LDQS I/O pad
     inout                        ndqsl,    // ~LDQS I/O pad
-    inout                        dmu,      // UDM  I/O pad (actually only output)
+    output                       dmu,      // UDM  I/O pad (actually only output)
     inout                        dqsu,     // UDQS I/O pad
     inout                        ndqsu,    // ~UDQS I/O pad
     

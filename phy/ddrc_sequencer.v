@@ -59,10 +59,10 @@ module  ddrc_sequencer   #(
     output                       SDODT, // output ODT port
 
     inout                 [15:0] SDD,   // DQ  I/O pads
-    inout                        SDDML, // LDM  I/O pad (actually only output)
+    output                       SDDML, // LDM  I/O pad (actually only output)
     inout                        DQSL,  // LDQS I/O pad
     inout                        NDQSL, // ~LDQS I/O pad
-    inout                        SDDMU, // UDM  I/O pad (actually only output)
+    output                       SDDMU, // UDM  I/O pad (actually only output)
     inout                        DQSU,  // UDQS I/O pad
     inout                        NDQSU, // ~UDQS I/O pad
 // clocks, reset
@@ -164,7 +164,8 @@ module  ddrc_sequencer   #(
     
     always @ (posedge mclk or posedge rst) begin
         if (rst)                cmd_busy <= 0;
-        else if (sequence_done) cmd_busy <= 0;
+//        else if (sequence_done) cmd_busy <= 0;
+        else if (sequence_done &&  cmd_busy[2]) cmd_busy <= 0;
         else cmd_busy <= {cmd_busy[1:0],run_seq | cmd_busy[0]}; 
         // Pause counter
         if (rst)                           pause_cntr <= 0;
@@ -212,8 +213,8 @@ module  ddrc_sequencer   #(
         else if (run_seq_d)        buf_raddr <= {buf_page,7'h0};
         else if (buf_wr || buf_rd) buf_raddr <= buf_raddr +1; // Separate read/write address? read address re-registered @ negedge
 
-        if (rst) run_chn_d <= 0;
-        else     run_chn_d <= run_chn;
+        if (rst)          run_chn_d <= 0;
+        else if (run_seq) run_chn_d <= run_chn;
         if (rst) run_seq_d <= 0;
         else run_seq_d <= run_seq;
         

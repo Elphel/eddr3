@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.49 (w)1999-2013 BSI
-[*] Fri May 30 07:35:38 2014
+[*] Sat May 31 06:12:01 2014
 [*]
-[dumpfile] "/data/vdt/vdt-projects/eddr3/simulation/ddrc_test01_testbench-20140530013238993.lxt"
-[dumpfile_mtime] "Fri May 30 07:33:55 2014"
-[dumpfile_size] 55044338
+[dumpfile] "/data/vdt/vdt-projects/eddr3/simulation/ddrc_test01_testbench-20140531000432115.lxt"
+[dumpfile_mtime] "Sat May 31 06:06:51 2014"
+[dumpfile_size] 72003129
 [savefile] "/data/vdt/vdt-projects/eddr3/ddrc_test01_testbench.sav"
-[timestart] 117839420
+[timestart] 119279350
 [size] 1920 1180
 [pos] -1920 108
-*-11.298908 117840830 117826250 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-14.213203 119337900 117826250 118403972 118403856 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] ddrc_test01_testbench.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.axibram_read_i.
@@ -19,6 +19,13 @@
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.
+[treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].
+[treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.
+[treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.
+[treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].
+[treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.
+[treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.
+[treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dqs_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane1_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane1_i.dqs_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane1_i.dqs_i.oserdes_i.
@@ -26,11 +33,12 @@
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.idelay_ctrl_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.pll_base_i.PLLE2_BASE_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.pll_base_i.PLLE2_BASE_i.plle2_adv_1.
+[treeopen] ddrc_test01_testbench.simul_axi_master_rdaddr_i.
 [treeopen] ddrc_test01_testbench.simul_axi_master_wraddr_i.
 [sst_width] 334
-[signals_width] 427
+[signals_width] 305
 [sst_expanded] 1
-[sst_vpaned_height] 723
+[sst_vpaned_height] 820
 @28
 ddrc_test01_testbench.RST[0]
 ddrc_test01_testbench.CLK[0]
@@ -1296,10 +1304,37 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.sequence_done[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.set[0]
 @1401200
 -ddrc_sequencer
-@c00200
+@800200
 -ddr_sequencer_i_selected
+@c00200
+-tristate_control
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_control_i.dqs_tri_pattern_r[15:0]
 @28
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.clk[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.dqs_tri_off_pattern[3:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.dqs_tri_on_pattern[3:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.dqs_tri_prev[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_dqs_tri_in[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_dqs_tri[7:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dqs_i.iobufs_dqs_i.T[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.dq_tri_off_pattern[3:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.dq_tri_on_pattern[3:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.dq_tri_prev[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_dq_tri_in[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_dq_tri[7:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.iobufs_dqs_i.T[0]
+@1401200
+-tristate_control
+@28
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.sdclk[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.SDCLK[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.SDCKE[0]
@@ -1321,6 +1356,12 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.SDD[15:0]
 @28
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.SDODT[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.SDRST[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.buf_wdata[63:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.buf_wdata_negedge[63:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.buf_wr[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.buf_wr_negedge[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.mclk[0]
 @22
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.cmd0_addr[9:0]
@@ -1359,7 +1400,11 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.run_done[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.run_seq[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.run_seq_d[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.sequence_done[0]
-@1401200
+@200
+-
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.add_pause[0]
+@1000200
 -ddr_sequencer_i_selected
 @c00200
 -ddrc_test01
@@ -1724,7 +1769,7 @@ ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.we[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.wem[0]
 @1401200
 -wdata_i
-@c00200
+@800200
 -axibram_read_i
 @28
 ddrc_test01_testbench.ddrc_test01_i.axibram_read_i.aclk[0]
@@ -1799,7 +1844,33 @@ ddrc_test01_testbench.ddrc_test01_i.axibram_read_i.start_burst[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_read_i.start_read_burst_0[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_read_i.start_read_burst_1[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_read_i.start_read_burst_w[0]
-@1401200
+@22
+ddrc_test01_testbench.read_block_buf.i[31:0]
+ddrc_test01_testbench.registered_rdata[31:0]
+@28
+ddrc_test01_testbench.rstb[0]
+ddrc_test01_testbench.AR_SET_CMD_r[0]
+@22
+ddrc_test01_testbench.simul_axi_master_rdaddr_i.simul_axi_fifo_i.out_address[31:0]
+@200
+-
+@28
+ddrc_test01_testbench.simul_axi_master_rdaddr_i.simul_axi_fifo_i.ready[0]
+ddrc_test01_testbench.simul_axi_master_rdaddr_i.simul_axi_fifo_i.out_inc[0]
+ddrc_test01_testbench.simul_axi_master_rdaddr_i.simul_axi_fifo_i.valid[0]
+ddrc_test01_testbench.arready[0]
+ddrc_test01_testbench.AR_READY[0]
+@22
+ddrc_test01_testbench.LAST_ARID[11:0]
+ddrc_test01_testbench.SIMUL_AXI_READ[31:0]
+ddrc_test01_testbench.SIMUL_AXI_ADDR[9:0]
+@28
+ddrc_test01_testbench.SIMUL_AXI_FULL[0]
+@29
+ddrc_test01_testbench.rstb[0]
+@200
+-
+@1000200
 -axibram_read_i
 @c00200
 -ddrc_status
@@ -1983,7 +2054,7 @@ ddrc_test01_testbench.simul_axi_master_wraddr_i.simul_axi_fifo_i.reset[0]
 ddrc_test01_testbench.simul_axi_master_wraddr_i.simul_axi_fifo_i.valid[0]
 @1401200
 -simul_axi_master_wraddr_fifo
-@800200
+@c00200
 -write_block
 @28
 ddrc_test01_testbench.SDCLK[0]
@@ -2022,10 +2093,366 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.port1_data[31:0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.port1_addr[7:0]
 @28
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.port1_page[1:0]
-@29
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.port1_we[0]
 @1000200
 -port1_wr
+@1401200
 -write_block
+@c00200
+-byte_lane0_selected
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.clk[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.clk_div[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dci_disable_dq[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dci_disable_dq_r[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dci_disable_dqs[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dci_disable_dqs_r[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.decode_sel[9:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.din[31:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.din_dm[3:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.din_dm_r[3:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.din_dqs[3:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.din_dqs_r[3:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.din_r[31:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dly_addr[4:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dly_data[7:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dly_data_r[7:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dm[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dout[31:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq[7:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dqs[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dqs_read[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.iclk[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.inv_clk_div[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.ld_delay[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.ld_idly[7:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.ld_idly_dqs[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.ld_odly[7:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.ld_odly_dm[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.ld_odly_dqs[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.ndqs[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.rst[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.set[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.set_r[0]
+@800022
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.tin_dq[3:0]
+@28
+(0)ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.tin_dq[3:0]
+(1)ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.tin_dq[3:0]
+(2)ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.tin_dq[3:0]
+(3)ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.tin_dq[3:0]
+@1001200
+-group_end
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.tin_dq_r[3:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.tin_dqs[3:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.tin_dqs_r[3:0]
+@c00200
+-dqs0_i
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dqs_i.dqs[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dqs_i.clk[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dqs_i.clk_div[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dqs_i.dqs_received_dly[0]
+@1401200
+-dqs0_i
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dq_dly[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dout[3:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dq_dly[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dout[3:0]
+@200
+-
+@c00200
+-dqs1_i
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.clk[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.clk_div[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.d_ser[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dci_disable[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.din[3:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dly_data[7:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dout[3:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dq[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dq_data_dly[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dq_di[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dq_dly[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dq_tri[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.iclk[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.inv_clk_div[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.ld_idelay[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.ld_odelay[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.rst[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.set_idelay[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.set_odelay[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.IDATAIN[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.tin[3:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.fdly[2:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.qcntvalueout_reg[4:0]
+@1401200
+-dqs1_i
+@c00200
+-dq0_i
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.clk[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.clk_div[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dly_data[7:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dout[3:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dq[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dq_data_dly[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dq_di[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dq_dly[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dq_tri[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.iclk[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.inv_clk_div[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.ld_idelay[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.ld_odelay[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.rst[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.set_idelay[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.set_odelay[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.tin[3:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.IDATAIN[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.fdly[2:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.qcntvalueout_reg[4:0]
+@1401200
+-dq0_i
+-byte_lane0_selected
+@200
+-
+@c00200
+-dq1_idelay2
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.CALC_TAPDELAY_FD
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.CALC_TAPDELAY_RD
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.CE[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.CINVCTRL[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.CNTVALUEIN[4:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.CNTVALUEIN_INTEGER[31:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.CNTVALUEOUT[4:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.C[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.DATAIN[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.DATAOUT[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.DATAOUT_reg[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.DELAY_D[31:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.GSR[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.IDATAIN[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.IFDLY[2:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.INC[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.INIT_DELAY_FD
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.INIT_DELAY_RD
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.LDPIPEEN[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.LD[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.REGRST[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.c_in[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.c_in_pre[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.ce_in[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.cinvctrl_in[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.cntvaluein_in[4:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.cntvalueout_pre[4:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.data_mux[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.datain_in[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_c[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_ce[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_0[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_1[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_2[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_3[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_4[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_5[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_6[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_7[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_8[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_9[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_10[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_11[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_12[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_13[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_14[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_15[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_16[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_17[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_18[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_19[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_20[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_21[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_22[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_23[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_24[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_25[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_26[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_27[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_28[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_29[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_30[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_31[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_cinvctrl[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_cntvaluein[4:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_datain[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_idatain[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_ifdly[2:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_inc[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_ld[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_ldpipeen[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_regrst[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.fine_delay_0[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.fine_delay_1[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.fine_delay_2[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.fine_delay_3[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.fine_delay_4[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.fine_delay_5[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.gsr_in[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.idatain_in[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.idelay_count[31:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.ifdly_in[2:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.inc_in[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.ld_in[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.ldpipeen_in[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.qcntvalueout_mux[4:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.qcntvalueout_reg[4:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.regrst_in[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.tap_out_fd[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.tap_out_final[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[1].dq_i.dqs_in_dly_i.idelay2_finedelay_i.tap_out_rd[0]
+@1401200
+-dq1_idelay2
+@c00200
+-dq0_idelay2
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.CALC_TAPDELAY_FD
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.CALC_TAPDELAY_RD
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.CE[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.CINVCTRL[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.CNTVALUEIN[4:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.CNTVALUEIN_INTEGER[31:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.CNTVALUEOUT[4:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.C[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.DATAIN[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.DATAOUT[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.DATAOUT_reg[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.DELAY_D[31:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.GSR[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.IDATAIN[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.IFDLY[2:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.INC[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.INIT_DELAY_FD
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.INIT_DELAY_RD
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.LDPIPEEN[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.LD[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.REGRST[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.c_in[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.c_in_pre[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.ce_in[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.cinvctrl_in[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.cntvaluein_in[4:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.cntvalueout_pre[4:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.data_mux[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.datain_in[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_c[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_ce[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_0[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_1[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_2[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_3[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_4[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_5[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_6[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_7[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_8[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_9[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_10[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_11[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_12[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_13[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_14[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_15[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_16[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_17[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_18[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_19[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_20[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_21[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_22[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_23[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_24[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_25[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_26[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_27[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_28[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_29[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_30[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_chain_31[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_cinvctrl[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_cntvaluein[4:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_datain[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_idatain[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_ifdly[2:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_inc[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_ld[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_ldpipeen[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.delay_regrst[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.fine_delay_0[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.fine_delay_1[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.fine_delay_2[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.fine_delay_3[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.fine_delay_4[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.fine_delay_5[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.gsr_in[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.idatain_in[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.idelay_count[31:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.ifdly_in[2:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.inc_in[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.ld_in[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.ldpipeen_in[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.qcntvalueout_mux[4:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.qcntvalueout_reg[4:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.regrst_in[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.tap_out_fd[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.tap_out_final[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dqs_in_dly_i.idelay2_finedelay_i.tap_out_rd[0]
+@1401200
+-dq0_idelay2
 [pattern_trace] 1
 [pattern_trace] 0

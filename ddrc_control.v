@@ -22,51 +22,33 @@
 
 module  ddrc_control #(
     parameter AXI_WR_ADDR_BITS=    12,
-//    parameter SELECT_ADDR =        'h800, // address to select this module
-//    parameter SELECT_ADDR_MASK =   'h800, // address mask to select this  module
-//    parameter BUSY_ADDR =          'hc00, // address to generate busy
-//    parameter BUSY_ADDR_MASK =     'hc00,  // address mask to generate busy
-
     parameter CONTROL_ADDR =        'h1000, // AXI write address of control write registers
     parameter CONTROL_ADDR_MASK =   'h1400, // AXI write address of control registers
-//    parameter STATUS_ADDR =         'h1400, // AXI write address of status read registers
-//    parameter STATUS_ADDR_MASK =    'h1400, // AXI write address of status registers
     parameter BUSY_WR_ADDR =        'h1800, // AXI write address to generate busy
     parameter BUSY_WR_ADDR_MASK =   'h1c00, // AXI write address mask to generate busy
-    
-//    parameter DLY_LD_ADDR =        'h880,  // address to generate delay load
-//    parameter DLY_LD_ADDR_MASK =   'hb80,  // address mask to generate delay load
-//    parameter DLY_SET_ADDR =       'h870,  // address to generate delay set
-//    parameter DLY_SET_ADDR_MASK =  'hbff,  // address mask to generate delay set
-//    parameter RUN_CHN_ADDR =       'h800,  // address to set sequnecer channel and  run (4 LSB-s - channel)
-//    parameter RUN_CHN_ADDR_MASK =  'hbf0,  // address mask to generate sequencer channel/run
-//    parameter PATTERNS_ADDR =      'h820,  // address to set DQM and DQS patterns (16'h0055)
-//    parameter PATTERNS_ADDR_MASK = 'hbff,  // address mask to set DQM and DQS patterns
-//    parameter PAGES_ADDR =         'h821,  // address to set buffer pages {port1_page[1:0],port1_int_page[1:0],port0_page[1:0],port0_int_page[1:0]}
-//    parameter PAGES_ADDR_MASK =    'hbff,  // address mask to set DQM and DQS patterns
-//    parameter CMDA_EN_ADDR =       'h822,  // address to enable('h823)/disable('h822) command/address outputs  
-//    parameter CMDA_EN_ADDR_MASK =  'hbfe,  // address mask for command/address outputs
-//    parameter EXTRA_ADDR =         'h824,  // address to set extra parameters (currently just inv_clk_div)
-//    parameter EXTRA_ADDR_MASK =    'hbff   // address mask for extra parameters
 
-    parameter DLY_LD_REL =        'h080,  // address to generate delay load
-    parameter DLY_LD_REL_MASK =   'h380,  // address mask to generate delay load
-    parameter DLY_SET_REL =       'h070,  // address to generate delay set
-    parameter DLY_SET_REL_MASK =  'h3ff,  // address mask to generate delay set
-    parameter RUN_CHN_REL =       'h000,  // address to set sequnecer channel and  run (4 LSB-s - channel)
-    parameter RUN_CHN_REL_MASK =  'h3f0,  // address mask to generate sequencer channel/run
-    parameter PATTERNS_REL =      'h020,  // address to set DQM and DQS patterns (16'h0055)
-    parameter PATTERNS_REL_MASK = 'h3ff,  // address mask to set DQM and DQS patterns
-    parameter PAGES_REL =         'h021,  // address to set buffer pages {port1_page[1:0],port1_int_page[1:0],port0_page[1:0],port0_int_page[1:0]}
-    parameter PAGES_REL_MASK =    'h3ff,  // address mask to set DQM and DQS patterns
-    parameter CMDA_EN_REL =       'h022,  // address to enable('h823)/disable('h822) command/address outputs  
-    parameter CMDA_EN_REL_MASK =  'h3fe,  // address mask for command/address outputs
-    parameter SDRST_ACT_REL =     'h024,  // address to activate('h825)/deactivate('h8242) active-low reset signal to DDR3 memory  
-    parameter SDRST_ACT_REL_MASK ='h3fe,  // address mask for reset DDR3
-    parameter CKE_EN_REL =        'h026,  // address to enable('h827)/disable('h826) CKE signal to memory   
-    parameter CKE_EN_REL_MASK =   'h3fe,  // address mask for command/address outputs
-    parameter EXTRA_REL =         'h028,  // address to set extra parameters (currently just inv_clk_div)
-    parameter EXTRA_REL_MASK =    'h3ff   // address mask for extra parameters
+    parameter DLY_LD_REL =            'h080,  // address to generate delay load
+    parameter DLY_LD_REL_MASK =       'h380,  // address mask to generate delay load
+    parameter DLY_SET_REL =           'h070,  // address to generate delay set
+    parameter DLY_SET_REL_MASK =      'h3ff,  // address mask to generate delay set
+    parameter RUN_CHN_REL =           'h000,  // address to set sequnecer channel and  run (4 LSB-s - channel)
+    parameter RUN_CHN_REL_MASK =      'h3f0,  // address mask to generate sequencer channel/run
+    parameter PATTERNS_REL =          'h020,  // address to set DQM and DQS patterns (16'h0055)
+    parameter PATTERNS_REL_MASK =     'h3ff,  // address mask to set DQM and DQS patterns
+    parameter PATTERNS_TRI_REL =      'h021,  // address to set DQM and DQS tristate on/off patterns {dqs_off,dqs_on, dq_off,dq_on} - 4 bits each
+    parameter PATTERNS_TRI_REL_MASK = 'h3ff,  // address mask to set DQM and DQS tristate patterns
+    parameter WBUF_DELAY_REL =        'h022,  // extra delay (in mclk cycles) to add to write buffer enable (DDR3 read data)
+    parameter WBUF_DELAY_REL_MASK =   'h3ff,  // address mask to set extra delay
+    parameter PAGES_REL =             'h023,  // address to set buffer pages {port1_page[1:0],port1_int_page[1:0],port0_page[1:0],port0_int_page[1:0]}
+    parameter PAGES_REL_MASK =        'h3ff,  // address mask to set DQM and DQS patterns
+    parameter CMDA_EN_REL =           'h024,  // address to enable('h823)/disable('h822) command/address outputs  
+    parameter CMDA_EN_REL_MASK =      'h3fe,  // address mask for command/address outputs
+    parameter SDRST_ACT_REL =         'h026,  // address to activate('h825)/deactivate('h8242) active-low reset signal to DDR3 memory  
+    parameter SDRST_ACT_REL_MASK =    'h3fe,  // address mask for reset DDR3
+    parameter CKE_EN_REL =            'h028,  // address to enable('h827)/disable('h826) CKE signal to memory   
+    parameter CKE_EN_REL_MASK =       'h3fe,  // address mask for command/address outputs
+    parameter EXTRA_REL =             'h02a,  // address to set extra parameters (currently just inv_clk_div)
+    parameter EXTRA_REL_MASK =        'h3ff   // address mask for extra parameters
 )(
     input                         clk,
     input                         mclk,
@@ -96,6 +78,11 @@ module  ddrc_control #(
     output                        inv_clk_div, // invert clk_div to ISERDES
     output                 [ 7:0] dqs_pattern, // DQS pattern during write (normally 8'h55)
     output                 [ 7:0] dqm_pattern, // DQM pattern (just for testing, should be 8'h0)
+    output                 [ 3:0] dq_tri_on_pattern,
+    output                 [ 3:0] dq_tri_off_pattern,
+    output                 [ 3:0] dqs_tri_on_pattern,
+    output                 [ 3:0] dqs_tri_off_pattern,
+    output                 [ 3:0] wbuf_delay,
 // control: buffers pages
     output                 [ 1:0] port0_page,     // port 0 buffer read page (to be controlled by arbiter later, set to 2'b0)
     output                 [ 1:0] port0_int_page, // port 0 PHY-side write to buffer page (to be controlled by arbiter later, set to 2'b0)
@@ -103,6 +90,13 @@ module  ddrc_control #(
     output                 [ 1:0] port1_int_page  // port 1 PHY-side buffer read page (to be controlled by arbiter later, set to 2'b0) 
 
 );
+    localparam DQSTRI_FIRST=    4'h3; // DQS tri-state control word, first when enabling output 
+    localparam DQSTRI_LAST=     4'hc; // DQS tri-state control word, first after disabling output
+    localparam DQTRI_FIRST=     4'h7; // DQ tri-state control word, first when enabling output 
+    localparam DQTRI_LAST=      4'he; // DQ tri-state control word, first after disabling output
+    localparam WBUF_DLY_DFLT=   4'h6; // extra delay (in mclk cycles) to add to write buffer enable (DDR3 read data)
+
+
     localparam DLY_LD_ADDR =        CONTROL_ADDR |      DLY_LD_REL;       // address to generate delay load
     localparam DLY_LD_ADDR_MASK =   CONTROL_ADDR_MASK | DLY_LD_REL_MASK;  // address mask to generate delay load
     localparam DLY_SET_ADDR =       CONTROL_ADDR |      DLY_SET_REL;      // address to generate delay set
@@ -111,6 +105,12 @@ module  ddrc_control #(
     localparam RUN_CHN_ADDR_MASK =  CONTROL_ADDR_MASK | RUN_CHN_REL_MASK; // address mask to generate sequencer channel/run
     localparam PATTERNS_ADDR =      CONTROL_ADDR |      PATTERNS_REL;     // address to set DQM and DQS patterns (16'h0055)
     localparam PATTERNS_ADDR_MASK = CONTROL_ADDR_MASK | PATTERNS_REL_MASK;// address mask to set DQM and DQS patterns
+    
+    localparam PATTERNS_TRI_ADDR =      CONTROL_ADDR |      PATTERNS_TRI_REL;     //address to set DQM and DQS tristate on/off patterns {dqs_off,dqs_on, dq_off,dq_on} - 4 bits each
+    localparam PATTERNS_TRI_ADDR_MASK = CONTROL_ADDR_MASK | PATTERNS_TRI_REL_MASK;// address mask to set DQM and DQS tristate patterns
+    localparam WBUF_DELAY_ADDR =        CONTROL_ADDR |      WBUF_DELAY_REL;        // extra delay (in mclk cycles) to add to write buffer enable (DDR3 read data)
+    localparam WBUF_DELAY_ADDR_MASK =   CONTROL_ADDR_MASK | WBUF_DELAY_REL_MASK;   // address mask to set extra delay
+    
     localparam PAGES_ADDR =         CONTROL_ADDR |      PAGES_REL;        // address to set buffer pages {port1_page[1:0],port1_int_page[1:0],port0_page[1:0],port0_int_page[1:0]}
     localparam PAGES_ADDR_MASK =    CONTROL_ADDR_MASK | PAGES_REL_MASK;   // address mask to set DQM and DQS patterns
     localparam CMDA_EN_ADDR =       CONTROL_ADDR |      CMDA_EN_REL;      // address to enable('h823)/disable('h822) command/address outputs  
@@ -150,6 +150,17 @@ module  ddrc_control #(
     reg                         ddr_cke_r;         // enable CKE to memory
 
     reg                         inv_clk_div_r;    // invert clk_div to ISERDES
+    
+    reg                  [15:0] dqs_tri_pattern_r;
+    reg                  [ 3:0] wbuf_delay_r;
+    
+    assign wbuf_delay= wbuf_delay_r;
+    assign {
+        dqs_tri_off_pattern[3:0],
+        dqs_tri_on_pattern[3:0],
+        dq_tri_off_pattern[3:0],
+        dq_tri_on_pattern[3:0]
+    } = dqs_tri_pattern_r;
 
     assign ld_delay = dly_ld_r;
     assign dly_set =  dly_set_r;
@@ -231,7 +242,14 @@ module  ddrc_control #(
         if (rst) inv_clk_div_r <= 1'b0;
         else if (fifo_re && (((waddr_fifo_out ^ EXTRA_ADDR) & EXTRA_ADDR_MASK)==0))
                  inv_clk_div_r <= wdata_fifo_out[0];
+                 
+        if (rst) dqs_tri_pattern_r <= {DQSTRI_LAST,DQSTRI_FIRST,DQTRI_LAST,DQTRI_FIRST};
+        else if (fifo_re && (((waddr_fifo_out ^ PATTERNS_TRI_ADDR) & PATTERNS_TRI_ADDR_MASK)==0))
+                 dqs_tri_pattern_r <= wdata_fifo_out[15:0];
 
+        if (rst) wbuf_delay_r <= WBUF_DLY_DFLT;
+        else if (fifo_re && (((waddr_fifo_out ^ WBUF_DELAY_ADDR) & WBUF_DELAY_ADDR_MASK)==0))
+                 wbuf_delay_r <= wdata_fifo_out[3:0];
     end
     always @ (posedge mclk) begin
         waddr_fifo_out_r <= waddr_fifo_out;

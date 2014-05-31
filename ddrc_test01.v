@@ -60,24 +60,28 @@ module  ddrc_test01 #(
     parameter PORT1_WR_ADDR =       'h0400, // AXI read address to generate busy
     parameter PORT1_WR_ADDR_MASK =  'h1c00,  // AXI read address mask to generate busy
     // parameters below to be ORed with CONTROL_ADDR and CONTROL_ADDR_MASK respectively
-    parameter DLY_LD_REL =          'h080,  // address to generate delay load
-    parameter DLY_LD_REL_MASK =     'h380,  // address mask to generate delay load
-    parameter DLY_SET_REL =         'h070,  // address to generate delay set
-    parameter DLY_SET_REL_MASK =    'h3ff,  // address mask to generate delay set
-    parameter RUN_CHN_REL =         'h000,  // address to set sequnecer channel and  run (4 LSB-s - channel)
-    parameter RUN_CHN_REL_MASK =    'h3f0,  // address mask to generate sequencer channel/run
-    parameter PATTERNS_REL =        'h020,  // address to set DQM and DQS patterns (16'h0055)
-    parameter PATTERNS_REL_MASK =   'h3ff,  // address mask to set DQM and DQS patterns
-    parameter PAGES_REL =           'h021,  // address to set buffer pages {port1_page[1:0],port1_int_page[1:0],port0_page[1:0],port0_int_page[1:0]}
-    parameter PAGES_REL_MASK =      'h3ff,  // address mask to set DQM and DQS patterns
-    parameter CMDA_EN_REL =         'h022,  // address to enable('h823)/disable('h822) command/address outputs  
-    parameter CMDA_EN_REL_MASK =    'h3fe,  // address mask for command/address outputs
-    parameter SDRST_ACT_REL =       'h024,  // address to activate('h825)/deactivate('h824) active-low reset signal to DDR3 memory  
-    parameter SDRST_ACT_REL_MASK =  'h3fe,  // address mask for reset DDR3
-    parameter CKE_EN_REL =          'h026,  // address to enable('h827)/disable('h826) CKE signal to memory   
-    parameter CKE_EN_REL_MASK =     'h3fe,  // address mask for command/address outputs
-    parameter EXTRA_REL =           'h028,  // address to set extra parameters (currently just inv_clk_div)
-    parameter EXTRA_REL_MASK =      'h3ff   // address mask for extra parameters
+    parameter DLY_LD_REL =            'h080,  // address to generate delay load
+    parameter DLY_LD_REL_MASK =       'h380,  // address mask to generate delay load
+    parameter DLY_SET_REL =           'h070,  // address to generate delay set
+    parameter DLY_SET_REL_MASK =      'h3ff,  // address mask to generate delay set
+    parameter RUN_CHN_REL =           'h000,  // address to set sequnecer channel and  run (4 LSB-s - channel)
+    parameter RUN_CHN_REL_MASK =      'h3f0,  // address mask to generate sequencer channel/run
+    parameter PATTERNS_REL =          'h020,  // address to set DQM and DQS patterns (16'h0055)
+    parameter PATTERNS_REL_MASK =     'h3ff,  // address mask to set DQM and DQS patterns
+    parameter PATTERNS_TRI_REL =      'h021,  // address to set DQM and DQS tristate on/off patterns {dqs_off,dqs_on, dq_off,dq_on} - 4 bits each
+    parameter PATTERNS_TRI_REL_MASK = 'h3ff,  // address mask to set DQM and DQS tristate patterns
+    parameter WBUF_DELAY_REL =        'h022,  // extra delay (in mclk cycles) to add to write buffer enable (DDR3 read data)
+    parameter WBUF_DELAY_REL_MASK =   'h3ff,  // address mask to set extra delay
+    parameter PAGES_REL =             'h023,  // address to set buffer pages {port1_page[1:0],port1_int_page[1:0],port0_page[1:0],port0_int_page[1:0]}
+    parameter PAGES_REL_MASK =        'h3ff,  // address mask to set DQM and DQS patterns
+    parameter CMDA_EN_REL =           'h024,  // address to enable('h823)/disable('h822) command/address outputs  
+    parameter CMDA_EN_REL_MASK =      'h3fe,  // address mask for command/address outputs
+    parameter SDRST_ACT_REL =         'h026,  // address to activate('h825)/deactivate('h8242) active-low reset signal to DDR3 memory  
+    parameter SDRST_ACT_REL_MASK =    'h3fe,  // address mask for reset DDR3
+    parameter CKE_EN_REL =            'h028,  // address to enable('h827)/disable('h826) CKE signal to memory   
+    parameter CKE_EN_REL_MASK =       'h3fe,  // address mask for command/address outputs
+    parameter EXTRA_REL =             'h02a,  // address to set extra parameters (currently just inv_clk_div)
+    parameter EXTRA_REL_MASK =        'h3ff   // address mask for extra parameters
 )(
     // DDR3 interface
     output                       SDRST, // DDR3 reset (active low)
@@ -222,6 +226,13 @@ module  ddrc_test01 #(
    reg    select_status;
    wire axiwr_dev_busy;
    wire axird_dev_busy;
+   
+   wire [ 3:0] dq_tri_on_pattern;
+   wire [ 3:0] dq_tri_off_pattern;
+   wire [ 3:0] dqs_tri_on_pattern;
+   wire [ 3:0] dqs_tri_off_pattern;
+   wire [ 3:0] wbuf_delay;
+   
 
 //   assign en_cmd0_wr=     axiwr_bram_wen   && (axiwr_bram_waddr[11:10]==2'h1);
 //   assign en_port0_rd=    axird_bram_ren   && (axird_bram_raddr[11:10]==2'h0);
@@ -338,6 +349,10 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
         .RUN_CHN_REL_MASK  (RUN_CHN_REL_MASK),
         .PATTERNS_REL      (PATTERNS_REL),
         .PATTERNS_REL_MASK (PATTERNS_REL_MASK),
+        .PATTERNS_TRI_REL      (PATTERNS_TRI_REL),
+        .PATTERNS_TRI_REL_MASK (PATTERNS_TRI_REL_MASK),
+        .WBUF_DELAY_REL        (WBUF_DELAY_REL),
+        .WBUF_DELAY_REL_MASK   (WBUF_DELAY_REL_MASK),
         .PAGES_REL         (PAGES_REL),
         .PAGES_REL_MASK    (PAGES_REL_MASK),
         .CMDA_EN_REL       (CMDA_EN_REL),
@@ -349,32 +364,37 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
         .EXTRA_REL         (EXTRA_REL),
         .EXTRA_REL_MASK    (EXTRA_REL_MASK)
     ) ddrc_control_i (
-        .clk              (axiwr_bram_wclk),        // same as axi_aclk
-        .mclk             (mclk),                   // input
-        .rst              (axi_rst),                // input
-        .pre_waddr        (axiwr_pre_awaddr[AXI_WR_ADDR_BITS-1:0]), // input[11:0] 
-        .start_wburst     (axiwr_start_burst),      // input
-        .waddr            (axiwr_bram_waddr[AXI_WR_ADDR_BITS-1:0]), // input[11:0] 
-        .wr_en            (axiwr_bram_wen),         // input
-        .wdata            (axiwr_bram_wdata[31:0]), // input[31:0] (no input for wstb here) 
-        .busy             (axiwr_dev_busy),         // output
-        .run_addr         (run_addr[10:0]),         // output[10:0] 
-        .run_chn          (run_chn[3:0]),           // output[3:0] 
-        .run_seq          (run_seq),                // output
-        .dly_data         (dly_data[7:0]),          // output[7:0] 
-        .dly_addr         (dly_addr[6:0]),          // output[6:0] 
-        .ld_delay         (ld_delay),               // output
-        .dly_set          (set),                    // output
-        .cmda_en          (cmda_en),                // output
-        .ddr_rst          (ddr_rst),                // output
-        .ddr_cke          (ddr_cke),                // output
-        .inv_clk_div      (inv_clk_div),            // output
-        .dqs_pattern      (dqs_pattern[7:0]),       // output[7:0] 
-        .dqm_pattern      (dqm_pattern[7:0]),       // output[7:0] 
-        .port0_page       (port0_page[1:0]),        // output[1:0] 
-        .port0_int_page   (port0_int_page[1:0]),    // output[1:0] 
-        .port1_page       (port1_page[1:0]),        // output[1:0] 
-        .port1_int_page   (port1_int_page[1:0])     // output[1:0] 
+        .clk                 (axiwr_bram_wclk),         // same as axi_aclk
+        .mclk                (mclk),                    // input
+        .rst                 (axi_rst),                 // input
+        .pre_waddr           (axiwr_pre_awaddr[AXI_WR_ADDR_BITS-1:0]), // input[11:0] 
+        .start_wburst        (axiwr_start_burst),       // input
+        .waddr               (axiwr_bram_waddr[AXI_WR_ADDR_BITS-1:0]), // input[11:0] 
+        .wr_en               (axiwr_bram_wen),          // input
+        .wdata               (axiwr_bram_wdata[31:0]),  // input[31:0] (no input for wstb here) 
+        .busy                (axiwr_dev_busy),          // output
+        .run_addr            (run_addr[10:0]),          // output[10:0] 
+        .run_chn             (run_chn[3:0]),            // output[3:0] 
+        .run_seq             (run_seq),                 // output
+        .dly_data            (dly_data[7:0]),           // output[7:0] 
+        .dly_addr            (dly_addr[6:0]),           // output[6:0] 
+        .ld_delay            (ld_delay),                // output
+        .dly_set             (set),                     // output
+        .cmda_en             (cmda_en),                 // output
+        .ddr_rst             (ddr_rst),                 // output
+        .ddr_cke             (ddr_cke),                 // output
+        .inv_clk_div         (inv_clk_div),             // output
+        .dqs_pattern         (dqs_pattern[7:0]),        // output[7:0] 
+        .dqm_pattern         (dqm_pattern[7:0]),        // output[7:0]
+        .dq_tri_on_pattern   (dq_tri_on_pattern[3:0]),  // output[3:0] 
+        .dq_tri_off_pattern  (dq_tri_off_pattern[3:0]), // output[3:0] 
+        .dqs_tri_on_pattern  (dqs_tri_on_pattern[3:0]), // output[3:0] 
+        .dqs_tri_off_pattern (dqs_tri_off_pattern[3:0]),// output[3:0] 
+        .wbuf_delay          (wbuf_delay[3:0]),         // output[3:0] 
+        .port0_page          (port0_page[1:0]),         // output[1:0] 
+        .port0_int_page      (port0_int_page[1:0]),     // output[1:0] 
+        .port1_page          (port1_page[1:0]),         // output[1:0] 
+        .port1_int_page      (port1_int_page[1:0])      // output[1:0] 
     );
     
     ddrc_status
@@ -492,7 +512,12 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
         .ddr_cke        (ddr_cke), // input
         .inv_clk_div    (inv_clk_div), // input
         .dqs_pattern    (dqs_pattern), // input[7:0] 
-        .dqm_pattern    (dqm_pattern) // input[7:0] 
+        .dqm_pattern    (dqm_pattern), // input[7:0]
+        .dq_tri_on_pattern   (dq_tri_on_pattern[3:0]),  // input[3:0] 
+        .dq_tri_off_pattern  (dq_tri_off_pattern[3:0]), // input[3:0] 
+        .dqs_tri_on_pattern  (dqs_tri_on_pattern[3:0]), // input[3:0] 
+        .dqs_tri_off_pattern (dqs_tri_off_pattern[3:0]),// input[3:0] 
+        .wbuf_delay          (wbuf_delay[3:0])          // input[3:0] 
     );
 
 

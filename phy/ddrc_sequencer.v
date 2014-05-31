@@ -43,8 +43,8 @@ module  ddrc_sequencer   #(
     parameter SS_EN =              "FALSE",
     parameter SS_MODE =      "CENTER_HIGH",
     parameter SS_MOD_PERIOD =       10000,
-    parameter CMD_PAUSE_BITS=       6,
-    parameter CMD_DONE_BIT=         6
+    parameter CMD_PAUSE_BITS=       10,
+    parameter CMD_DONE_BIT=         10
 )(
     // DDR3 interface
     output                       SDRST, // DDR3 reset (active low)
@@ -114,8 +114,12 @@ module  ddrc_sequencer   #(
     input                        ddr_cke, // DDR clock enable , XOR-ed with command bit
     input                        inv_clk_div,
     input                 [7:0]  dqs_pattern, // 8'h55
-    input                 [7:0]  dqm_pattern  // 8'h00
-    
+    input                 [7:0]  dqm_pattern,  // 8'h00
+    input                 [ 3:0] dq_tri_on_pattern,  // DQ tri-state control word, first when enabling output
+    input                 [ 3:0] dq_tri_off_pattern, // DQ tri-state control word, first after disabling output
+    input                 [ 3:0] dqs_tri_on_pattern, // DQS tri-state control word, first when enabling output
+    input                 [ 3:0] dqs_tri_off_pattern,// DQS tri-state control word, first after disabling output
+    input                 [ 3:0] wbuf_delay
 );
     localparam ADDRESS_NUMBER = 15;
     
@@ -131,7 +135,8 @@ module  ddrc_sequencer   #(
     reg                  [63:0]  buf_wdata_negedge; // output[63:0]
     wire                 [63:0]  buf_rdata; // multiplexed input from one of the write channels buffer
     wire                 [63:0]  buf1_rdata;
-    wire                         buf_wr; // output
+    wire                         buf_wr; // delayed by specified number of clock cycles
+    wire                         buf_wr_ndly; // before dealy
     wire                         buf_rd; // read next 64 bytes from the buffer, need one extra pre-read
     
     wire                         rst=rst_in;
@@ -141,6 +146,8 @@ module  ddrc_sequencer   #(
     reg                          cmd_sel;
     reg                  [ 2:0]  cmd_busy;      // bit 0 - immediately,
     wire                         phy_cmd_nop;   // decoded command (ras, cas, we) was NOP
+    wire                         phy_cmd_add_pause; // decoded from the command word - add one pause command after the current one
+    reg                          add_pause; // previos command had phy_cmd_add_pause set
     wire                         sequence_done;
     wire   [CMD_PAUSE_BITS-1:0]  pause_len;
     reg                          cmd_fetch;     // previous cycle command was read from the command memory, current: command valid
@@ -155,7 +162,7 @@ module  ddrc_sequencer   #(
     
     assign run_done=sequence_done;
     assign run_busy=cmd_busy[0]; //earliest
-    assign  pause=cmd_fetch? (phy_cmd_nop && (pause_len != 0)): (cmd_busy[2] && (pause_cntr[CMD_PAUSE_BITS-1:1]!=0));
+    assign  pause=cmd_fetch? (phy_cmd_add_pause || (phy_cmd_nop && (pause_len != 0))): (cmd_busy[2] && (pause_cntr[CMD_PAUSE_BITS-1:1]!=0));
 /// debugging
     assign phy_cmd_word = cmd_sel?phy_cmd1_word:phy_cmd0_word; // TODO: hangs even with 0-s in phy_cmd
 ///    assign phy_cmd_word = phy_cmd_word?0:0;
@@ -175,6 +182,10 @@ module  ddrc_sequencer   #(
         // Fetch - command data valid
         if (rst) cmd_fetch <= 0;
         else     cmd_fetch <= cmd_busy[0] && !pause;
+
+        if (rst) add_pause <= 0;
+        else     add_pause <= cmd_fetch && phy_cmd_add_pause;
+         
         // Command read address
         if (rst)                        cmd_addr <= 0;
         else  if (run_seq)              cmd_addr <= run_addr[9:0];
@@ -358,19 +369,33 @@ module  ddrc_sequencer   #(
 //        .phy_cmd_word        (32'h0), //phy_cmd_word[31:0]), // input[31:0]
         .phy_cmd_word        (phy_cmd_word[31:0]), // input[31:0]
         .phy_cmd_nop         (phy_cmd_nop), // output
+        .phy_cmd_add_pause   (phy_cmd_add_pause), // one pause cycle (for 8-bursts)
+        .add_pause           (add_pause),
         .pause_len           (pause_len),     // output  [CMD_PAUSE_BITS-1:0]
         .sequence_done       (sequence_done), // output
 //        .buf_addr            (buf_addr[6:0]), // output[6:0] 
         .buf_wdata           (buf_wdata[63:0]), // output[63:0] 
         .buf_rdata           (buf_rdata[63:0]), // input[63:0] 
-        .buf_wr              (buf_wr), // output
+        .buf_wr              (buf_wr_ndly), // output
         .buf_rd              (buf_rd), // output
         .cmda_en             (cmda_en), // input
-        .ddr_rst             (ddr_rst), // input ***************
-        .ddr_cke             (ddr_cke), // input ***************
+        .ddr_rst             (ddr_rst), // input
+        .ddr_cke             (ddr_cke), // input
         .inv_clk_div         (inv_clk_div), // input
         .dqs_pattern         (dqs_pattern), // input[7:0] 
-        .dqm_pattern         (dqm_pattern) // input[7:0] 
+        .dqm_pattern         (dqm_pattern), // input[7:0]
+        .dq_tri_on_pattern   (dq_tri_on_pattern[3:0]),  // input[3:0] 
+        .dq_tri_off_pattern  (dq_tri_off_pattern[3:0]), // input[3:0] 
+        .dqs_tri_on_pattern  (dqs_tri_on_pattern[3:0]), // input[3:0] 
+        .dqs_tri_off_pattern (dqs_tri_off_pattern[3:0]) // input[3:0] 
+    );
+    // delay buf_wr by 1-16 cycles to compensate for DDR and HDL code latency (~7 cycles?)
+    dly01_16 buf_wr_dly_i (
+        .clk(mclk), // input
+        .rst(1'b0), // input
+        .dly(wbuf_delay[3:0]), // input[3:0] 
+        .din(buf_wr_ndly), // input
+        .dout(buf_wr) // output reg 
     );
 
 

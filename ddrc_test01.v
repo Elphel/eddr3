@@ -255,19 +255,20 @@ always @ (posedge axi_rst or posedge axi_aclk) begin
     if (axi_rst) select_status <= 1'b0;
     else if (axird_start_burst) select_status <= (((axird_pre_araddr^ STATUS_ADDR) & STATUS_ADDR_MASK)==0);
 end
-/*   
+   
 // Clock and reset from PS
 reg frst_inv;
 always @ (negedge frst[0] or posedge axi_aclk) begin
     if (!frst[0]) frst_inv <= 1'b1;
     else          frst_inv <= 1'b0; 
 end
-*/
+
+/*
 `ifndef IVERILOG
 (* dont_touch = "true" *)
 `endif
  wire frst_inv= ~frst[0];
-
+*/
 
 //BUFG bufg_axi_rst_i  (.O(axi_rst),.I(~frst[0]));
 BUFG bufg_axi_rst_i  (.O(axi_rst),.I(frst_inv));

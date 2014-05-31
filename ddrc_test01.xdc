@@ -194,11 +194,13 @@ set_property PACKAGE_PIN G7 [get_ports {NDQSU}]
 set_property IOSTANDARD DIFF_SSTL15_T_DCI [get_ports {NDQSU}]
 
 #    inout                        SDDML,      // LDM  I/O pad (actually only output)
-set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDDML}]
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDDML}]
+set_property IOSTANDARD SSTL15 [get_ports {SDDML}]
 set_property PACKAGE_PIN L5 [get_ports {SDDML}]
 
 #    inout                        SDDMU,      // UDM  I/O pad (actually only output)
-set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDDMU}]
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDDMU}]
+set_property IOSTANDARD SSTL15 [get_ports {SDDMU}]
 set_property PACKAGE_PIN J5 [get_ports {SDDMU}]
 
 

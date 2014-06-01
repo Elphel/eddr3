@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/> .
  *******************************************************************************/
 `timescale 1ns/1ps
-
+`define use200Mhz 1
 module  ddrc_test01_testbench #(
     parameter PHASE_WIDTH =     8,
     parameter SLEW_DQ =         "SLOW",
@@ -27,12 +27,21 @@ module  ddrc_test01_testbench #(
     parameter SLEW_CMDA =       "SLOW",
     parameter SLEW_CLK =        "SLOW",
     parameter IBUF_LOW_PWR =    "TRUE",
+`ifdef use200Mhz
+    parameter real REFCLK_FREQUENCY = 200.0, // 300.0,
+    parameter HIGH_PERFORMANCE_MODE = "FALSE",
+    parameter CLKIN_PERIOD          = 20, // 10, //ns >1.25, 600<Fvco<1200 // Hardware 150MHz , change to             | 6.667
+    parameter CLKFBOUT_MULT =       16,   // 8, // Fvco=Fclkin*CLKFBOUT_MULT_F/DIVCLK_DIVIDE, Fout=Fvco/CLKOUT#_DIVIDE  | 16
+    parameter CLKFBOUT_MULT_REF =   16,   // 18,   // 9, // Fvco=Fclkin*CLKFBOUT_MULT_F/DIVCLK_DIVIDE, Fout=Fvco/CLKOUT#_DIVIDE  | 6
+    parameter CLKFBOUT_DIV_REF =    4, // 200Mhz 3, // To get 300MHz for the reference clock
+`else
     parameter real REFCLK_FREQUENCY = 300.0,
     parameter HIGH_PERFORMANCE_MODE = "FALSE",
-    parameter CLKIN_PERIOD          = 10, //ns >1.25, 600<Fvco<1200 // Hardware 150MHz , change to             | 6.667
-    parameter CLKFBOUT_MULT =       8, // Fvco=Fclkin*CLKFBOUT_MULT_F/DIVCLK_DIVIDE, Fout=Fvco/CLKOUT#_DIVIDE  | 16
-    parameter CLKFBOUT_MULT_REF =   9, // Fvco=Fclkin*CLKFBOUT_MULT_F/DIVCLK_DIVIDE, Fout=Fvco/CLKOUT#_DIVIDE  | 6
+    parameter CLKIN_PERIOD          = 10, //ns >1.25, 600<Fvco<1200
+    parameter CLKFBOUT_MULT =       8, // Fvco=Fclkin*CLKFBOUT_MULT_F/DIVCLK_DIVIDE, Fout=Fvco/CLKOUT#_DIVIDE
+    parameter CLKFBOUT_MULT_REF =   9, // Fvco=Fclkin*CLKFBOUT_MULT_F/DIVCLK_DIVIDE, Fout=Fvco/CLKOUT#_DIVIDE
     parameter CLKFBOUT_DIV_REF =    3, // To get 300MHz for the reference clock
+`endif    
     parameter DIVCLK_DIVIDE=        1, //                                                                      | 3
     parameter CLKFBOUT_PHASE =      0.000,
     parameter SDCLK_PHASE =         0.000,
@@ -133,12 +142,25 @@ module  ddrc_test01_testbench #(
 // SuppressWarnings VEditor - not yet used
     localparam STATUS_LOCKED_MASK = 'h200;
     localparam STATUS_SEQ_BUSY_MASK = 'h400;
-      
+
+`ifdef use200Mhz
+    localparam DLY_LANE0_DQS_WLV_IDELAY = 8'hb0; // idelay dqs
+    localparam DLY_LANE1_DQS_WLV_IDELAY = 8'hb0; // idelay dqs
+    localparam DLY_LANE0_ODELAY= 80'h4c4c4b4a494844434241; // odelay dqm, odelay ddqs, odelay dq[7:0]
+    localparam DLY_LANE0_IDELAY= 72'ha0636261605c5b5a59; // idelay dqs, idelay dq[7:0
+    localparam DLY_LANE1_ODELAY= 80'h4c4c4b4a494844434241; // odelay dqm, odelay ddqs, odelay dq[7:0]
+    localparam DLY_LANE1_IDELAY= 72'ha0636261605c5b5a59; // idelay dqs, idelay dq[7:0
+    localparam DLY_CMDA=  256'h3c3c3c3c3b3a39383434343433323130002c2c2c2b2a29282424242423222120; // odelay odt, cke, cas, ras, we, ba2,ba1,ba0, X, a14,..,a0
+`else   
+    localparam DLY_LANE0_DQS_WLV_IDELAY = 8'he8; // idelay dqs
+    localparam DLY_LANE1_DQS_WLV_IDELAY = 8'he8; // idelay dqs
     localparam DLY_LANE0_ODELAY= 80'h7474737271706c6b6a69; // odelay dqm, odelay ddqs, odelay dq[7:0]
     localparam DLY_LANE0_IDELAY= 72'hd8737271706c6b6a69; // idelay dqs, idelay dq[7:0
     localparam DLY_LANE1_ODELAY= 80'h7474737271706c6b6a69; // odelay dqm, odelay ddqs, odelay dq[7:0]
     localparam DLY_LANE1_IDELAY= 72'hd8737271706c6b6a69; // idelay dqs, idelay dq[7:0
     localparam DLY_CMDA=  256'h5c5c5c5c5b5a59585454545453525150004c4c4c4b4a49484444444443424140; // odelay odt, cke, cas, ras, we, ba2,ba1,ba0, X, a14,..,a0
+`endif   
+    
     localparam DLY_PHASE= 8'h1c; // mmcm fine phase shift, 1/4 tCK
     
     localparam DQSTRI_FIRST=    4'h3; // DQS tri-state control word, first when enabling output 
@@ -146,11 +168,13 @@ module  ddrc_test01_testbench #(
     localparam DQTRI_FIRST=     4'h7; // DQ tri-state control word, first when enabling output 
     localparam DQTRI_LAST=      4'he; // DQ tri-state control word, first after disabling output
     localparam WBUF_DLY_DFLT=   4'h6; // extra delay (in mclk cycles) to add to write buffer enable (DDR3 read data)
+    localparam WBUF_DLY_WLV=    4'h7; // write leveling mode: extra delay (in mclk cycles) to add to write buffer enable (DDR3 read data)
     
 //    localparam DLY_PHASE= 8'hdb; // mmcm fine phase shift
-    localparam WRITELEV_OFFSET='h20; // write leveling start address (in words)
-    localparam WRITE_BLOCK_OFFSET='h100; // write block sequence start address (in words) ..'h14c
-    localparam READ_BLOCK_OFFSET= 'h180; // read  block sequence start address (in words)
+    localparam WRITELEV_OFFSET=    'h20; // write leveling start address (in words)
+    localparam READ_PATTERN_OFFSET='h40; // read pattern to memory block sequence start address (in words) ..'h053 with 8x2*64 bits (variable)
+    localparam WRITE_BLOCK_OFFSET= 'h100; // write block sequence start address (in words) ..'h14c
+    localparam READ_BLOCK_OFFSET=  'h180; // read  block sequence start address (in words)
     
     
 
@@ -325,13 +349,11 @@ always #(CLKIN_PERIOD/2) CLK <= ~CLK;
     enable_cke(1);
     repeat (16) @(posedge CLK) ;
     set_mrs(1);
-    set_write_lev(16); // write leveling, 16 times    
+    set_write_lev(16); // write leveling, 16 times   (full buffer - 128) 
     
     // set dq /dqs tristate on/off patterns
     axi_write_single(BASEADDR_PATTERNS_TRI, {16'h0, DQSTRI_LAST, DQSTRI_FIRST, DQTRI_LAST, DQTRI_FIRST});
  
-    // set write buffer (from DDR3) WE signal delay
-    axi_write_single(BASEADDR_WBUF_DELAY, {28'h0, WBUF_DLY_DFLT});
  
     
     #100;
@@ -340,18 +362,66 @@ always #(CLKIN_PERIOD/2) CLK <= ~CLK;
     wait_sequencer_ready(16);
     axi_write_single(BASEADDR_PATTERNS, 32'h0055); // set patterns for DM (always 0) and DQS - always the same (may try different for write lev.)
 
+// Set special values for DQS idelay for write leveling
+    axi_set_dqs_idelay_wlv;
+// Set write buffer (from DDR3) WE signal delay for write leveling mode
+    axi_write_single(BASEADDR_WBUF_DELAY, {28'h0, WBUF_DLY_WLV});
+    
+//axi_set_dqs_idelay_nominal;
     run_sequence(0,WRITELEV_OFFSET);
     wait_sequencer_ready(16);
-
+`ifdef use200Mhz
+    axi_set_dly_single(0,8,'h78); // was 'h74 dqs lane 0, odelay    
+    axi_set_dly_single(2,8,'h80); // was 'h74 dqs lane 1, odelay    
+`else
     axi_set_dly_single(0,8,'h80); // was 'h74 dqs lane 0, odelay    
     axi_set_dly_single(2,8,'hc0); // was 'h74 dqs lane 1, odelay    
+`endif
 
     run_sequence(0,WRITELEV_OFFSET);
+`ifdef use200Mhz
+    #120; // 140 ns delay 30; // 30 ns delay
+    axi_set_dly_single(2,8,'h78); // was 'h74 dqs lane 1, odelay
+    #10
+    axi_set_dly_single(0,8,'h80); // was 'h74 dqs lane 0, odelay    
+`else
     #140; // 140 ns delay 30; // 30 ns delay
     axi_set_dly_single(2,8,'hb8); // was 'h74 dqs lane 1, odelay
     #20
     axi_set_dly_single(0,8,'hc0); // was 'h74 dqs lane 0, odelay    
+`endif
     wait_sequencer_ready(16);
+    
+// read writelev data over AXI (odd/even have byte1/byte0 - each byte different sample)    
+    wait (~rstb);
+    SIMUL_AXI_FULL<=1'b0;
+    read_block_buf(32); // 32 x32 words (32 is twice 16 specified in set_write_lev(16))
+    wait (~rvalid && rready && (rid==LAST_ARID)); // nothing left in read queue?   
+    SIMUL_AXI_FULL<=1'b0;
+    
+    
+// restore normal dqs idelay (after write leveling)
+    axi_set_dqs_idelay_nominal;
+// restore normal write buffer (from DDR3) WE signal delay
+    axi_write_single(BASEADDR_WBUF_DELAY, {28'h0, WBUF_DLY_DFLT});
+
+// test reading pattern       
+    set_read_pattern(8); // 8x2*64 bits, 32x32 bits to read
+    run_sequence(0,READ_PATTERN_OFFSET);
+// TODO: add timing variation during read    
+
+    wait_sequencer_ready(16);
+    
+// read pattern data over AXI    
+    wait (~rstb);
+    SIMUL_AXI_FULL<=1'b0;
+    read_block_buf(32); // 32 x32 words (32 is twice 16 specified in set_write_lev(16))
+    wait (~rvalid && rready && (rid==LAST_ARID)); // nothing left in read queue?   
+    SIMUL_AXI_FULL<=1'b0;
+
+
+
+
     
 // test write block;
     write_block_buf; // fill block memory
@@ -368,17 +438,18 @@ always #(CLKIN_PERIOD/2) CLK <= ~CLK;
         3'h5,     // bank
         15'h1234, // row address
         10'h100   // column address
-        );   
+        );
+           
     run_sequence(0,READ_BLOCK_OFFSET);
     
-// add read block over AXI    
+// read block over AXI    
     wait_sequencer_ready(16);
     wait (~rstb);
     SIMUL_AXI_FULL<=1'b0;
-    read_block_buf; 
-    
+    read_block_buf(256); // 256 x32 words 
     wait (~rvalid && rready && (rid==LAST_ARID)); // nothing left in read queue?   
     SIMUL_AXI_FULL<=1'b0;
+    
 #100;
     $display("finish testbench 0");
     $finish;
@@ -394,7 +465,7 @@ always #(CLKIN_PERIOD/2) CLK <= ~CLK;
 // protect from never end
   initial begin
 //  #10000000;
-  #150000;
+  #200000;
     $display("finish testbench 2");
   $finish;
   end
@@ -911,6 +982,7 @@ simul_axi_read simul_axi_read_i(
     task write_block_buf;
         integer i,j;
         begin
+            $display ("**** write_block_buf  @%t",$time);
             for (i=0;i<256;i=i+16) begin
                 axi_write_addr_data(
                     i,    // id
@@ -922,6 +994,7 @@ simul_axi_read simul_axi_read_i(
                     4'hf, // wstrb
                     1'b0 // last
                 );
+                $display ("+Write block data (addr:data): 0x%x:0x%x @%t",i,i | (((i + 7) & 'hff) << 8) | (((i + 23) & 'hff) << 16) | (((i + 31) & 'hff) << 24),$time);
                 for (j=1;j<16;j=j+1) begin
                     axi_write_data(
                         i,        // id
@@ -929,6 +1002,8 @@ simul_axi_read simul_axi_read_i(
                         4'hf, // wstrb
                         (1==15)?1:0 // last 
                     );
+                $display (" Write block data (addr:data): 0x%x:0x%x @%t",(i+j),
+                    (i+j) | ((((i+j) + 7) & 'hff) << 8) | ((((i+j) + 23) & 'hff) << 16) | ((((i+j) + 31) & 'hff) << 24),$time);
                 end
             end
         
@@ -937,11 +1012,12 @@ simul_axi_read simul_axi_read_i(
    
    // read memory
     task read_block_buf;
+        input integer num_read; // number of words to read (will be rounded up to multiple of 16)
         integer i; //,j;
         begin
         $display ("**** read_block_buf  @%t",$time);
             axi_set_rd_lag(0);
-            for (i=0;i<256;i=i+16) begin
+            for (i=0;i<num_read;i=i+16) begin
                 wait(arready);
 //                $display ("read_block_buf (0x%x) @%t",i,$time);
                 axi_read_addr(
@@ -955,7 +1031,213 @@ simul_axi_read simul_axi_read_i(
     endtask
     
    
-    
+  // Set MR3, read nrep*8 words, save to buffer (port0). No ACTIVATE/PRECHARGE are needed/allowed   
+    task set_read_pattern; 
+        input integer nrep;
+//        input [ 2:0] ba;
+//        input [14:0] ra;
+//        input [ 9:0] ca;
+        reg   [31:0] cmd_addr;
+        reg   [31:0] data;
+        reg                 [17:0] mr3_norm;
+        reg                 [17:0] mr3_pattern;
+        integer i;
+        begin
+             cmd_addr <= BASEADDR_CMD0 + (READ_PATTERN_OFFSET << 2);
+             mr3_norm <= ddr3_mr3 (
+                1'h0,     //       mpr;    // MPR mode: 0 - normal, 1 - dataflow from MPR
+                2'h0);    // [1:0] mpr_rf; // MPR read function: 2'b00: predefined pattern 0101...
+             mr3_pattern <= ddr3_mr3 (
+                1'h1,     //       mpr;    // MPR mode: 0 - normal, 1 - dataflow from MPR
+                2'h0);    // [1:0] mpr_rf; // MPR read function: 2'b00: predefined pattern 0101...
+             
+// Set pattern mode
+             @(posedge CLK)
+             data <=  encode_seq_word(
+                mr3_pattern[14:0],           // [14:0] phy_addr_in;
+                mr3_pattern[17:15],          // [ 2:0] phy_bank_in; //TODO: debug!
+                3'b111,                      // [ 2:0] phy_rcw_in; // {ras,cas,we}, positive
+                1'b0,                        //        phy_odt_in; // may be optimized?
+                1'b0,                        // phy_cke_inv; // may be optimized?
+                1'b0,                        // phy_sel_in == 0; // first/second half-cycle,
+                1'b0,                        // phy_dq_en_in;
+                1'b0,                        // phy_dqs_en_in;
+                1'b0,                        // phy_dqs_toggle_en;
+                1'b0,                        // phy_dci_en_in;      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+                1'b0,                        // phy_buf_wr;   // connect to external buffer
+                1'b0,                        // phy_buf_rd;   // connect to external buffer
+                1'b0);                       // add NOP after the current command, keep other data
+             @(posedge CLK)
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+             data <= encode_seq_skip(5,0); // tMOD
+             @(posedge CLK)
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+// first read
+// read
+             data <= {
+                     15'h0, //{5'b0,ca[9:0]},
+                     3'h0, //ba[2:0], //phy_bank_in[2:0],
+                     3'b010, // phy_rcw_in[2:0],      // {ras,cas,we}
+                     1'b0, // phy_odt_in,       // may be optimized?
+                     1'b0, // phy_cke_inv,      // may be optimized?
+                     1'b1, // phy_sel_in,      // first/second half-cycle, other will be nop (cke+odt applicable to both)
+                     1'b0, // phy_dq_en_in,   //phy_dq_tri_in,   // tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
+                     1'b0, // phy_dqs_en_in,  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
+                     1'b0,                    // phy_dqs_toggle_en;
+                     1'b1, // phy_dci_en_in,  //phy_dci_in,      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+                     1'b0, // phy_buf_wr,     // connect to external buffer (but only if not paused)
+                     1'b0, // phy_buf_rd,     // connect to external buffer (but only if not paused)
+                     1'b0,                    // add NOP after the current command, keep other data
+                     1'b0                     // Reserved for future use
+             };
+             @(posedge CLK)
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+// nop
+             data <= {
+                     15'b0, // skip 0
+                     3'h0, //ba[2:0], //phy_bank_in[2:0],
+                     3'b000, // phy_rcw_in[2:0],      // {ras,cas,we}
+                     1'b0, // phy_odt_in,       // may be optimized?
+                     1'b0, // phy_cke_inv,      // may be optimized?
+                     1'b1, // phy_sel_in,      // first/second half-cycle, other will be nop (cke+odt applicable to both)
+                     1'b0, // phy_dq_en_in,   //phy_dq_tri_in,   // tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
+                     1'b0, // phy_dqs_en_in,  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
+                     1'b0,                    // phy_dqs_toggle_en;
+                     1'b1, // phy_dci_en_in,  // phy_dci_in,      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+                     1'b0, // phy_buf_wr,     // connect to external buffer (but only if not paused)
+                     1'b0, // phy_buf_rd,     // connect to external buffer (but only if not paused)
+                     1'b0,                    // add NOP after the current command, keep other data
+                     1'b0                     // Reserved for future use
+             };
+             @(posedge CLK)
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+//repeat remaining reads             
+             for (i=1;i<nrep;i=i+1) begin
+// read             
+                data <= {
+                     15'h0, //{5'b0,ca[9:0]},
+                     3'h0, //ba[2:0], //phy_bank_in[2:0],
+                     3'b010, // phy_rcw_in[2:0],      // {ras,cas,we}
+                     1'b0, // phy_odt_in,       // may be optimized?
+                     1'b0, // phy_cke_inv,      // may be optimized?
+                     1'b1, // phy_sel_in,      // first/second half-cycle, other will be nop (cke+odt applicable to both)
+                     1'b0, // phy_dq_en_in,   //phy_dq_tri_in,   // tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
+                     1'b0, // phy_dqs_en_in,  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
+                     1'b0,                        // phy_dqs_toggle_en;
+                     1'b1, // phy_dci_en_in,  //phy_dci_in,      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+                     1'b1, // phy_buf_wr,   // connect to external buffer (but only if not paused)
+                     1'b0, // phy_buf_rd,    // connect to external buffer (but only if not paused)
+                     1'b1,                   // add NOP after the current command, keep other data
+                     1'b0                    // Reserved for future use
+                };
+                @(posedge CLK)
+                axi_write_single(cmd_addr, data);
+                cmd_addr <= cmd_addr + 4;
+
+             end
+             
+// nop
+             data <= {
+                     15'b0, // skip 0
+                     3'h0, //ba[2:0], //phy_bank_in[2:0],
+                     3'b000, // phy_rcw_in[2:0],      // {ras,cas,we}
+                     1'b0, // phy_odt_in,       // may be optimized?
+                     1'b0, // phy_cke_inv,      // may be optimized?
+                     1'b1, // phy_sel_in,      // first/second half-cycle, other will be nop (cke+odt applicable to both)
+                     1'b0, // phy_dq_en_in,   //phy_dq_tri_in,   // tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
+                     1'b0, // phy_dqs_en_in,  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
+                     1'b0,                        // phy_dqs_toggle_en;
+                     1'b1, // phy_dci_en_in,  //phy_dci_in,      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+                     1'b1, // phy_buf_wr,   // connect to external buffer (but only if not paused)
+                     1'b0, // phy_buf_rd,    // connect to external buffer (but only if not paused)
+                     1'b0,                   // add NOP after the current command, keep other data
+                     1'b0                    // Reserved for future use
+             };
+             @(posedge CLK)
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+// nop
+             data <= {
+                     15'b0, // skip 0
+                     3'h0, //ba[2:0], //phy_bank_in[2:0],
+                     3'b000, // phy_rcw_in[2:0],      // {ras,cas,we}
+                     1'b0, // phy_odt_in,       // may be optimized?
+                     1'b0, // phy_cke_inv,      // may be optimized?
+                     1'b1, // phy_sel_in,      // first/second half-cycle, other will be nop (cke+odt applicable to both)
+                     1'b0, // phy_dq_en_in,   //phy_dq_tri_in,   // tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
+                     1'b0, // phy_dqs_en_in,  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
+                     1'b0,                        // phy_dqs_toggle_en;
+                     1'b1, // phy_dci_en_in,  //phy_dci_in,      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+                     1'b1, // phy_buf_wr,   // connect to external buffer (but only if not paused)
+                     1'b0, // phy_buf_rd,    // connect to external buffer (but only if not paused)
+                     1'b0,                   // add NOP after the current command, keep other data
+                     1'b0                    // Reserved for future use
+             };
+             @(posedge CLK)
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+// nop
+             data <= {
+                     15'b0, // skip 0
+                     3'h0, //ba[2:0], //phy_bank_in[2:0],
+                     3'b000, // phy_rcw_in[2:0],      // {ras,cas,we}
+                     1'b0, // phy_odt_in,       // may be optimized?
+                     1'b0, // phy_cke_inv,      // may be optimized?
+                     1'b1, // phy_sel_in,      // first/second half-cycle, other will be nop (cke+odt applicable to both)
+                     1'b0, // phy_dq_en_in,   //phy_dq_tri_in,   // tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
+                     1'b0, // phy_dqs_en_in,  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
+                     1'b0,                        // phy_dqs_toggle_en;
+                     1'b1, // phy_dci_en_in,  //phy_dci_in,      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+                     1'b1, // phy_buf_wr,   // connect to external buffer (but only if not paused)
+                     1'b0, // phy_buf_rd,    // connect to external buffer (but only if not paused)
+                     1'b0,                   // add NOP after the current command, keep other data
+                     1'b0                    // Reserved for future use
+             };
+             @(posedge CLK)
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+
+             data <= encode_seq_skip(2,0); // tWR = 15ns (6 cycles for 2.5ns) from end of write (not write command)
+             @(posedge CLK)
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+             
+// Turn off read pattern mode
+             @(posedge CLK)
+             data <=  encode_seq_word(
+                mr3_norm[14:0],           // [14:0] phy_addr_in;
+                mr3_norm[17:15],          // [ 2:0] phy_bank_in; //TODO: debug!
+                3'b111,                      // [ 2:0] phy_rcw_in; // {ras,cas,we}, positive
+                1'b0,                        //        phy_odt_in; // may be optimized?
+                1'b0,                        // phy_cke_inv; // may be optimized?
+                1'b0,                        // phy_sel_in == 0; // first/second half-cycle,
+                1'b0,                        // phy_dq_en_in;
+                1'b0,                        // phy_dqs_en_in;
+                1'b0,                        // phy_dqs_toggle_en;
+                1'b0,                        // phy_dci_en_in;      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+                1'b0,                        // phy_buf_wr;   // connect to external buffer
+                1'b0,                        // phy_buf_rd;   // connect to external buffer
+                1'b0);                       // add NOP after the current command, keep other data
+             @(posedge CLK)
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+             data <= encode_seq_skip(5,0); // tMOD
+             @(posedge CLK)
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+
+             data <= encode_seq_skip(0,1); // end of sequence 
+             @(posedge CLK)
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+             
+        end
+    endtask
+
     task set_read_block;
         input [ 2:0] ba;
         input [14:0] ra;
@@ -1365,8 +1647,10 @@ simul_axi_read simul_axi_read_i(
         reg                 [31:0] cmd_addr;
         reg                 [31:0] data;
         reg   [CMD_PAUSE_BITS-1:0] dqs_low_rpt;
+        reg   [CMD_PAUSE_BITS-1:0] nrep_minus_1;
         begin
              dqs_low_rpt <= 8;
+             nrep_minus_1 <= nrep-1;
              mr1_norm <= ddr3_mr1 (
                 1'h0,     //       qoff; // output enable: 0 - DQ, DQS operate in normal mode, 1 - DQ, DQS are disabled
                 1'h0,     //       tdqs; // termination data strobe (for x8 devices) 0 - disabled, 1 - enabled
@@ -1433,10 +1717,10 @@ simul_axi_read simul_axi_read_i(
 //             axi_write_single(cmd_addr, data);
 //             cmd_addr <= cmd_addr + 4;
              
-// Toggle DQS as needed for write leveling             
+// Toggle DQS as needed for write leveling, write to buffer             
              data <= { // encode_seq_skip(nrep,0); // Adjust skip
                  {15-CMD_DONE_BIT{1'b0}},
-                 nrep[CMD_PAUSE_BITS-1:0],
+                 nrep_minus_1[CMD_PAUSE_BITS-1:0],
                  3'b0, //phy_bank_in[2:0],
                  3'b0, // phy_rcw_in[2:0],      // {ras,cas,we}
                  1'b0, // phy_odt_in,       // may be optimized?
@@ -1446,7 +1730,7 @@ simul_axi_read simul_axi_read_i(
                  1'b1, // phy_dqs_en_in,  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
                  1'b1,                        // phy_dqs_toggle_en;
                  1'b0, // phy_dci_en_in,  //phy_dci_in,      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
-                 1'b0, // phy_buf_wr,   // connect to external buffer (but only if not paused)
+                 1'b1, // phy_buf_wr,   // connect to external buffer (but only if not paused)
                  1'b0, // phy_buf_rd,    // connect to external buffer (but only if not paused)
                  1'b0,                   // add NOP after the current command, keep other data
                  1'b0                    // Reserved for future use
@@ -1454,6 +1738,28 @@ simul_axi_read simul_axi_read_i(
              @(posedge CLK)
              axi_write_single(cmd_addr, data);
              cmd_addr <= cmd_addr + 4;
+// continue toggling, but disable writing to buffer (used same wbuf latency as for read)
+             data <= { // encode_seq_skip(nrep,0); // Adjust skip
+                 15'h4, // 4 cycles
+                 3'b0, //phy_bank_in[2:0],
+                 3'b0, // phy_rcw_in[2:0],      // {ras,cas,we}
+                 1'b0, // phy_odt_in,       // may be optimized?
+                 1'b0, // phy_cke_inv,      // may be optimized?
+                 1'b0, // phy_sel_in,      // first/second half-cycle, other will be nop (cke+odt applicable to both)
+                 1'b0, // phy_dq_en_in,   //phy_dq_tri_in,   // tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
+                 1'b1, // phy_dqs_en_in,  // tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
+                 1'b1,                        // phy_dqs_toggle_en;
+                 1'b0, // phy_dci_en_in,  //phy_dci_in,      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+                 1'b0, // phy_buf_wr,   // no write
+                 1'b0, // phy_buf_rd,    // connect to external buffer (but only if not paused)
+                 1'b0,                   // add NOP after the current command, keep other data
+                 1'b0                    // Reserved for future use
+             };
+             @(posedge CLK)
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+             
+             
              data <= encode_seq_skip(2,0); // Adjust skip 
              @(posedge CLK)
              axi_write_single(cmd_addr, data);
@@ -1900,6 +2206,23 @@ simul_axi_read simul_axi_read_i(
      end
     endtask
     
+    task axi_set_dqs_idelay_nominal;
+     begin
+        axi_write_single(BASEADDRESS_LANE0_IDELAY + (8<<2), (DLY_LANE0_IDELAY >> (8<<3)) & 32'hff);
+        axi_write_single(BASEADDRESS_LANE1_IDELAY + (8<<2), (DLY_LANE1_IDELAY >> (8<<3)) & 32'hff);
+        axi_write_single(BASEADDR_DLY_SET, 0); // set all dealys
+     end
+    endtask
+    
+    task axi_set_dqs_idelay_wlv;
+     begin
+        axi_write_single(BASEADDRESS_LANE0_IDELAY + (8<<2), DLY_LANE0_DQS_WLV_IDELAY);
+        axi_write_single(BASEADDRESS_LANE1_IDELAY + (8<<2), DLY_LANE1_DQS_WLV_IDELAY);
+        axi_write_single(BASEADDR_DLY_SET, 0); // set all dealys
+     end
+    endtask
+    
+    
     task axi_set_dly_single;
         input [2:0] group; // 0 - lane 0 odelay, 1 - lane0 idelay, 2 - lane 1  odelay, 3 - lane1 idelay, 4 - cmda odelay
         input [4:0] index; // 0..7 - DQ, 8 - DQS, 9 DQM (for byte lanes)
@@ -2125,10 +2448,7 @@ simul_axi_read simul_axi_read_i(
         end
     endtask
 
-    task axi_read_addr;`ifndef IVERILOG
-(* dont_touch = "true" *)
-`endif
-    
+    task axi_read_addr;
         input [11:0] id;
         input [31:0] addr;
         input [ 3:0] len;

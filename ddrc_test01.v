@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/> .
  *******************************************************************************/
 `timescale 1ns/1ps
-
+`define use200Mhz 1
 module  ddrc_test01 #(
     parameter PHASE_WIDTH =     8,
     parameter SLEW_DQ =         "SLOW",
@@ -27,12 +27,21 @@ module  ddrc_test01 #(
     parameter SLEW_CMDA =       "SLOW",
     parameter SLEW_CLK =        "SLOW",
     parameter IBUF_LOW_PWR =    "TRUE",
+`ifdef use200Mhz
+    parameter real REFCLK_FREQUENCY = 200.0, // 300.0,
+    parameter HIGH_PERFORMANCE_MODE = "FALSE",
+    parameter CLKIN_PERIOD          = 20, // 10, //ns >1.25, 600<Fvco<1200 // Hardware 150MHz , change to             | 6.667
+    parameter CLKFBOUT_MULT =       16,   // 8, // Fvco=Fclkin*CLKFBOUT_MULT_F/DIVCLK_DIVIDE, Fout=Fvco/CLKOUT#_DIVIDE  | 16
+    parameter CLKFBOUT_MULT_REF =   16,   // 18,   // 9, // Fvco=Fclkin*CLKFBOUT_MULT_F/DIVCLK_DIVIDE, Fout=Fvco/CLKOUT#_DIVIDE  | 6
+    parameter CLKFBOUT_DIV_REF =    4, // 200Mhz 3, // To get 300MHz for the reference clock
+`else
     parameter real REFCLK_FREQUENCY = 300.0,
     parameter HIGH_PERFORMANCE_MODE = "FALSE",
     parameter CLKIN_PERIOD          = 10, //ns >1.25, 600<Fvco<1200
     parameter CLKFBOUT_MULT =       8, // Fvco=Fclkin*CLKFBOUT_MULT_F/DIVCLK_DIVIDE, Fout=Fvco/CLKOUT#_DIVIDE
     parameter CLKFBOUT_MULT_REF =   9, // Fvco=Fclkin*CLKFBOUT_MULT_F/DIVCLK_DIVIDE, Fout=Fvco/CLKOUT#_DIVIDE
     parameter CLKFBOUT_DIV_REF =    3, // To get 300MHz for the reference clock
+`endif    
     parameter DIVCLK_DIVIDE=        1,
     parameter CLKFBOUT_PHASE =      0.000,
     parameter SDCLK_PHASE =         0.000,
@@ -233,27 +242,40 @@ module  ddrc_test01 #(
    wire [ 3:0] dqs_tri_off_pattern;
    wire [ 3:0] wbuf_delay;
    
+   wire        port0_rd_match;
+   reg         port0_rd_match_r; // rd address matched in previous cycle
 
+   assign      port0_rd_match=(((axird_bram_raddr ^ PORT0_RD_ADDR) & PORT0_RD_ADDR_MASK)==0);  
 //   assign en_cmd0_wr=     axiwr_bram_wen   && (axiwr_bram_waddr[11:10]==2'h1);
 //   assign en_port0_rd=    axird_bram_ren   && (axird_bram_raddr[11:10]==2'h0);
 //   assign en_port0_regen= axird_bram_regen && (axird_bram_raddr[11:10]==2'h0);
 //   assign en_port1_wr=    axiwr_bram_wen   && (axiwr_bram_waddr[11:10]==2'h0);
 
+
    assign en_cmd0_wr=     axiwr_bram_wen   && (((axiwr_bram_waddr ^ CMD0_ADDR) & CMD0_ADDR_MASK)==0);
-   assign en_port0_rd=    axird_bram_ren   && (((axird_bram_raddr ^ PORT0_RD_ADDR) & PORT0_RD_ADDR_MASK)==0);
-   assign en_port0_regen= axird_bram_regen && (((axird_bram_raddr ^ PORT0_RD_ADDR) & PORT0_RD_ADDR_MASK)==0);
+
+//   assign en_port0_rd=    axird_bram_ren   && (((axird_bram_raddr ^ PORT0_RD_ADDR) & PORT0_RD_ADDR_MASK)==0);
+//   assign en_port0_regen= axird_bram_regen && (((axird_bram_raddr ^ PORT0_RD_ADDR) & PORT0_RD_ADDR_MASK)==0);
+   assign en_port0_rd=    axird_bram_ren   && port0_rd_match;
+   assign en_port0_regen= axird_bram_regen && port0_rd_match_r;
+
    assign en_port1_wr=    axiwr_bram_wen   && (((axiwr_bram_waddr ^ PORT1_WR_ADDR) & PORT1_WR_ADDR_MASK)==0);
    
    
    assign axiwr_dev_ready = ~axiwr_dev_busy; //may combine (AND) multiple sources if needed
    assign axird_bram_rdata= select_port0? port0_rdata[31:0]:(select_status?status_rdata[31:0]:32'bx);
    assign axird_dev_ready = ~axird_dev_busy; //may combine (AND) multiple sources if needed
+   
+always @ (posedge axi_aclk) begin
+   port0_rd_match_r <= port0_rd_match; // rd address matched in previous cycle
+end
 
 always @ (posedge axi_rst or posedge axi_aclk) begin
     if (axi_rst) select_port0 <= 1'b0;
     else if (axird_start_burst) select_port0 <= (((axird_pre_araddr^ PORT0_RD_ADDR) & PORT0_RD_ADDR_MASK)==0);
     if (axi_rst) select_status <= 1'b0;
     else if (axird_start_burst) select_status <= (((axird_pre_araddr^ STATUS_ADDR) & STATUS_ADDR_MASK)==0);
+    
 end
    
 // Clock and reset from PS

@@ -121,6 +121,7 @@ module  axibram_read #(
     reg start_read_burst_1;
     reg [11:0] pre_rid0;
     reg [11:0] pre_rid;
+    
 // External memory interface - synchronization with ready
    assign pre_araddr=  araddr_out[ADDRESS_BITS-1:0];
    assign start_burst= start_read_burst_w;
@@ -130,9 +131,8 @@ module  axibram_read #(
    assign  bram_raddr = read_in_progress?read_address[ADDRESS_BITS-1:0]:{ADDRESS_BITS{1'b1}};  // read address
    assign  bram_ren =   bram_reg_re_w;     // read port enable
    assign  bram_regen = bram_reg_re_w;     // output register enable
+   
    assign  rdata[31:0] = bram_rdata;    // data out
-
-
 
     always @ (posedge  aclk or posedge  rst) begin
     

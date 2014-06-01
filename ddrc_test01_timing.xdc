@@ -18,9 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/> .
 #################################################################################
-#create_clock -period 2.500 -name clk -waveform {0.000 1.250} [get_ports CLK]
-#axi_aclk  [get_pins -hierarchical *pll*CLKIN1]
-create_clock -name axi_aclk -period 10 [get_nets -hierarchical *axi_aclk]
+
+create_clock -name axi_aclk -period 20 [get_nets -hierarchical *axi_aclk]
 
 
 #Clock        Period    Waveform           Attributes  Sources

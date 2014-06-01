@@ -1,0 +1,268 @@
+#################################################################################
+# Filename: ddrc_test01.xcf
+# Date:2014-05-20  
+# Author: Andrey Filippov
+# Description: DDR3 controller test with axi constraints
+#
+# Copyright (c) 2014 Elphel, Inc.
+# ddrc_test01.xcf is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+#  ddrc_test01.xcf is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/> .
+#################################################################################
+
+#    output                       SDRST, // output SDRST, active low
+# set_property IOSTANDARD SSTL15 [get_ports {SDRST}]
+# set_property PACKAGE_PIN J4 [get_ports {SDRST}]
+NET "SDRST"             LOC = "J4"  | IOSTANDARD = "SSTL15" ;
+
+
+#    output                       SDCLK, // DDR3 clock differential output, positive
+#set_property IOSTANDARD DIFF_SSTL15 [get_ports {SDCLK}]
+#set_property PACKAGE_PIN K3 [get_ports {SDCLK}]
+NET "SDCLK"             LOC = "K3"  | IOSTANDARD = "SSTL15" ;
+
+#    output                       SDNCLK,// DDR3 clock differential output, negative
+#set_property IOSTANDARD DIFF_SSTL15 [get_ports {SDNCLK}]
+#set_property PACKAGE_PIN K2 [get_ports {SDNCLK}]
+NET "SDNCLK"             LOC = "K2"  | IOSTANDARD = "SSTL15" ;
+
+#    output  [ADDRESS_NUMBER-1:0] SDA,   // output address ports (14:0) for 4Gb device
+#set_property IOSTANDARD SSTL15 [get_ports {SDA[0]}]
+#set_property PACKAGE_PIN N3 [get_ports {SDA[0]}]
+NET "SDA<0>"             LOC = "N3"  | IOSTANDARD = "SSTL15" ;
+
+#set_property IOSTANDARD SSTL15 [get_ports {SDA[1]}]
+#set_property PACKAGE_PIN H2 [get_ports {SDA[1]}]
+NET "SDA<1>"             LOC = "H2"  | IOSTANDARD = "SSTL15" ;
+
+#set_property IOSTANDARD SSTL15 [get_ports {SDA[2]}]
+#set_property PACKAGE_PIN M2 [get_ports {SDA[2]}]
+NET "SDA<2>"             LOC = "M2"  | IOSTANDARD = "SSTL15" ;
+
+#set_property IOSTANDARD SSTL15 [get_ports {SDA[3]}]
+#set_property PACKAGE_PIN P5 [get_ports {SDA[3]}]
+NET "SDA<3>"             LOC = "P5"  | IOSTANDARD = "SSTL15" ;
+
+#set_property IOSTANDARD SSTL15 [get_ports {SDA[4]}]
+#set_property PACKAGE_PIN H1 [get_ports {SDA[4]}]
+NET "SDA<4>"             LOC = "H1"  | IOSTANDARD = "SSTL15" ;
+
+#set_property IOSTANDARD SSTL15 [get_ports {SDA[5]}]
+#set_property PACKAGE_PIN M3 [get_ports {SDA[5]}]
+NET "SDA<5>"             LOC = "M3"  | IOSTANDARD = "SSTL15" ;
+
+#set_property IOSTANDARD SSTL15 [get_ports {SDA[6]}]
+#set_property PACKAGE_PIN J1 [get_ports {SDA[6]}]
+NET "SDA<6>"             LOC = "J1"  | IOSTANDARD = "SSTL15" ;
+
+#set_property IOSTANDARD SSTL15 [get_ports {SDA[7]}]
+#set_property PACKAGE_PIN P4 [get_ports {SDA[7]}]
+NET "SDA<7>"             LOC = "P4"  | IOSTANDARD = "SSTL15" ;
+
+#set_property IOSTANDARD SSTL15 [get_ports {SDA[8]}]
+#set_property PACKAGE_PIN K1 [get_ports {SDA[8]}]
+NET "SDA<8>"             LOC = "K1"  | IOSTANDARD = "SSTL15" ;
+
+#set_property IOSTANDARD SSTL15 [get_ports {SDA[9]}]
+#set_property PACKAGE_PIN P3 [get_ports {SDA[9]}]
+NET "SDA<9>"             LOC = "P3"  | IOSTANDARD = "SSTL15" ;
+
+#set_property IOSTANDARD SSTL15 [get_ports {SDA[10]}]
+#set_property PACKAGE_PIN F2 [get_ports {SDA[10]}]
+NET "SDA<10>"             LOC = "F2"  | IOSTANDARD = "SSTL15" ;
+
+#set_property IOSTANDARD SSTL15 [get_ports {SDA[11]}]
+#set_property PACKAGE_PIN H3 [get_ports {SDA[11]}]
+NET "SDA<11>"             LOC = "H3"  | IOSTANDARD = "SSTL15" ;
+
+#set_property IOSTANDARD SSTL15 [get_ports {SDA[12]}]
+#set_property PACKAGE_PIN G3 [get_ports {SDA[12]}]
+NET "SDA<12>"             LOC = "G3"  | IOSTANDARD = "SSTL15" ;
+
+#set_property IOSTANDARD SSTL15 [get_ports {SDA[13]}]
+#set_property PACKAGE_PIN N2 [get_ports {SDA[13]}]
+NET "SDA<13>"             LOC = "N2"  | IOSTANDARD = "SSTL15" ;
+
+#set_property IOSTANDARD SSTL15 [get_ports {SDA[14]}]
+#set_property PACKAGE_PIN J3 [get_ports {SDA[14]}]
+NET "SDA<14>"             LOC = "J3"  | IOSTANDARD = "SSTL15" ;
+
+
+#    output                 [2:0] SDBA,  // output bank address ports
+#set_property IOSTANDARD SSTL15 [get_ports {SDBA[0]}]
+#set_property PACKAGE_PIN N1 [get_ports {SDBA[0]}]
+NET "SDBA<0>"             LOC = "N1"  | IOSTANDARD = "SSTL15" ;
+
+#set_property IOSTANDARD SSTL15 [get_ports {SDBA[1]}]
+#set_property PACKAGE_PIN F1 [get_ports {SDBA[1]}]
+NET "SDBA<1>"             LOC = "F1"  | IOSTANDARD = "SSTL15" ;
+
+#set_property IOSTANDARD SSTL15 [get_ports {SDBA[2]}]
+#set_property PACKAGE_PIN P1 [get_ports {SDBA[2]}]
+NET "SDBA<2>"             LOC = "P1"  | IOSTANDARD = "SSTL15" ;
+
+#    output                       SDWE,  // output WE port
+#set_property IOSTANDARD SSTL15 [get_ports {SDWE}]
+#set_property PACKAGE_PIN G4 [get_ports {SDWE}]
+NET "SDWE"                LOC = "G4"  | IOSTANDARD = "SSTL15" ;
+
+#    output                       SDRAS, // output RAS port
+#set_property IOSTANDARD SSTL15 [get_ports {SDRAS}]
+#set_property PACKAGE_PIN L2 [get_ports {SDRAS}]
+NET "SDRAS"               LOC = "L2"  | IOSTANDARD = "SSTL15" ;
+
+#    output                       SDCAS, // output CAS port
+#set_property IOSTANDARD SSTL15 [get_ports {SDCAS}]
+#set_property PACKAGE_PIN L1 [get_ports {SDCAS}]
+NET "SDCAS"               LOC = "L1"  | IOSTANDARD = "SSTL15" ;
+
+
+#    output                       SDCKE, // output Clock Enable port
+#set_property IOSTANDARD SSTL15 [get_ports {SDCKE}]
+#set_property PACKAGE_PIN E1 [get_ports {SDCKE}]
+NET "SDCKE"               LOC = "E1"  | IOSTANDARD = "SSTL15" ;
+
+#    output                       SDODT, // output ODT port
+#set_property IOSTANDARD SSTL15 [get_ports {SDODT}]
+#set_property PACKAGE_PIN M7 [get_ports {SDODT}]
+NET "SDODT"               LOC = "M7"  | IOSTANDARD = "SSTL15" ;
+
+#    inout                 [15:0] SDD,       // DQ  I/O pads
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDD[0]}]
+#set_property PACKAGE_PIN K6 [get_ports {SDD[0]}]
+NET "SDD<0>"              LOC = "K6"  | IOSTANDARD = "SSTL15_T_DCI" ;
+
+#    inout                 [15:0] SDD,       // DQ  I/O pads
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDD[1]}]
+#set_property PACKAGE_PIN L4 [get_ports {SDD[1]}]
+NET "SDD<1>"              LOC = "L4"  | IOSTANDARD = "SSTL15_T_DCI" ;
+
+#    inout                 [15:0] SDD,       // DQ  I/O pads
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDD[2]}]
+#set_property PACKAGE_PIN K7 [get_ports {SDD[2]}]
+NET "SDD<2>"              LOC = "K7"  | IOSTANDARD = "SSTL15_T_DCI" ;
+
+#    inout                 [15:0] SDD,       // DQ  I/O pads
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDD[3]}]
+#set_property PACKAGE_PIN K4 [get_ports {SDD[3]}]
+NET "SDD<3>"              LOC = "K4"  | IOSTANDARD = "SSTL15_T_DCI" ;
+
+#    inout                 [15:0] SDD,       // DQ  I/O pads
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDD[4]}]
+#set_property PACKAGE_PIN L6 [get_ports {SDD[4]}]
+NET "SDD<4>"              LOC = "L6"  | IOSTANDARD = "SSTL15_T_DCI" ;
+
+#    inout                 [15:0] SDD,       // DQ  I/O pads
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDD[5]}]
+#set_property PACKAGE_PIN M4 [get_ports {SDD[5]}]
+NET "SDD<5>"              LOC = "M4"  | IOSTANDARD = "SSTL15_T_DCI" ;
+
+#    inout                 [15:0] SDD,       // DQ  I/O pads
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDD[6]}]
+#set_property PACKAGE_PIN L7 [get_ports {SDD[6]}]
+NET "SDD<6>"              LOC = "L7"  | IOSTANDARD = "SSTL15_T_DCI" ;
+
+#    inout                 [15:0] SDD,       // DQ  I/O pads
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDD[7]}]
+#set_property PACKAGE_PIN N5 [get_ports {SDD[7]}]
+NET "SDD<7>"              LOC = "N5"  | IOSTANDARD = "SSTL15_T_DCI" ;
+
+#    inout                 [15:0] SDD,       // DQ  I/O pads
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDD[8]}]
+#set_property PACKAGE_PIN H5 [get_ports {SDD[8]}]
+NET "SDD<8>"              LOC = "H5"  | IOSTANDARD = "SSTL15_T_DCI" ;
+
+#    inout                 [15:0] SDD,       // DQ  I/O pads
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDD[9]}]
+#set_property PACKAGE_PIN J6 [get_ports {SDD[9]}]
+NET "SDD<9>"              LOC = "J6"  | IOSTANDARD = "SSTL15_T_DCI" ;
+
+#    inout                 [15:0] SDD,       // DQ  I/O pads
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDD[10]}]
+#set_property PACKAGE_PIN G5 [get_ports {SDD[10]}]
+NET "SDD<10>"             LOC = "G5"  | IOSTANDARD = "SSTL15_T_DCI" ;
+
+#    inout                 [15:0] SDD,       // DQ  I/O pads
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDD[11]}]
+#set_property PACKAGE_PIN H6 [get_ports {SDD[11]}]
+NET "SDD<11>"             LOC = "H6"  | IOSTANDARD = "SSTL15_T_DCI" ;
+
+#    inout                 [15:0] SDD,       // DQ  I/O pads
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDD[12]}]
+#set_property PACKAGE_PIN F5 [get_ports {SDD[12]}]
+NET "SDD<12>"             LOC = "F5"  | IOSTANDARD = "SSTL15_T_DCI" ;
+
+#    inout                 [15:0] SDD,       // DQ  I/O pads
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDD[13]}]
+#set_property PACKAGE_PIN F7 [get_ports {SDD[13]}]
+NET "SDD<13>"             LOC = "F7"  | IOSTANDARD = "SSTL15_T_DCI" ;
+
+#    inout                 [15:0] SDD,       // DQ  I/O pads
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDD[14]}]
+#set_property PACKAGE_PIN F4 [get_ports {SDD[14]}]
+NET "SDD<14>"             LOC = "F4"  | IOSTANDARD = "SSTL15_T_DCI" ;
+
+#    inout                 [15:0] SDD,       // DQ  I/O pads
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDD[15]}]
+#set_property PACKAGE_PIN F6 [get_ports {SDD[15]}]
+NET "SDD<15>"             LOC = "F6"  | IOSTANDARD = "SSTL15_T_DCI" ;
+
+#    inout                        DQSL,     // LDQS I/O pad
+#set_property PACKAGE_PIN N7 [get_ports {DQSL}]
+#set_property SLEW FAST [get_ports {DQSL}]
+#set_property IOSTANDARD DIFF_SSTL15_T_DCI [get_ports {DQSL}]
+NET "DQSL"             LOC = "N7"  | IOSTANDARD = "DIFF_SSTL15_T_DCI"; # | SLEW = "FAST";
+
+#    inout                        NDQSL,    // ~LDQS I/O pad
+#set_property PACKAGE_PIN N6 [get_ports {NDQSL}]
+#set_property SLEW FAST [get_ports {NDQSL}]
+#set_property IOSTANDARD DIFF_SSTL15_T_DCI [get_ports {NDQSL}]
+NET "NDQSL"            LOC = "N6"  | IOSTANDARD = "DIFF_SSTL15_T_DCI";# | SLEW = "FAST";
+
+#    inout                        DQSU,     // UDQS I/O pad
+#set_property PACKAGE_PIN H7 [get_ports {DQSU}]
+#set_property SLEW FAST [get_ports {DQSU}]
+#set_property IOSTANDARD DIFF_SSTL15_T_DCI [get_ports {DQSU}]
+NET "DQSU"             LOC = "H7"  | IOSTANDARD = "DIFF_SSTL15_T_DCI";# | SLEW = "FAST";
+
+#    inout                        NDQSU,    // ~UDQS I/O pad
+#set_property PACKAGE_PIN G7 [get_ports {NDQSU}]
+#set_property SLEW FAST [get_ports {NDQSU}]
+#set_property IOSTANDARD DIFF_SSTL15_T_DCI [get_ports {NDQSU}]
+NET "NDQSU"            LOC = "G7"  | IOSTANDARD = "DIFF_SSTL15_T_DCI";# | SLEW = "FAST";
+
+#    inout                        SDDML,      // LDM  I/O pad (actually only output)
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDDML}]
+#set_property IOSTANDARD SSTL15 [get_ports {SDDML}]
+#set_property PACKAGE_PIN L5 [get_ports {SDDML}]
+NET "SDDML"            LOC = "L5"  | IOSTANDARD = "SSTL15";
+
+
+#    inout                        SDDMU,      // UDM  I/O pad (actually only output)
+#set_property IOSTANDARD SSTL15_T_DCI [get_ports {SDDMU}]
+#set_property IOSTANDARD SSTL15 [get_ports {SDDMU}]
+#set_property PACKAGE_PIN J5 [get_ports {SDDMU}]
+NET "SDDMU"            LOC = "J5"  | IOSTANDARD = "SSTL15";
+
+
+# Global constraints
+
+#set_property INTERNAL_VREF  0.750 [get_iobanks 34]
+CONFIG INTERNAL_VREF_BANK34=0.750;
+#set_property DCI_CASCADE 34 [get_iobanks 35]
+CONFIG DCI_CASCADE = "35 34";
+#set_property INTERNAL_VREF  0.750 [get_iobanks 35]
+CONFIG INTERNAL_VREF_BANK35=0.750;
+#set_property CFGBVS GND [current_design]
+# No UCF?
+#set_property CONFIG_VOLTAGE 1.8 [current_design]
+# No UCF?

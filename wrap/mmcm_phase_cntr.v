@@ -117,8 +117,8 @@ module  mmcm_phase_cntr#(
         else ps_start0 <= ps_we && ps_ready;
         
         if (rst) ps_dout_r <= 0;
-        else if (psen &&  psincdec) ps_dout_r <= ps_dout_r +1; 
-        else if (psen && !psincdec) ps_dout_r <= ps_dout_r -1;
+        else if (psen &&  psincdec) ps_dout_r <= ps_dout_r +1; //SuppressThisWarning ISExst Result of 9-bit expression is truncated to fit in 8-bit target.
+        else if (psen && !psincdec) ps_dout_r <= ps_dout_r -1; //SuppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 8-bit target.
         
         if (rst) ps_target <= 0;
         else if (ps_we && ps_ready) ps_target <= ps_din;
@@ -171,11 +171,11 @@ module  mmcm_phase_cntr#(
         .CLKOUT6_USE_FINE_PS (CLKOUT6_USE_FINE_PS),
         .COMPENSATION        (COMPENSATION),
         .DIVCLK_DIVIDE       (DIVCLK_DIVIDE),
-        .IS_CLKINSEL_INVERTED  (1'b0),
-        .IS_PSEN_INVERTED      (1'b0),
-        .IS_PSINCDEC_INVERTED  (1'b0),
-        .IS_PWRDWN_INVERTED    (1'b0),
-        .IS_RST_INVERTED       (1'b0),
+//        .IS_CLKINSEL_INVERTED  (1'b0),  // ISE does not have this parameter
+//        .IS_PSEN_INVERTED      (1'b0),  // ISE does not have this parameter
+//        .IS_PSINCDEC_INVERTED  (1'b0),  // ISE does not have this parameter
+//        .IS_PWRDWN_INVERTED    (1'b0),  // ISE does not have this parameter
+//        .IS_RST_INVERTED       (1'b0),  // ISE does not have this parameter
         .REF_JITTER1         (REF_JITTER1),
         .REF_JITTER2         (REF_JITTER2),
         .SS_EN               (SS_EN),

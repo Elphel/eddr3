@@ -56,8 +56,8 @@ module  odelay_fine_pipe
         .HIGH_PERFORMANCE_MODE(HIGH_PERFORMANCE_MODE),
         .ODELAY_TYPE("VAR_LOAD_PIPE"),
         .ODELAY_VALUE(DELAY_VALUE>>3),
-        .IS_C_INVERTED(1'b0),
-        .IS_ODATAIN_INVERTED(1'b0),
+//        .IS_C_INVERTED(1'b0), // ISE does not have this parameter
+//        .IS_ODATAIN_INVERTED(1'b0),  // ISE does not have this parameter
         .PIPE_SEL("TRUE"),
         .REFCLK_FREQUENCY(REFCLK_FREQUENCY),
         .SIGNAL_PATTERN("DATA")

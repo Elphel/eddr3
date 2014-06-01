@@ -276,7 +276,7 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
 
     axibram_write #(
         .ADDRESS_BITS(AXI_WR_ADDR_BITS)
-    ) axibram_write_i (
+    ) axibram_write_i (  //SuppressThisWarning ISExst Output port <bram_wstb> of the instance <axibram_write_i> is unconnected or connected to loadless signal.
         .aclk        (axi_aclk), // input
         .rst         (axi_rst), // input
         .awaddr      (axi_awaddr[31:0]), // input[31:0] 
@@ -302,14 +302,14 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
         .bram_wclk   (axiwr_bram_wclk), // output
         .bram_waddr  (axiwr_bram_waddr[AXI_WR_ADDR_BITS-1:0]), // output[9:0] 
         .bram_wen    (axiwr_bram_wen), // output
-        .bram_wstb   (axiwr_bram_wstb[3:0]), // output[3:0] 
+        .bram_wstb   (axiwr_bram_wstb[3:0]), // output[3:0] //SuppressThisWarning ISExst Assignment to axiwr_bram_wstb ignored, since the identifier is never used
         .bram_wdata  (axiwr_bram_wdata[31:0]) // output[31:0] 
     );
 
     /* Instance template for module axibram_read */
     axibram_read #(
         .ADDRESS_BITS(AXI_RD_ADDR_BITS)
-    ) axibram_read_i (
+    ) axibram_read_i ( //SuppressThisWarning ISExst Output port <bram_rclk> of the instance <axibram_read_i> is unconnected or connected to loadless signal.
         .aclk        (axi_aclk), // input
         .rst         (axi_rst), // input
         .araddr      (axi_araddr[31:0]), // input[31:0] 
@@ -328,7 +328,7 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
         .pre_araddr  (axird_pre_araddr[AXI_RD_ADDR_BITS-1:0]), // output[9:0] 
         .start_burst (axird_start_burst), // output
         .dev_ready   (axird_dev_ready), // input
-        .bram_rclk   (axird_bram_rclk), // output
+        .bram_rclk   (axird_bram_rclk), // output //SuppressThisWarning ISExst Assignment to axird_bram_rclk ignored, since the identifier is never used
         .bram_raddr  (axird_bram_raddr[AXI_RD_ADDR_BITS-1:0]), // output[9:0] 
         .bram_ren    (axird_bram_ren), // output
         .bram_regen  (axird_bram_regen), // output
@@ -449,7 +449,7 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
         .SS_MOD_PERIOD    (SS_MOD_PERIOD),
         .CMD_PAUSE_BITS   (CMD_PAUSE_BITS),
         .CMD_DONE_BIT     (CMD_DONE_BIT)
-    ) ddrc_sequencer_i (
+    ) ddrc_sequencer_i ( //SuppressThisWarning ISExst Output port <run_done> of the instance <ddrc_sequencer_i> is unconnected or connected to loadless signal.
         .SDRST          (SDRST), // output
         .SDCLK          (SDCLK), // output
         .SDNCLK         (SDNCLK), // output

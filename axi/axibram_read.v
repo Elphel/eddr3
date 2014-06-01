@@ -77,7 +77,7 @@ module  axibram_read #(
     reg  [ 1:0] rburst;             // registered burst type 
     reg  [ 3:0] rlen;               // registered burst type 
     wire [ADDRESS_BITS-1:0] next_rd_address_w;     // next transfer address;
-    assign      next_rd_address_w=
+    assign      next_rd_address_w= //SuppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 13-bit target.
       rburst[1]?
         (rburst[0]? {ADDRESS_BITS{1'b0}}:((read_address[ADDRESS_BITS-1:0]+1) & {{(ADDRESS_BITS-4){1'b1}}, ~rlen[3:0]})):
         (rburst[0]? (read_address[ADDRESS_BITS-1:0]+1):(read_address[ADDRESS_BITS-1:0]));
@@ -164,7 +164,7 @@ module  axibram_read #(
 
       if   (rst) read_left <= 0;
       else if (start_read_burst_w) read_left <= arlen_out[3:0]; // precedence over inc
-      else if (bram_reg_re_w)      read_left <= read_left-1;
+      else if (bram_reg_re_w)      read_left <= read_left-1; //SuppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 4-bit target.
             
       if   (rst)                   read_address <= {ADDRESS_BITS{1'b0}};
       else if (start_read_burst_w) read_address <= araddr_out[ADDRESS_BITS-1:0]; // precedence over inc
@@ -178,7 +178,7 @@ module  axibram_read #(
       else if (last_in_burst_d_w)  rlast <= 1'b1;
       else if (rready)             rlast <= 1'b0;
     end
-    always @ (posedge  aclk) begin
+    always @ (posedge  aclk) begin //SuppressThisWarning ISExst Assignment to bram_reg_re_0 ignored, since the identifier is never used
 //        bram_reg_re_0 <= read_in_progress_w && !pre_rvalid_w;
 
         bram_reg_re_0 <= (ar_nempty && !read_in_progress) || (read_in_progress && !read_in_progress);
@@ -230,7 +230,7 @@ fifo_same_clock   #( .DATA_WIDTH(ADDRESS_BITS+20),.DATA_DEPTH(4))
         .we(arvalid && arready),
         .re(start_read_burst_w),
         .data_in({arid[11:0], arburst[1:0],arsize[1:0],arlen[3:0],araddr[ADDRESS_BITS+1:2]}),
-        .data_out({arid_out[11:0], arburst_out[1:0],arsize_out[1:0],arlen_out[3:0],araddr_out[ADDRESS_BITS-1:0]}),
+        .data_out({arid_out[11:0], arburst_out[1:0],arsize_out[1:0],arlen_out[3:0],araddr_out[ADDRESS_BITS-1:0]}), //SuppressThisWarning ISExst Assignment to arsize ignored, since the identifier is never used
         .nempty(ar_nempty),
         .full(),
         .half_full(ar_half_full)

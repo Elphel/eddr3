@@ -175,12 +175,12 @@ set_property PACKAGE_PIN F6 [get_ports {SDD[15]}]
 
 #    inout                        DQSL,     // LDQS I/O pad
 set_property PACKAGE_PIN N7 [get_ports {DQSL}]
-set_property SLEW FAST [get_ports {DQSL}]
+#set_property SLEW FAST [get_ports {DQSL}]
 set_property IOSTANDARD DIFF_SSTL15_T_DCI [get_ports {DQSL}]
 
 #    inout                        NDQSL,    // ~LDQS I/O pad
 set_property PACKAGE_PIN N6 [get_ports {NDQSL}]
-set_property SLEW FAST [get_ports {NDQSL}]
+#set_property SLEW FAST [get_ports {NDQSL}]
 set_property IOSTANDARD DIFF_SSTL15_T_DCI [get_ports {NDQSL}]
 
 #    inout                        DQSU,     // UDQS I/O pad

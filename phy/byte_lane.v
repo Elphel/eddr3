@@ -57,8 +57,8 @@ module  byte_lane #(
 wire dqs_read;
 wire  iclk;         // source-synchronous clock (BUFR from DQS)
 reg  [31:0] din_r=0;
-reg  [3:0] din_dm_r=0, din_dqs_r=0, tin_dq_r=4'hf, tin_dqs_r=4'hf;
-// Preventing register duplication
+// Preventing register removal of equivalent registers
+ (* keep = "true" *) reg  [3:0] din_dm_r=0, din_dqs_r=0, tin_dq_r=4'hf, tin_dqs_r=4'hf;
  (* keep = "true" *) reg  [7:0] dly_data_r=0; 
  (* keep = "true" *) reg        set_r=0;
  (* keep = "true" *) reg  dci_disable_dqs_r, dci_disable_dq_r;

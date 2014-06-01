@@ -3,3 +3,5 @@ glbl.v
 vivado_*
 syntax_*
 simulation/*
+ise_*
+

@@ -39,7 +39,7 @@ module fifo_cross_clocks
     reg  [DATA_WIDTH-1:0]   ram [0:DATA_2DEPTH];
     reg  [DATA_DEPTH-1:0] raddr;
     reg  [DATA_DEPTH-1:0] waddr;
-    reg  [DATA_DEPTH-1:0] waddr_gray; //VivadoSynthesis: [Synth 8-3332] Sequential element ddrc_test01.ddrc_control_i.fifo_cross_clocks_i.waddr_gray_reg[3] is unused and will be removed from module ddrc_test01.
+    reg  [DATA_DEPTH-1:0] waddr_gray; //SuppressThisWarning ISExst VivadoSynthesis : MSB(waddr_gray) == MSB(waddr)
     reg  [DATA_DEPTH-1:0] waddr_gray_rclk;
     wire [DATA_DEPTH-1:0] waddr_plus1 = waddr +1;   
     wire [DATA_DEPTH-1:0] waddr_plus1_gray = waddr_plus1 ^ {1'b0,waddr_plus1[DATA_DEPTH-1:1]};
@@ -47,15 +47,13 @@ module fifo_cross_clocks
     wire [DATA_DEPTH-1:0] raddr_gray = raddr ^ {1'b0,raddr[DATA_DEPTH-1:1]};
     wire [DATA_DEPTH-1:0] raddr_plus1 = raddr +1;   
     wire [2:0] raddr_plus1_gray_top3 = raddr_plus1[DATA_DEPTH-1:DATA_DEPTH-3] ^ {1'b0,raddr_plus1[DATA_DEPTH-1:DATA_DEPTH-2]};
-    reg  [2:0] raddr_gray_top3; //VivadoSynthesis: [Synth 8-3332] Sequential element ddrc_test01.ddrc_control_i.fifo_cross_clocks_i.raddr_gray_top3_reg[2] is unused and will be removed from module ddrc_test01.
+    reg  [2:0] raddr_gray_top3; //SuppressThisWarning ISExst VivadoSynthesis : MSB(raddr_gray_top3) == MSB(raddr)
     reg  [2:0] raddr_gray_top3_wclk;
        wire [2:0] raddr_top3_wclk = {
         raddr_gray_top3_wclk[2],
         raddr_gray_top3_wclk[2]^raddr_gray_top3_wclk[1],
         raddr_gray_top3_wclk[2]^raddr_gray_top3_wclk[1]^raddr_gray_top3_wclk[0]};
-//(* keep = "true" *)   wire [2:0] addr_diff=waddr[DATA_DEPTH-1-:3]-raddr_top3_wclk; // just debugging 8-3332
    wire [2:0] waddr_top3=waddr[DATA_DEPTH-1:DATA_DEPTH-3];
-//(* keep = "true" *)   wire [2:0] addr_diff=waddr[DATA_DEPTH-1:DATA_DEPTH-4]-raddr_top3_wclk; // just debugging 8-3332
    wire [2:0] addr_diff=waddr_top3[2:0]-raddr_top3_wclk[2:0];
     // half-empty does not need to be precise, it uses 3 MSBs of the write address
     // converting to Gray code (easy) and then back (can not be done parallel easily).

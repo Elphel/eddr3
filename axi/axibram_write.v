@@ -99,7 +99,7 @@ module  axibram_write #(
     assign w_nempty_ready=w_nempty && dev_ready_r; // should it be dev_ready?
     
     reg         dev_ready_r;        // device, selected at start burst
-    assign      next_wr_address_w=
+    assign      next_wr_address_w= //SuppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 13-bit target.
       wburst[1]?
         (wburst[0]? {ADDRESS_BITS{1'b0}}:((write_address[ADDRESS_BITS-1:0]+1) & {{(ADDRESS_BITS-4){1'b1}}, ~wlen[3:0]})):
         (wburst[0]? (write_address[ADDRESS_BITS-1:0]+1):(write_address[ADDRESS_BITS-1:0]));
@@ -124,7 +124,7 @@ module  axibram_write #(
 
       if   (rst) write_left <= 0;
       else if (start_write_burst_w) write_left <= awlen_out[3:0]; // precedence over inc
-      else if (bram_we_w)           write_left <= write_left-1;
+      else if (bram_we_w)           write_left <= write_left-1; //SuppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 4-bit target.
             
       if   (rst)                    write_address <= {ADDRESS_BITS{1'b0}};
       else if (start_write_burst_w) write_address <= awaddr_out[ADDRESS_BITS-1:0]; // precedence over inc
@@ -168,7 +168,7 @@ fifo_same_clock   #( .DATA_WIDTH(20+ADDRESS_BITS),.DATA_DEPTH(4))
         .we(awvalid && awready),
         .re(start_write_burst_w),
         .data_in({awid[11:0], awburst[1:0],awsize[1:0],awlen[3:0],awaddr[ADDRESS_BITS+1:2]}),
-        .data_out({awid_out[11:0], awburst_out[1:0],awsize_out[1:0],awlen_out[3:0],awaddr_out[ADDRESS_BITS-1:0]}),
+        .data_out({awid_out[11:0], awburst_out[1:0],awsize_out[1:0],awlen_out[3:0],awaddr_out[ADDRESS_BITS-1:0]}),  //SuppressThisWarning ISExst Assignment to awsize_out ignored, since the identifier is never used
         .nempty(aw_nempty),
         .full(),
         .half_full(aw_half_full)
@@ -180,7 +180,7 @@ fifo_same_clock   #( .DATA_WIDTH(49),.DATA_DEPTH(4))
         .we(wvalid && wready),
         .re(bram_we_w), //start_write_burst_w), // wrong
         .data_in({wid[11:0],wlast,wstb[3:0],wdata[31:0]}),
-        .data_out({wid_out[11:0],wlast_out,wstb_out[3:0],wdata_out[31:0]}),
+        .data_out({wid_out[11:0],wlast_out,wstb_out[3:0],wdata_out[31:0]}), //SuppressThisWarning ISExst Assignment to wlast ignored, since the identifier is never used
         .nempty(w_nempty),
         .full(),
         .half_full(w_half_full)

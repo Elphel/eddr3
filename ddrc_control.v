@@ -164,8 +164,8 @@ module  ddrc_control #(
 
     assign ld_delay = dly_ld_r;
     assign dly_set =  dly_set_r;
-    assign dly_data = wdata_fifo_out_r[ 7:0]; // WARNING: [Synth 8-3936] Found unconnected internal register 'wdata_fifo_out_r_reg' and it is trimmed from '32' to '11' bits. [ddrc_control.v:100]
-    assign dly_addr = waddr_fifo_out_r[ 6:0]; //WARNING: [Synth 8-3936] Found unconnected internal register 'waddr_fifo_out_r_reg' and it is trimmed from '12' to '7' bits. [ddrc_control.v:101]
+    assign dly_data = wdata_fifo_out_r[ 7:0]; // IgnoreThisWarning  VivadoSynthesis WARNING: [Synth 8-3936] Found unconnected internal register 'wdata_fifo_out_r_reg' and it is trimmed from '32' to '11' bits. [ddrc_control.v:100]
+    assign dly_addr = waddr_fifo_out_r[ 6:0]; // IgnoreThisWarning  VivadoSynthesis WARNING: [Synth 8-3936] Found unconnected internal register 'waddr_fifo_out_r_reg' and it is trimmed from '12' to '7' bits. [ddrc_control.v:101]
     assign run_addr = wdata_fifo_out_r[10:0];
     assign run_chn =  waddr_fifo_out_r[3:0];
     assign run_seq =  run_seq_r && !ddr_rst;

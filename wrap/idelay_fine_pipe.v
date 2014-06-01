@@ -56,9 +56,9 @@ module  idelay_fine_pipe
         .HIGH_PERFORMANCE_MODE(HIGH_PERFORMANCE_MODE),
         .IDELAY_TYPE("VAR_LOAD_PIPE"),
         .IDELAY_VALUE(DELAY_VALUE>>3),
-        .IS_C_INVERTED(1'b0),
-        .IS_DATAIN_INVERTED(1'b0),
-        .IS_IDATAIN_INVERTED(1'b0),
+//        .IS_C_INVERTED(1'b0),  // ISE does not have this parameter
+//        .IS_DATAIN_INVERTED(1'b0),  // ISE does not have this parameter
+//        .IS_IDATAIN_INVERTED(1'b0),  // ISE does not have this parameter
         .PIPE_SEL("TRUE"),
         .REFCLK_FREQUENCY(REFCLK_FREQUENCY),
         .SIGNAL_PATTERN("DATA")

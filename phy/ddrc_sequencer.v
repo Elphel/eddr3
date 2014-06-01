@@ -178,7 +178,7 @@ module  ddrc_sequencer   #(
         if (rst)                           pause_cntr <= 0;
         else if (!cmd_busy[1])             pause_cntr <= 0; // not needed?
         else if (cmd_fetch && phy_cmd_nop) pause_cntr <= pause_len;
-        else if (pause_cntr!=0)            pause_cntr <= pause_cntr-1;
+        else if (pause_cntr!=0)            pause_cntr <= pause_cntr-1; //SuppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 10-bit target.
         // Fetch - command data valid
         if (rst) cmd_fetch <= 0;
         else     cmd_fetch <= cmd_busy[0] && !pause;
@@ -189,7 +189,7 @@ module  ddrc_sequencer   #(
         // Command read address
         if (rst)                        cmd_addr <= 0;
         else  if (run_seq)              cmd_addr <= run_addr[9:0];
-        else if (cmd_busy[0] && !pause) cmd_addr <= cmd_addr + 1;
+        else if (cmd_busy[0] && !pause) cmd_addr <= cmd_addr + 1; //SuppressThisWarning ISExst Result of 11-bit expression is truncated to fit in 10-bit target.
         // command bank select (0 - "manual" (software programmed sequences), 1 - "auto" (normal block r/w)
         if (rst)            cmd_sel <= 0;
         else  if (run_seq)  cmd_sel <= run_addr[10];
@@ -222,7 +222,7 @@ module  ddrc_sequencer   #(
             (run_chn_d==4'h0)?1'b1:1'b0 };
         if (rst)                   buf_raddr <= 9'h0;
         else if (run_seq_d)        buf_raddr <= {buf_page,7'h0};
-        else if (buf_wr || buf_rd) buf_raddr <= buf_raddr +1; // Separate read/write address? read address re-registered @ negedge
+        else if (buf_wr || buf_rd) buf_raddr <= buf_raddr +1; // Separate read/write address? read address re-registered @ negedge //SuppressThisWarning ISExst Result of 10-bit expression is truncated to fit in 9-bit target.
 
         if (rst)          run_chn_d <= 0;
         else if (run_seq) run_chn_d <= run_chn;

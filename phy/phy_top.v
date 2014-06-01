@@ -108,7 +108,7 @@ module  phy_top #(
     output     [PHASE_WIDTH-1:0] ps_out 
 );
   reg rst=1'b0;
-  always @(posedge clk or posedge rst_in) begin
+  always @(posedge clk_div or posedge rst_in) begin
     if (rst_in) rst <= 1'b1;
     else        rst <= 1'b0;
   end

@@ -97,6 +97,8 @@ module  phy_cmd#(
 //    input                        cmda_tri, // tristate command and address lines // not likely to be used
     input                        cmda_en, // tristate command and address lines // not likely to be used
     input                        ddr_rst, // generate reset to DDR3 memory (active high)
+    input                        dci_rst, // active high - reset DCI circuitry
+    input                        dly_rst, // active high - delay calibration circuitry
     input                        ddr_cke, // DDR clock enable , XOR-ed with command bit
     input                        inv_clk_div,
     input                 [7:0]  dqs_pattern, // 8'h55
@@ -180,7 +182,7 @@ module  phy_cmd#(
         phy_addr_in,
         phy_bank_in,
         phy_rcw_pos,      // {ras,cas,we}
-        phy_odt_in,      // may be optimized?
+        phy_odt_in,      // 
         phy_cke_dis,     // disable cke (0 - enable), also controlled by a command bit ddr_cke (XOR-ed)
         phy_sel_in,      // fitst/second half-cycle, oter will be nop (cke+odt applicable to both)
         phy_dq_en_in, //phy_dq_tri_in,   // tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
@@ -248,7 +250,7 @@ module  phy_cmd#(
     assign  phy_dqs_tri= (dqs_tri_prev==phy_dqs_tri_in)?{{8{phy_dqs_tri_in}}}:
                           (dqs_tri_prev?{dqs_tri_on_pattern,dqs_tri_on_pattern}:{dqs_tri_off_pattern,dqs_tri_off_pattern});
     assign  phy_dci_dis_dq =   phy_dci_in;         // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
-    assign  phy_dci_dis_dqs =  phy_dci_in;        // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+    assign  phy_dci_dis_dqs =  phy_dci_in || phy_odt_cur;  // In write leveling mode phy_dci_in = 0, phy_odt_cur=1 - use DCI on DQ only, no DQS
     
     assign  locked = locked_r2;
     assign  ps_rdy = ps_rdy_r2;
@@ -380,6 +382,8 @@ module  phy_cmd#(
 
         .rst_in          (rst_in),   // input
         .ddr_rst         (ddr_rst),  // input
+        .dci_rst         (dci_rst), // input
+        .dly_rst         (dly_rst), // input
         .in_a            (phy_addr[2*ADDRESS_NUMBER-1:0]), // input[29:0] 
         .in_ba           (phy_bank[5:0]), // input[5:0] 
         .in_we           ({phy_rcw[3],phy_rcw[0]}), // input[1:0] 

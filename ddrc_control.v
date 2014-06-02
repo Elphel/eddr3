@@ -41,14 +41,19 @@ module  ddrc_control #(
     parameter WBUF_DELAY_REL_MASK =   'h3ff,  // address mask to set extra delay
     parameter PAGES_REL =             'h023,  // address to set buffer pages {port1_page[1:0],port1_int_page[1:0],port0_page[1:0],port0_int_page[1:0]}
     parameter PAGES_REL_MASK =        'h3ff,  // address mask to set DQM and DQS patterns
-    parameter CMDA_EN_REL =           'h024,  // address to enable('h823)/disable('h822) command/address outputs  
+    parameter CMDA_EN_REL =           'h024,  // address to enable('h825)/disable('h824) command/address outputs  
     parameter CMDA_EN_REL_MASK =      'h3fe,  // address mask for command/address outputs
-    parameter SDRST_ACT_REL =         'h026,  // address to activate('h825)/deactivate('h8242) active-low reset signal to DDR3 memory  
+    parameter SDRST_ACT_REL =         'h026,  // address to activate('h827)/deactivate('h826) active-low reset signal to DDR3 memory  
     parameter SDRST_ACT_REL_MASK =    'h3fe,  // address mask for reset DDR3
-    parameter CKE_EN_REL =            'h028,  // address to enable('h827)/disable('h826) CKE signal to memory   
+    parameter CKE_EN_REL =            'h028,  // address to enable('h829)/disable('h828) CKE signal to memory   
     parameter CKE_EN_REL_MASK =       'h3fe,  // address mask for command/address outputs
-    parameter EXTRA_REL =             'h02a,  // address to set extra parameters (currently just inv_clk_div)
+    parameter DCI_RST_REL =           'h02a,  // address to activate('h82b)/deactivate('h82a) Zynq DCI calibrate circuitry  
+    parameter DCI_RST_REL_MASK =      'h3fe,  // address mask for DCI calibrate circuitry
+    parameter DLY_RST_REL =           'h02c,  // address to activate('h82d)/deactivate('h82c) delay calibration circuitry  
+    parameter DLY_RST_REL_MASK =      'h3fe,  // address mask for delay calibration circuitry
+    parameter EXTRA_REL =             'h02e,  // address to set extra parameters (currently just inv_clk_div)
     parameter EXTRA_REL_MASK =        'h3ff   // address mask for extra parameters
+   
 )(
     input                         clk,
     input                         mclk,
@@ -73,6 +78,8 @@ module  ddrc_control #(
 // control: additional signals
     output                        cmda_en,  // tri-state all command and address lines to DDR chip
     output                        ddr_rst,  // generate DDR3 memory reset signal
+    output                        dci_rst,  // active high - reset DCI circuitry
+    output                        dly_rst,  // active high - delay calibration circuitry
     output                        ddr_cke,  // control DDR3 memory CKE signal
     
     output                        inv_clk_div, // invert clk_div to ISERDES
@@ -118,6 +125,13 @@ module  ddrc_control #(
 
     localparam SDRST_ACT_ADDR =     CONTROL_ADDR |      SDRST_ACT_REL;      // address to activate('h825)/deactivate('h8242) active-low reset signal to DDR3 memory    
     localparam SDRST_ACT_ADDR_MASK =CONTROL_ADDR_MASK | SDRST_ACT_REL_MASK; // address mask for reset DDR3
+    
+    localparam DCI_RST_ADDR =       CONTROL_ADDR |      DCI_RST_REL;      // address to activate/deactivate Zynq DCI calibrate circuitry    
+    localparam DCI_RST_ADDR_MASK =  CONTROL_ADDR_MASK | DCI_RST_REL_MASK; // address mask for DCI calibrate circuitry
+    localparam DLY_RST_ADDR =       CONTROL_ADDR |      DLY_RST_REL;      // address to activate/deactivate delay calibration circuitry    
+    localparam DLY_RST_ADDR_MASK =  CONTROL_ADDR_MASK | DLY_RST_REL_MASK; // address mask for delay calibration circuitry
+    
+    
     localparam CKE_EN_ADDR =        CONTROL_ADDR |      CKE_EN_REL;       // address to enable('h827)/disable('h826) CKE signal to memory  
     localparam CKE_EN_ADDR_MASK =   CONTROL_ADDR_MASK | CKE_EN_REL_MASK;  // address mask for CKE
 
@@ -147,6 +161,8 @@ module  ddrc_control #(
     reg                  [ 1:0] port1_int_page_r; // port 1 PHY-side buffer read page (to be controlled by arbiter later, set to 2'b0) 
     reg                         cmda_en_r;        // enable (tri-state off) all command and address lines to DDR chip
     reg                         ddr_rst_r;        // generate DDR3 memory reset
+    reg                         dci_rst_r;  // active high - reset DCI circuitry
+    reg                         dly_rst_r;  // active high - reset delay calibration circuitry
     reg                         ddr_cke_r;         // enable CKE to memory
 
     reg                         inv_clk_div_r;    // invert clk_div to ISERDES
@@ -179,7 +195,10 @@ module  ddrc_control #(
     assign port1_page =     port1_page_r[1:0];
     assign port1_int_page = port1_int_page_r[1:0];
     assign cmda_en =        cmda_en_r;
-    assign ddr_rst=         ddr_rst_r;
+    assign ddr_rst =        ddr_rst_r;
+    assign dci_rst =        dci_rst_r;
+    assign dly_rst =        dly_rst_r;
+    
     assign ddr_cke=         ddr_cke_r;
     assign inv_clk_div =    inv_clk_div_r;
 
@@ -234,6 +253,16 @@ module  ddrc_control #(
         if (rst) ddr_rst_r <= 1'b1; // enable DDR3 reset at system reset
         else if (fifo_re && (((waddr_fifo_out ^ SDRST_ACT_ADDR) & SDRST_ACT_ADDR_MASK)==0))
                  ddr_rst_r <= waddr_fifo_out[0];
+
+        if (rst) dci_rst_r <= 1'b0; // reset DCI circuitry off (it is ORed with rst later)
+        else if (fifo_re && (((waddr_fifo_out ^ DCI_RST_ADDR) & DCI_RST_ADDR_MASK)==0))
+                 dci_rst_r <= waddr_fifo_out[0];
+
+        if (rst) dly_rst_r <= 1'b0; // reset DCI circuitry off (it is ORed with rst later)
+        else if (fifo_re && (((waddr_fifo_out ^ DLY_RST_ADDR) & DLY_RST_ADDR_MASK)==0))
+                 dly_rst_r <= waddr_fifo_out[0];
+
+
 
         if (rst) ddr_cke_r <= 1'b0;
         else if (fifo_re && (((waddr_fifo_out ^ CKE_EN_ADDR) & CKE_EN_ADDR_MASK)==0))

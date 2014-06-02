@@ -111,6 +111,8 @@ module  ddrc_sequencer   #(
     // extras
     input                        cmda_en, // enable (!tristate) command and address lines // not likely to be used
     input                        ddr_rst, // generate reset to DDR3 memory (active high)
+    input                        dci_rst,  // active high - reset DCI circuitry
+    input                        dly_rst,  // active high - delay calibration circuitry
     input                        ddr_cke, // DDR clock enable , XOR-ed with command bit
     input                        inv_clk_div,
     input                 [7:0]  dqs_pattern, // 8'h55
@@ -380,6 +382,8 @@ module  ddrc_sequencer   #(
         .buf_rd              (buf_rd), // output
         .cmda_en             (cmda_en), // input
         .ddr_rst             (ddr_rst), // input
+        .dci_rst             (dci_rst), // input
+        .dly_rst             (dly_rst), // input
         .ddr_cke             (ddr_cke), // input
         .inv_clk_div         (inv_clk_div), // input
         .dqs_pattern         (dqs_pattern), // input[7:0] 

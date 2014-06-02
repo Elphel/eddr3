@@ -1,21 +1,22 @@
 [*]
 [*] GTKWave Analyzer v3.3.49 (w)1999-2013 BSI
-[*] Sun Jun  1 23:19:02 2014
+[*] Mon Jun  2 06:48:00 2014
 [*]
-[dumpfile] "/data/vdt/vdt-projects/eddr3/simulation/ddrc_test01_testbench-20140601171040635.lxt"
-[dumpfile_mtime] "Sun Jun  1 23:14:06 2014"
-[dumpfile_size] 76198101
+[dumpfile] "/data/vdt/vdt-projects/eddr3/simulation/ddrc_test01_testbench-20140602003755521.lxt"
+[dumpfile_mtime] "Mon Jun  2 06:40:41 2014"
+[dumpfile_size] 76024228
 [savefile] "/data/vdt/vdt-projects/eddr3/ddrc_test01_testbench.sav"
-[timestart] 116772900
+[timestart] 102360000
 [size] 1920 1180
 [pos] 0 108
-*-16.459938 116901250 114486875 114489375 114571875 114574375 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-22.533184 131161875 114486875 114489375 114571875 114574375 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] ddrc_test01_testbench.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.axibram_read_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_control_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.
+[treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.
@@ -36,9 +37,9 @@
 [treeopen] ddrc_test01_testbench.simul_axi_master_rdaddr_i.
 [treeopen] ddrc_test01_testbench.simul_axi_master_wraddr_i.
 [sst_width] 334
-[signals_width] 407
+[signals_width] 403
 [sst_expanded] 1
-[sst_vpaned_height] 820
+[sst_vpaned_height] 755
 @28
 ddrc_test01_testbench.RST[0]
 ddrc_test01_testbench.CLK[0]
@@ -1306,8 +1307,12 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.set[0]
 -ddrc_sequencer
 @800200
 -ddr_sequencer_i_selected
-@c00200
 -tristate_control
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.SDODT[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dci_disable_dqs[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dci_disable_dq[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_dci_in[0]
 @22
 ddrc_test01_testbench.ddrc_test01_i.ddrc_control_i.dqs_tri_pattern_r[15:0]
 @28
@@ -1332,7 +1337,7 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_dq_tri_in[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_dq_tri[7:0]
 @28
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.iobufs_dqs_i.T[0]
-@1401200
+@1000200
 -tristate_control
 @28
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.sdclk[0]
@@ -1391,7 +1396,7 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.cmd0_clk[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.cmd0_data[31:0]
 @28
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.cmd0_we[0]
-@23
+@22
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.cmd_addr[9:0]
 @800028
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.cmd_busy[2:0]
@@ -1822,7 +1827,7 @@ ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.we[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.wem[0]
 @1401200
 -wdata_i
-@800200
+@c00200
 -axibram_read_i
 @28
 ddrc_test01_testbench.ddrc_test01_i.axibram_read_i.aclk[0]
@@ -1922,7 +1927,7 @@ ddrc_test01_testbench.SIMUL_AXI_FULL[0]
 ddrc_test01_testbench.rstb[0]
 @200
 -
-@1000200
+@1401200
 -axibram_read_i
 @c00200
 -ddrc_status

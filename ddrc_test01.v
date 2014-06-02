@@ -83,13 +83,17 @@ module  ddrc_test01 #(
     parameter WBUF_DELAY_REL_MASK =   'h3ff,  // address mask to set extra delay
     parameter PAGES_REL =             'h023,  // address to set buffer pages {port1_page[1:0],port1_int_page[1:0],port0_page[1:0],port0_int_page[1:0]}
     parameter PAGES_REL_MASK =        'h3ff,  // address mask to set DQM and DQS patterns
-    parameter CMDA_EN_REL =           'h024,  // address to enable('h823)/disable('h822) command/address outputs  
+    parameter CMDA_EN_REL =           'h024,  // address to enable('h825)/disable('h824) command/address outputs  
     parameter CMDA_EN_REL_MASK =      'h3fe,  // address mask for command/address outputs
-    parameter SDRST_ACT_REL =         'h026,  // address to activate('h825)/deactivate('h8242) active-low reset signal to DDR3 memory  
+    parameter SDRST_ACT_REL =         'h026,  // address to activate('h827)/deactivate('h826) active-low reset signal to DDR3 memory  
     parameter SDRST_ACT_REL_MASK =    'h3fe,  // address mask for reset DDR3
-    parameter CKE_EN_REL =            'h028,  // address to enable('h827)/disable('h826) CKE signal to memory   
+    parameter CKE_EN_REL =            'h028,  // address to enable('h829)/disable('h828) CKE signal to memory   
     parameter CKE_EN_REL_MASK =       'h3fe,  // address mask for command/address outputs
-    parameter EXTRA_REL =             'h02a,  // address to set extra parameters (currently just inv_clk_div)
+    parameter DCI_RST_REL =           'h02a,  // address to activate('h82b)/deactivate('h82a) Zynq DCI calibrate circuitry  
+    parameter DCI_RST_REL_MASK =      'h3fe,  // address mask for DCI calibrate circuitry
+    parameter DLY_RST_REL =           'h02a,  // address to activate('h82d)/deactivate('h82c) delay calibration circuitry  
+    parameter DLY_RST_REL_MASK =      'h3fe,  // address mask for delay calibration circuitry
+    parameter EXTRA_REL =             'h02e,  // address to set extra parameters (currently just inv_clk_div)
     parameter EXTRA_REL_MASK =        'h3ff   // address mask for extra parameters
 )(
     // DDR3 interface
@@ -225,6 +229,11 @@ module  ddrc_test01 #(
 // additional control signals
    wire        cmda_en; // enable DDR3 memory control and addreee outputs
    wire        ddr_rst; // generate DDR3 memory reset (active hight)
+   wire        dci_rst;  // active high - reset DCI circuitry
+   wire        dly_rst;  // active high - reset delay calibration circuitry
+   
+   
+   
    wire        ddr_cke; // control of the DDR3 memory CKE signal
    
    wire        inv_clk_div; // input
@@ -384,6 +393,10 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
         .SDRST_ACT_REL_MASK(SDRST_ACT_REL_MASK),
         .CKE_EN_REL        (CKE_EN_REL),   
         .CKE_EN_REL_MASK   (CKE_EN_REL_MASK),
+        .DCI_RST_REL       (DCI_RST_REL),
+        .DCI_RST_REL_MASK  (DCI_RST_REL_MASK),
+        .DLY_RST_REL       (DLY_RST_REL),
+        .DLY_RST_REL_MASK  (DLY_RST_REL_MASK),
         .EXTRA_REL         (EXTRA_REL),
         .EXTRA_REL_MASK    (EXTRA_REL_MASK)
     ) ddrc_control_i (
@@ -405,6 +418,8 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
         .dly_set             (set),                     // output
         .cmda_en             (cmda_en),                 // output
         .ddr_rst             (ddr_rst),                 // output
+        .dci_rst             (dci_rst),                 // output
+        .dly_rst             (dly_rst),                 // output
         .ddr_cke             (ddr_cke),                 // output
         .inv_clk_div         (inv_clk_div),             // output
         .dqs_pattern         (dqs_pattern[7:0]),        // output[7:0] 
@@ -532,6 +547,8 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
         .port1_data     (axiwr_bram_wdata[31:0]), // input[31:0] 
         .cmda_en        (cmda_en), // input
         .ddr_rst        (ddr_rst), // input
+        .dci_rst        (dci_rst), // input
+        .dly_rst        (dly_rst), // input
         .ddr_cke        (ddr_cke), // input
         .inv_clk_div    (inv_clk_div), // input
         .dqs_pattern    (dqs_pattern), // input[7:0] 

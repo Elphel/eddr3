@@ -76,7 +76,10 @@ module  phy_top #(
     output                       clk_div,  // free-running half clk frequency, front aligned to clk (shared for R/W), BUFR output
     output                       mclk,     // same as clk_div, through separate BUFG and static phase adjust
     input                        rst_in,   // reset delays/serdes
-    input                        ddr_rst,  // active high - generate NRST to memory 
+    input                        ddr_rst,  // active high - generate NRST to memory
+    input                        dci_rst,  // active high - reset DCI circuitry
+    input                        dly_rst,  // active high - delay calibration circuitry
+     
     input [2*ADDRESS_NUMBER-1:0] in_a,     // input address, 2 bits per signal (first, second) (29:0) for 4Gb device
     input                  [5:0] in_ba,    // input bank address, 2 bits per signal (first, second)
     input                  [1:0] in_we,    // input WE, 2 bits (first, second)
@@ -108,7 +111,8 @@ module  phy_top #(
     output     [PHASE_WIDTH-1:0] ps_out 
 );
   reg rst=1'b0;
-  always @(posedge clk_div or posedge rst_in) begin
+//  always @(posedge clk_div or posedge rst_in) begin // got min hold violation
+  always @(negedge clk_div or posedge rst_in) begin
     if (rst_in) rst <= 1'b1;
     else        rst <= 1'b0;
   end
@@ -118,8 +122,8 @@ module  phy_top #(
   wire  ld_mmcm=    (dly_addr[6:0] == 7'h60) && ld_delay ;
   wire  clkfb_ref, clk_ref_pre; 
   wire  clk_ref; // 200MHz/300Mhz to calibrate I/O delays            
-  wire locked_mmcm,locked_pll, dly_ready;
-  assign locked=locked_mmcm && locked_pll && dly_ready; // both PLL ready, I/O delay calibrated
+  wire locked_mmcm,locked_pll, dly_ready, dci_ready;
+  assign locked=locked_mmcm && locked_pll && dly_ready && dci_ready; // both PLL ready, I/O delay calibrated
   
 /* memory reset */
     obuf #(
@@ -345,15 +349,19 @@ BUFG mclk_i (.O(mclk),.I(mclk_pre) );
         .clkfbout(clkfb_ref), // output
         .locked(locked_pll) // output
     );
-// Does it need to be re-calibrated periodically?
-idelay_ctrl# (
- .IODELAY_GRP("IODELAY_MEMORY")
-) idelay_ctrl_i (
-    .refclk(clk_ref),
-    .rst(rst),
-    .rdy(dly_ready)
-);
+// Does it need to be re-calibrated periodically - yes when temperature changes, same as dci_reset
+    idelay_ctrl# (
+        .IODELAY_GRP("IODELAY_MEMORY")
+    ) idelay_ctrl_i (
+        .refclk(clk_ref),
+        .rst(rst || dly_rst),
+        .rdy(dly_ready)
+    );
 
+    dci_reset dci_reset_i (
+        .reset(rst || dci_rst), // input
+        .ready(dci_ready) // output
+    );
 
 endmodule
 

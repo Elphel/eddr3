@@ -95,7 +95,9 @@ module  mmcm_phase_cntr#(
     output clkout3b, // output 3, inverted
     output clkfbout, // dedicate feedback output    
     output clkfboutb,// inverted feedback output
-    output locked   // PLL locked output
+    output locked,   // PLL locked output
+    output clkin_stopped,
+    output clkfb_stopped
 );
     reg [PHASE_WIDTH-1:0] ps_dout_r;
     wire psen;       // phase shift enable input
@@ -185,8 +187,8 @@ module  mmcm_phase_cntr#(
     ) MMCME2_ADV_i (
         .CLKFBOUT       (clkfbout), // output
         .CLKFBOUTB      (clkfboutb), // output
-        .CLKFBSTOPPED      (), // output
-        .CLKINSTOPPED      (), // output
+        .CLKFBSTOPPED   (clkfb_stopped), // output
+        .CLKINSTOPPED   (clkin_stopped), // output
         .CLKOUT0        (clkout0), // output
         .CLKOUT0B       (clkout0b), // output
         .CLKOUT1        (clkout1), // output

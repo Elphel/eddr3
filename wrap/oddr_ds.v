@@ -33,6 +33,7 @@ module  oddr_ds # (
     input  rst,
     input  set,
     input [1:0] din,
+    input  tin, // tristate control
     output dq,
     output ndq
 );
@@ -53,6 +54,7 @@ module  oddr_ds # (
     );
 
     /* Instance template for module OBUFDS */
+/*    
     OBUFDS #(
         .CAPACITANCE(CAPACITANCE),
         .IOSTANDARD(IOSTANDARD),
@@ -62,7 +64,19 @@ module  oddr_ds # (
         .OB(ndq), // output 
         .I(idq) // input 
     );
-
+*/
+    /* Instance template for module OBUFTDS */
+    OBUFTDS #(
+        .CAPACITANCE (CAPACITANCE),
+        .IOSTANDARD  (IOSTANDARD),
+        .SLEW        (SLEW)
+    ) OBUFDS_i (
+        .O  (dq), // output 
+        .OB (ndq), // output 
+        .I  (idq), // input 
+//        .T  (tin || rst) // input 
+        .T  (tin) // input 
+    );
 
 endmodule
 

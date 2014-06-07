@@ -94,7 +94,13 @@ module  ddrc_test01 #(
     parameter DLY_RST_REL =           'h02a,  // address to activate('h82d)/deactivate('h82c) delay calibration circuitry  
     parameter DLY_RST_REL_MASK =      'h3fe,  // address mask for delay calibration circuitry
     parameter EXTRA_REL =             'h02e,  // address to set extra parameters (currently just inv_clk_div)
-    parameter EXTRA_REL_MASK =        'h3ff   // address mask for extra parameters
+    parameter EXTRA_REL_MASK =        'h3ff,  // address mask for extra parameters
+    parameter REFRESH_EN_REL =        'h030,  // address to enable('h31) and disable ('h30) DDR refresh
+    parameter REFRESH_EN_REL_MASK =   'h3fe,  // address mask to enable/disable DDR refresh
+    parameter REFRESH_PER_REL =       'h032,  // address to set refresh period in 32 x tCK
+    parameter REFRESH_PER_REL_MASK =  'h3ff,  // address mask set refresh period
+    parameter REFRESH_ADDR_REL =      'h033,  // address to set sequencer start address for DDR refresh
+    parameter REFRESH_ADDR_REL_MASK = 'h3ff   // address mask set refresh sequencer address
 )(
     // DDR3 interface
     output                       SDRST, // DDR3 reset (active low)
@@ -114,7 +120,10 @@ module  ddrc_test01 #(
     inout                        NDQSL, // ~LDQS I/O pad
     output                       SDDMU, // UDM  I/O pad (actually only output)
     inout                        DQSU,  // UDQS I/O pad
-    inout                        NDQSU // ~UDQS I/O pad
+    inout                        NDQSU,
+    output                       DUMMY_TO_KEEP,  // to keep PS7 signals from "optimization"
+    input                        MEMCLK
+     // ~UDQS I/O pad
     // AXI write (ps -> pl)
 );
     localparam ADDRESS_NUMBER=15;
@@ -202,9 +211,18 @@ module  ddrc_test01 #(
 
    wire        mclk;
    wire        en_cmd0_wr;
-   wire [10:0] run_addr; // input[10:0] 
-   wire [ 3:0] run_chn;  // input[3:0] 
-   wire        run_seq;  // input
+   wire [10:0] axi_run_addr; 
+   wire [ 3:0] axi_run_chn;  
+   wire        axi_run_seq; 
+   wire [10:0] run_addr; // multiplexed - from refresh or axi 
+   wire [ 3:0] run_chn;   // multiplexed - from refresh or axi
+   wire        run_seq; 
+   
+   wire        run_seq_rq_in; // higher priority request to run sequence
+   wire        run_seq_rq_gen;// SuppressThisWarning VEditor : unused this wants to run sequencer 
+//   wire        run_seq_busy;  // sequencer is busy or access granted to other master
+   
+   
 //   wire        run_done; // output
    wire        run_busy; // TODO: add to ddrc_sequencer 
    wire [ 7:0] dly_data; // input[7:0] 
@@ -213,6 +231,18 @@ module  ddrc_test01 #(
    wire        set; // input
 
    wire        locked; // output
+   wire        locked_mmcm;
+   wire        locked_pll;
+   wire        dly_ready;
+   wire        dci_ready;
+
+   wire        phy_locked_mmcm;
+   wire        phy_locked_pll;
+   wire        phy_dly_ready;
+   wire        phy_dci_ready;
+
+   wire [ 7:0] tmp_debug; 
+   
    wire        ps_rdy; // output
    wire [ 7:0] ps_out; // output[7:0] 
 
@@ -254,6 +284,11 @@ module  ddrc_test01 #(
    wire        port0_rd_match;
    reg         port0_rd_match_r; // rd address matched in previous cycle
 
+   wire [7:0] refresh_period;
+   wire [10:0] refresh_address;
+   wire       refresh_en;
+   wire       refresh_set;
+
    assign      port0_rd_match=(((axird_bram_raddr ^ PORT0_RD_ADDR) & PORT0_RD_ADDR_MASK)==0);  
 //   assign en_cmd0_wr=     axiwr_bram_wen   && (axiwr_bram_waddr[11:10]==2'h1);
 //   assign en_port0_rd=    axird_bram_ren   && (axird_bram_raddr[11:10]==2'h0);
@@ -275,6 +310,7 @@ module  ddrc_test01 #(
    assign axird_bram_rdata= select_port0? port0_rdata[31:0]:(select_status?status_rdata[31:0]:32'bx);
    assign axird_dev_ready = ~axird_dev_busy; //may combine (AND) multiple sources if needed
    
+   assign locked=locked_mmcm && locked_pll;
 always @ (posedge axi_aclk) begin
    port0_rd_match_r <= port0_rd_match; // rd address matched in previous cycle
 end
@@ -294,6 +330,119 @@ always @ (negedge frst[0] or posedge axi_aclk) begin
     else          frst_inv <= 1'b0; 
 end
 
+    /* Instance template for module PULLDOWN */
+    PULLDOWN PULLDOWN_i (
+        .O(MEMCLK) // output 
+    );
+wire dbg_clk; // = fclk[1] ^ MEMCLK;
+//BUFG dbg_clk_ii (.O(dbg_clk),.I(fclk[1] ^ MEMCLK));
+BUFG dbg_clk_ii (.O(dbg_clk),.I(MEMCLK));
+//(* dont_touch = "true" *) 
+reg [7:0] dbg_toggle;
+//always @ (posedge axi_rst or posedge axi_aclk) begin
+wire dbg_rst=frst[1] && !frst[0]; 
+always @ (posedge dbg_rst or posedge dbg_clk) begin
+//always @ (posedge axi_rst or posedge dbg_clk) begin
+//always @ (posedge fclk[1]) begin
+   if   (dbg_rst) dbg_toggle <= 8'ha5;
+   else           dbg_toggle <= dbg_toggle+1; //dbg_toggle+1;
+end
+
+/*
+     dly_addr[1],
+    dly_addr[0],
+    clkin_stopped_mmcm,
+    clkfb_stopped_mmcm,
+    ddr_rst,
+    rst_in,
+    dci_rst,
+    dly_rst
+
+*/
+
+
+
+//MEMCLK
+wire [63:0] gpio_in;
+assign gpio_in={
+16'b0,
+    1'b1,              // 1
+    MEMCLK,            // 1/0? - external clock
+    dbg_rst,           // 1
+    fclk[1] ^ MEMCLK, //dbg_clk,           // 0/1 
+    
+    frst[1],           // 1 (follows)
+    fclk[1:0],         // 2'bXX (toggle)
+    axird_dev_busy,    // 0
+
+{frst[2]?8'h5a:{
+    dbg_toggle[7:4],   // 4'b1111 -> 4'ha
+    
+    dbg_toggle[3:0]}},   // 4'b1111 -> 4'ha
+    
+    tmp_debug[7:4],    // 4'b0111 -> 4'bx00x
+                       //    dly_addr[1],
+                       //    dly_addr[0],
+                       //    clkin_stopped_mmcm,
+                       //    clkfb_stopped_mmcm,
+    
+    tmp_debug[3:0],    // 4'b1100 -> 4'bxx00
+                       //    ddr_rst,
+                       //    rst_in,
+                       //    dci_rst,
+                       //    dly_rst
+    
+    
+    phy_locked_mmcm,   // 0 1
+    phy_locked_pll,    // 0 1
+    phy_dly_ready,     // 0 1
+    phy_dci_ready,     // 1 1
+    
+    locked_mmcm,       // 0 1 
+    locked_pll,        // 0 1
+    dly_ready,         // 0 1
+    dci_ready,         // 0 1
+    
+    ps_out[7:4],       // 4'b0 input[7:0] 4'b0
+    
+    ps_out[3:0],       // 4'b0 input[7:0] 4'b0
+     
+    run_busy, // input // 0 
+    locked, // input   // 0
+    ps_rdy, // input   // 0
+    axi_arready,       // 1
+    
+    axi_awready,       // 1 
+    axi_wready,        // 1 
+    axi_aclk,          // 0/1 
+    axi_rst            // 0
+};
+/*
+  assign tmp_debug ={
+  1'b1,
+    clkin_stopped_mmcm,
+    clkfb_stopped_mmcm,
+    clk_in, // dbg_reg3,
+    dbg_reg2,
+    dbg_reg1,
+    rst_in,
+    dly_rst
+  };
+
+*/
+//assign DUMMY_TO_KEEP = ^gpio_in[63:0]; // to keep PS7 signals from "optimization"
+assign DUMMY_TO_KEEP = dbg_toggle[0];
+/*
+        .rdata            (status_rdata[31:0]), // output[31:0] 
+        .busy             (axird_dev_busy), // output
+//        .run_done         (run_done), // input
+        .run_busy         (run_busy), // input
+        .locked           (locked), // input
+        .ps_rdy           (ps_rdy), // input
+        .ps_out           (ps_out[7:0]) // input[7:0] 
+
+*/
+
 /*
 `ifndef IVERILOG
 (* dont_touch = "true" *)
@@ -302,7 +451,9 @@ end
 */
 
 //BUFG bufg_axi_rst_i  (.O(axi_rst),.I(~frst[0]));
-BUFG bufg_axi_rst_i  (.O(axi_rst),.I(frst_inv));
+//assign axi_rst=~frst[0];
+assign axi_rst=~frst[0] || frst[1]; // prevent releasing reset before explicit command 
+//BUFG bufg_axi_rst_i  (.O(axi_rst),.I(frst_inv));
 BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
 
     axibram_write #(
@@ -366,39 +517,46 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
         .bram_rdata  (axird_bram_rdata) // input[31:0] 
     );
     ddrc_control #(
-        .AXI_WR_ADDR_BITS  (AXI_WR_ADDR_BITS),
-        .CONTROL_ADDR      (CONTROL_ADDR),
-        .CONTROL_ADDR_MASK (CONTROL_ADDR_MASK),
+        .AXI_WR_ADDR_BITS      (AXI_WR_ADDR_BITS),
+        .CONTROL_ADDR          (CONTROL_ADDR),
+        .CONTROL_ADDR_MASK     (CONTROL_ADDR_MASK),
 //        .STATUS_ADDR       (STATUS_ADDR),
 //        .STATUS_ADDR_MASK  (STATUS_ADDR_MASK),
-        .BUSY_WR_ADDR      (BUSY_WR_ADDR),
-        .BUSY_WR_ADDR_MASK (BUSY_WR_ADDR_MASK),
-        .DLY_LD_REL        (DLY_LD_REL),
-        .DLY_LD_REL_MASK   (DLY_LD_REL_MASK),
-        .DLY_SET_REL       (DLY_SET_REL),
-        .DLY_SET_REL_MASK  (DLY_SET_REL_MASK),
-        .RUN_CHN_REL       (RUN_CHN_REL),
-        .RUN_CHN_REL_MASK  (RUN_CHN_REL_MASK),
-        .PATTERNS_REL      (PATTERNS_REL),
-        .PATTERNS_REL_MASK (PATTERNS_REL_MASK),
+        .BUSY_WR_ADDR          (BUSY_WR_ADDR),
+        .BUSY_WR_ADDR_MASK     (BUSY_WR_ADDR_MASK),
+        .DLY_LD_REL            (DLY_LD_REL),
+        .DLY_LD_REL_MASK       (DLY_LD_REL_MASK),
+        .DLY_SET_REL           (DLY_SET_REL),
+        .DLY_SET_REL_MASK      (DLY_SET_REL_MASK),
+        .RUN_CHN_REL           (RUN_CHN_REL),
+        .RUN_CHN_REL_MASK      (RUN_CHN_REL_MASK),
+        .PATTERNS_REL          (PATTERNS_REL),
+        .PATTERNS_REL_MASK     (PATTERNS_REL_MASK),
         .PATTERNS_TRI_REL      (PATTERNS_TRI_REL),
         .PATTERNS_TRI_REL_MASK (PATTERNS_TRI_REL_MASK),
         .WBUF_DELAY_REL        (WBUF_DELAY_REL),
         .WBUF_DELAY_REL_MASK   (WBUF_DELAY_REL_MASK),
-        .PAGES_REL         (PAGES_REL),
-        .PAGES_REL_MASK    (PAGES_REL_MASK),
-        .CMDA_EN_REL       (CMDA_EN_REL),
-        .CMDA_EN_REL_MASK  (CMDA_EN_REL_MASK),
-        .SDRST_ACT_REL     (SDRST_ACT_REL),  
-        .SDRST_ACT_REL_MASK(SDRST_ACT_REL_MASK),
-        .CKE_EN_REL        (CKE_EN_REL),   
-        .CKE_EN_REL_MASK   (CKE_EN_REL_MASK),
-        .DCI_RST_REL       (DCI_RST_REL),
-        .DCI_RST_REL_MASK  (DCI_RST_REL_MASK),
-        .DLY_RST_REL       (DLY_RST_REL),
-        .DLY_RST_REL_MASK  (DLY_RST_REL_MASK),
-        .EXTRA_REL         (EXTRA_REL),
-        .EXTRA_REL_MASK    (EXTRA_REL_MASK)
+        .PAGES_REL             (PAGES_REL),
+        .PAGES_REL_MASK        (PAGES_REL_MASK),
+        .CMDA_EN_REL           (CMDA_EN_REL),
+        .CMDA_EN_REL_MASK      (CMDA_EN_REL_MASK),
+        .SDRST_ACT_REL         (SDRST_ACT_REL),  
+        .SDRST_ACT_REL_MASK    (SDRST_ACT_REL_MASK),
+        .CKE_EN_REL            (CKE_EN_REL),   
+        .CKE_EN_REL_MASK       (CKE_EN_REL_MASK),
+        .DCI_RST_REL           (DCI_RST_REL),
+        .DCI_RST_REL_MASK      (DCI_RST_REL_MASK),
+        .DLY_RST_REL           (DLY_RST_REL),
+        .DLY_RST_REL_MASK      (DLY_RST_REL_MASK),
+        .EXTRA_REL             (EXTRA_REL),
+        .EXTRA_REL_MASK        (EXTRA_REL_MASK),
+        .REFRESH_EN_REL        (REFRESH_EN_REL),
+        .REFRESH_EN_REL_MASK   (REFRESH_EN_REL_MASK),
+        .REFRESH_PER_REL       (REFRESH_PER_REL),
+        .REFRESH_PER_REL_MASK  (REFRESH_PER_REL_MASK),
+        .REFRESH_ADDR_REL      (REFRESH_ADDR_REL),
+        .REFRESH_ADDR_REL_MASK (REFRESH_ADDR_REL_MASK)
+        
     ) ddrc_control_i (
         .clk                 (axiwr_bram_wclk),         // same as axi_aclk
         .mclk                (mclk),                    // input
@@ -409,9 +567,19 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
         .wr_en               (axiwr_bram_wen),          // input
         .wdata               (axiwr_bram_wdata[31:0]),  // input[31:0] (no input for wstb here) 
         .busy                (axiwr_dev_busy),          // output
-        .run_addr            (run_addr[10:0]),          // output[10:0] 
-        .run_chn             (run_chn[3:0]),            // output[3:0] 
-        .run_seq             (run_seq),                 // output
+        .run_addr            (axi_run_addr[10:0]),          // output[10:0] 
+        .run_chn             (axi_run_chn[3:0]),            // output[3:0] 
+        .run_seq             (axi_run_seq),                 // output
+        
+        .run_seq_rq_in       (run_seq_rq_in),           // input
+        .run_seq_rq_gen      (run_seq_rq_gen),          // output
+        .run_seq_busy        (run_busy),                // input
+
+        .refresh_address     (refresh_address[10:0]), // output[10:0] 
+        .refresh_period      (refresh_period[7:0]), // output[7:0] 
+        .refresh_set         (refresh_set), // output
+        .refresh_en          (refresh_en), // output
+        
         .dly_data            (dly_data[7:0]),           // output[7:0] 
         .dly_addr            (dly_addr[6:0]),           // output[6:0] 
         .ld_delay            (ld_delay),                // output
@@ -434,6 +602,43 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
         .port1_page          (port1_page[1:0]),         // output[1:0] 
         .port1_int_page      (port1_int_page[1:0])      // output[1:0] 
     );
+
+    assign run_addr = axi_run_seq ?  axi_run_addr[10:0] : refresh_address[10:0];
+    assign run_chn =  axi_run_seq ?  axi_run_chn[3:0] : 4'h0;
+    assign run_seq = axi_run_seq || refresh_grant;
+    
+/*
+   wire        run_seq_rq_in; // higher priority request to run sequence
+   wire        run_seq_rq_gen;// SuppressThisWarning VEditor : unused this wants to run sequencer 
+//   wire        run_seq_busy;  // sequencer is busy or access granted to other master
+run_busy
+    wire [10:0] refresh_address;
+   
+*/    
+//   assign run_seq_rq_in = 1'b0; // higher priority request input
+
+    wire       refresh_want;
+    wire       refresh_need;
+    reg        refresh_grant;
+
+   assign run_seq_rq_in = refresh_en && refresh_need; // higher priority request input
+
+    
+    ddr_refresh ddr_refresh_i (
+        .rst              (axi_rst), // input
+        .clk              (mclk), // input
+        .refresh_period   (refresh_period[7:0]), // input[7:0] 
+        .set              (refresh_set), // input
+        .want             (refresh_want), // output
+        .need             (refresh_need), // output
+        .grant            (refresh_grant) // input
+    );
+
+    always @ (posedge axi_rst or  posedge mclk) begin
+         if (axi_rst) refresh_grant <= 0; 
+         refresh_grant <= !refresh_grant && refresh_en && !run_busy && !axi_run_seq && (refresh_need || (refresh_want && !run_seq_rq_gen)); 
+    end
+
     
     ddrc_status
 //     #(
@@ -456,6 +661,11 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
 //        .run_done         (run_done), // input
         .run_busy         (run_busy), // input
         .locked           (locked), // input
+        .locked_mmcm      (locked_mmcm), // input
+        .locked_pll       (locked_pll), // input
+        .dly_ready        (dly_ready), // input
+        .dci_ready        (dci_ready), // input
+        
         .ps_rdy           (ps_rdy), // input
         .ps_out           (ps_out[7:0]) // input[7:0] 
     );
@@ -528,7 +738,18 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
         .dly_addr       (dly_addr[6:0]), // input[6:0] 
         .ld_delay       (ld_delay), // input
         .set            (set), // input
-        .locked         (locked), // output
+//        .locked         (locked), // output
+        .locked_mmcm     (locked_mmcm), // output
+        .locked_pll      (locked_pll), // output
+        .dly_ready       (dly_ready), // output
+        .dci_ready       (dci_ready), // output
+
+        .phy_locked_mmcm (phy_locked_mmcm), // output
+        .phy_locked_pll  (phy_locked_pll), // output
+        .phy_dly_ready   (phy_dly_ready), // output
+        .phy_dci_ready   (phy_dci_ready), // output
+        
+        .tmp_debug       (tmp_debug[7:0]),
         .ps_rdy         (ps_rdy), // output
         .ps_out         (ps_out[7:0]), // output[7:0]
          
@@ -633,7 +854,7 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
     .EMIOENET1MDIOI(),           // MDIO 1 MD data input, input
   // EMIO GPIO
     .EMIOGPIOO(),                // EMIO GPIO Data out[63:0], output
-    .EMIOGPIOI(),                // EMIO GPIO Data in[63:0], input
+    .EMIOGPIOI(gpio_in[63:0]),   // EMIO GPIO Data in[63:0], input
     .EMIOGPIOTN(),               // EMIO GPIO OutputEnable[63:0], output
   // EMIO I2C 0  
     .EMIOI2C0SCLO(),             // I2C 0 SCL OUT, output // manual says input
@@ -819,7 +1040,9 @@ BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
     .FPGAIDLEN(1'b1),             //Idle PL AXI interfaces (active low), input
 // AXI PS Master GP0    
 // AXI PS Master GP0: Clock, Reset
-    .MAXIGP0ACLK(axi_aclk),       // AXI PS Master GP0 Clock , input
+//    .MAXIGP0ACLK(axi_aclk),       // AXI PS Master GP0 Clock , input
+    .MAXIGP0ACLK(fclk[0]),       // AXI PS Master GP0 Clock , input
+    //
     .MAXIGP0ARESETN(),            // AXI PS Master GP0 Reset, output
 // AXI PS Master GP0: Read Address    
     .MAXIGP0ARADDR  (axi_araddr[31:0]), // AXI PS Master GP0 ARADDR[31:0], output  

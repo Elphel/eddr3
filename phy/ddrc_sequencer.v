@@ -90,7 +90,17 @@ module  ddrc_sequencer   #(
     input                  [6:0] dly_addr, // select which delay to program
     input                        ld_delay, // load delay data to selected iodelayl (clk_div synchronous)
     input                        set,       // clk_div synchronous set all delays from previously loaded values
-    output                       locked,
+//    output                       locked,
+    output                       locked_mmcm,
+    output                       locked_pll,
+    output                       dly_ready,
+    output                       dci_ready,
+
+    output                       phy_locked_mmcm,
+    output                       phy_locked_pll,
+    output                       phy_dly_ready,
+    output                       phy_dci_ready,
+    output               [7:0]   tmp_debug,
     output                       ps_rdy,
     output     [PHASE_WIDTH-1:0] ps_out, 
 // read port 0
@@ -162,6 +172,18 @@ module  ddrc_sequencer   #(
     reg                   [3:0]  run_chn_d;
     reg                          run_seq_d; 
     
+//    reg tmp_dbg7=0;
+    wire [7:0] tmp_debug_a;
+    /*
+    always @ (posedge clk_in) begin
+        tmp_dbg7 <= ~tmp_dbg7;
+    end
+    
+    assign tmp_debug[7:0] = {tmp_dbg7,tmp_debug_a[6:0]};
+    */
+    assign tmp_debug[7:0] = tmp_debug_a[7:0];
+ //   clk_in
+    
     assign run_done=sequence_done;
     assign run_busy=cmd_busy[0]; //earliest
     assign  pause=cmd_fetch? (phy_cmd_add_pause || (phy_cmd_nop && (pause_len != 0))): (cmd_busy[2] && (pause_cntr[CMD_PAUSE_BITS-1:1]!=0));
@@ -174,6 +196,8 @@ module  ddrc_sequencer   #(
     always @ (posedge mclk or posedge rst) begin
         if (rst)                cmd_busy <= 0;
 //        else if (sequence_done) cmd_busy <= 0;
+
+        else if (ddr_rst) cmd_busy <= 0; // *************** reset sequencer with DDR reset
         else if (sequence_done &&  cmd_busy[2]) cmd_busy <= 0;
         else cmd_busy <= {cmd_busy[1:0],run_seq | cmd_busy[0]}; 
         // Pause counter
@@ -364,7 +388,19 @@ module  ddrc_sequencer   #(
         .dly_addr            (dly_addr[6:0]), // input[6:0] 
         .ld_delay            (ld_delay), // input
         .set                 (set), // input
-        .locked              (locked), // output
+//        .locked              (locked), // output
+        .locked_mmcm         (locked_mmcm), // output
+        .locked_pll          (locked_pll), // output
+        .dly_ready           (dly_ready), // output
+        .dci_ready           (dci_ready), // output
+        
+        .phy_locked_mmcm     (phy_locked_mmcm), // output
+        .phy_locked_pll      (phy_locked_pll), // output
+        .phy_dly_ready       (phy_dly_ready), // output
+        .phy_dci_ready       (phy_dci_ready), // output
+        
+        .tmp_debug           (tmp_debug_a[7:0]),
+        
         .ps_rdy              (ps_rdy), // output
         .ps_out              (ps_out[7:0]), // output[7:0]
 /// debugging

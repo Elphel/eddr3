@@ -52,8 +52,13 @@ module  ddrc_control #(
     parameter DLY_RST_REL =           'h02c,  // address to activate('h82d)/deactivate('h82c) delay calibration circuitry  
     parameter DLY_RST_REL_MASK =      'h3fe,  // address mask for delay calibration circuitry
     parameter EXTRA_REL =             'h02e,  // address to set extra parameters (currently just inv_clk_div)
-    parameter EXTRA_REL_MASK =        'h3ff   // address mask for extra parameters
-   
+    parameter EXTRA_REL_MASK =        'h3ff,  // address mask for extra parameters
+    parameter REFRESH_EN_REL =        'h030,  // address to enable('h31) and disable ('h30) DDR refresh
+    parameter REFRESH_EN_REL_MASK =   'h3fe,  // address mask to enable/disable DDR refresh
+    parameter REFRESH_PER_REL =       'h032,  // address to set refresh period in 32 x tCK
+    parameter REFRESH_PER_REL_MASK =  'h3ff,  // address mask set refresh period
+    parameter REFRESH_ADDR_REL =      'h033,  // address to set sequencer start address for DDR refresh
+    parameter REFRESH_ADDR_REL_MASK = 'h3ff   // address mask set refresh sequencer address
 )(
     input                         clk,
     input                         mclk,
@@ -63,12 +68,23 @@ module  ddrc_control #(
     input  [AXI_WR_ADDR_BITS-1:0] waddr,        // write address, valid with wr_en
     input                         wr_en,        // write enable 
     input                  [31:0] wdata,        // write data, valid with waddr and wr_en
-    output                        busy,          // interface busy (combinatorial delay from start_wburst and pre_addr
+    output                        busy,         // interface busy (combinatorial delay from start_wburst and pre_addr
 // control signals
 // control: sequencer run    
     output                 [10:0] run_addr, // Start address of the physical sequencer (MSB = 0 - "manual", 1 -"auto")
     output                 [ 3:0] run_chn,  // channel number to use for I/O buffers
     output                        run_seq,  // single mclk pulse to start sequencer
+// simple arbitration (should not start if higher priority, busy or run_seq)
+    input                         run_seq_rq_in, // higher priority request to run sequence
+    output                        run_seq_rq_gen,// this wants to run sequencer
+    input                         run_seq_busy,  // sequencer is busy or access granted to other master (should be on staring nearest cycle)
+    output                 [10:0] refresh_address,
+    output                 [ 7:0] refresh_period,
+    output                        refresh_set,
+    output                        refresh_en,                   
+    
+//    output                        run_seq_granted, // this module got sequencer access granted
+    
 //    input                        run_done; // output - will go through other channel - sequencer done (add busy?)
 // control: delays and mmcm setup    
     output                 [ 7:0] dly_data, // 8-bit IDELAY/ODELAY (fine) and MMCM phase shift
@@ -138,16 +154,37 @@ module  ddrc_control #(
     localparam EXTRA_ADDR =         CONTROL_ADDR |      EXTRA_REL;        // address to set extra parameters (currently just inv_clk_div)
     localparam EXTRA_ADDR_MASK =    CONTROL_ADDR_MASK | EXTRA_REL_MASK;   // address mask for extra parameters
 
+    localparam REFRESH_EN_ADDR =      CONTROL_ADDR |      REFRESH_EN_REL;        // address to enable('h31) and disable ('h30) DDR refresh
+    localparam REFRESH_EN_ADDR_MASK = CONTROL_ADDR_MASK | REFRESH_EN_REL_MASK;   // address mask to enable/disable DDR refresh
+
+    localparam REFRESH_PER_ADDR =      CONTROL_ADDR |      REFRESH_PER_REL;        // address to set refresh period in 32 x tCK
+    localparam REFRESH_PER_ADDR_MASK = CONTROL_ADDR_MASK | REFRESH_PER_REL_MASK;   // address mask set refresh period
+
+    localparam REFRESH_ADDR_ADDR =      CONTROL_ADDR |      REFRESH_ADDR_REL;        // address to set sequencer start address for DDR refresh
+    localparam REFRESH_ADDR_ADDR_MASK = CONTROL_ADDR_MASK | REFRESH_ADDR_REL_MASK;   // address mask set refresh sequencer address
+
+    reg                 [10:0] refresh_address_r;
+    reg                 [ 7:0] refresh_period_r;
+    reg                        refresh_set_r, refresh_set_r0;                   
+    reg                        refresh_ld_addr;                   
+    reg                        refresh_en_r;                   
+    wire                       refresh_set_w; // just decoded                    
+
+    assign refresh_address = refresh_address_r;
+    assign refresh_period =  refresh_period_r;
+    assign refresh_set =     refresh_set_r;
+    assign refresh_en =      refresh_en_r;
+
     reg busy_r=0;
     reg selected=0;
     reg selected_busy=0;
-//(* keep = "true" *)
+
     wire fifo_half_empty; // just debugging with (* keep = "true" *)
     wire [AXI_WR_ADDR_BITS-1:0] waddr_fifo_out;
     wire                 [31:0] wdata_fifo_out;
 //    reg                         fifo_re; // wrong, need to have (fifo!=1) || !re 
     wire                        fifo_nempty;
-    wire                        fifo_re=fifo_nempty; // try simpler
+    wire                        fifo_re;
     reg  [AXI_WR_ADDR_BITS-1:0] waddr_fifo_out_r;
     reg                  [31:0] wdata_fifo_out_r;
     reg                         dly_ld_r=0;
@@ -169,6 +206,20 @@ module  ddrc_control #(
     
     reg                  [15:0] dqs_tri_pattern_r;
     reg                  [ 3:0] wbuf_delay_r;
+    
+    wire                        decoded_run_seq;
+    
+    assign refresh_set_w= fifo_re && (((waddr_fifo_out ^ REFRESH_PER_ADDR) & REFRESH_PER_ADDR_MASK)==0);
+//    reg                         this_granted;
+//    assign run_seq_granted=this_granted;
+    assign decoded_run_seq= (((waddr_fifo_out ^ RUN_CHN_ADDR) & RUN_CHN_ADDR_MASK)==0) && !ddr_rst; // without ddr_rst 'bx
+    assign run_seq_rq_gen=decoded_run_seq  && fifo_nempty ; // 
+//    assign                      fifo_re=fifo_nempty; // try simpler
+// need a way to reset if run_seq_busy is forever busy? Will it work to just repeat the same command w/o busy to overrun fifo?
+// ddr_rst_r should reset seqencer?
+
+// watch higher priority and busy for run_seq command, always ready - for others
+    assign                      fifo_re= fifo_nempty  && (decoded_run_seq? (!run_seq_rq_in && !run_seq_busy && !run_seq_r): 1'b1);
     
     assign wbuf_delay= wbuf_delay_r;
     assign {
@@ -236,7 +287,8 @@ module  ddrc_control #(
         if (rst) dly_set_r <= 1'b0;
         else     dly_set_r <= fifo_re && (((waddr_fifo_out ^ DLY_SET_ADDR) & DLY_SET_ADDR_MASK)==0);
         if (rst) run_seq_r <= 1'b0;
-        else     run_seq_r <= fifo_re && (((waddr_fifo_out ^ RUN_CHN_ADDR) & RUN_CHN_ADDR_MASK)==0);
+//        else     run_seq_r <= fifo_re && (((waddr_fifo_out ^ RUN_CHN_ADDR) & RUN_CHN_ADDR_MASK)==0);
+        else     run_seq_r <=  fifo_nempty  && decoded_run_seq && !run_seq_rq_in && !run_seq_busy && !run_seq_r;
 
         if (rst) {dqm_pattern_r,dqs_pattern_r} <= 16'h0055;
         else if (fifo_re && (((waddr_fifo_out ^ PATTERNS_ADDR) & PATTERNS_ADDR_MASK)==0))
@@ -279,6 +331,26 @@ module  ddrc_control #(
         if (rst) wbuf_delay_r <= WBUF_DLY_DFLT;
         else if (fifo_re && (((waddr_fifo_out ^ WBUF_DELAY_ADDR) & WBUF_DELAY_ADDR_MASK)==0))
                  wbuf_delay_r <= wdata_fifo_out[3:0];
+                 
+        if (rst) refresh_en_r <= 1'b0;
+        else if (fifo_re && (((waddr_fifo_out ^ REFRESH_EN_ADDR) & REFRESH_EN_ADDR_MASK)==0))
+                 refresh_en_r <= waddr_fifo_out[0];
+
+        if (rst) refresh_address_r <= 0;
+        else if (refresh_ld_addr) refresh_address_r <= wdata_fifo_out_r[10:0];
+
+        if (rst) refresh_period_r <= 0;
+        else if (refresh_set_r0) refresh_period_r <= wdata_fifo_out_r[7:0];
+        
+        if (rst) refresh_set_r0 <= 0;
+        else     refresh_set_r0 <= refresh_set_w;
+
+        if (rst) refresh_set_r <= 0;
+        else     refresh_set_r <= refresh_set_r0;
+        
+        if (rst) refresh_ld_addr <= 0;
+        else     refresh_ld_addr <= fifo_re && (((waddr_fifo_out ^ REFRESH_ADDR_ADDR) & REFRESH_ADDR_ADDR_MASK)==0);
+                 
     end
     always @ (posedge mclk) begin
         waddr_fifo_out_r <= waddr_fifo_out;

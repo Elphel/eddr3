@@ -19,10 +19,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/> .
  *******************************************************************************/
 `timescale 1ns/1ps
-
+//`define use_iobuf 1
 module  dm_single #(
     parameter IODELAY_GRP ="IODELAY_MEMORY",
-    parameter IBUF_LOW_PWR ="TRUE",
+    parameter IBUF_LOW_PWR ="TRUE", //SuppressThisWarning VEditor not used in OBUF_DCIEN
     parameter IOSTANDARD = "SSTL15_T_DCI",
     parameter SLEW = "SLOW",
     parameter real REFCLK_FREQUENCY = 300.0,
@@ -60,7 +60,7 @@ odelay_fine_pipe # (
     .DELAY_VALUE(0),
     .REFCLK_FREQUENCY(REFCLK_FREQUENCY),
     .HIGH_PERFORMANCE_MODE(HIGH_PERFORMANCE_MODE)
-) dqs_out_dly_i(
+) dm_out_dly_i(
     .clk(clk_div),
     .rst(rst),
     .set(set_odelay),
@@ -69,14 +69,14 @@ odelay_fine_pipe # (
     .data_in(d_ser),
     .data_out(dq_data_dly)
 );
-
+`ifdef use_iobuf
 IOBUF_DCIEN #(
     .IBUF_LOW_PWR(IBUF_LOW_PWR), //
     .IOSTANDARD(IOSTANDARD),
     .SLEW(SLEW),
     .USE_IBUFDISABLE("FALSE")
 // SuppressWarnings VivadoSynthesis : VivadoSynthesis: [Synth 8-4446] all outputs are unconnected for this instance and logic may be removed 
-) iobufs_dqs_i (
+) iobufs_dm_i (
 //    .O(dq_di),
     .O(),
     .IO(dm),
@@ -84,5 +84,18 @@ IOBUF_DCIEN #(
     .IBUFDISABLE(1'b0),
     .I(dq_data_dly), //dqs_data),
     .T(dq_tri));
+`else    
+    /* Instance template for module OBUFT_DCIEN */
+    OBUFT_DCIEN #(
+        .IOSTANDARD(IOSTANDARD),
+        .SLEW(SLEW)
+    ) iobufs_dm_i (
+        .O(dm), // output 
+        .DCITERMDISABLE(dci_disable), // input 
+        .I(dq_data_dly), // input 
+        .T(dq_tri) // input 
+    );
+`endif    
+    
 endmodule
 

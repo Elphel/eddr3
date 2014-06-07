@@ -19,7 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/> .
  *******************************************************************************/
 `timescale 1ns/1ps
-
 module  dqs_single #(
     parameter IODELAY_GRP ="IODELAY_MEMORY",
     parameter IBUF_LOW_PWR ="TRUE",
@@ -34,6 +33,9 @@ module  dqs_single #(
     input       clk_div,
     input       rst,
     output      dqs_received_dly,
+//    output      dqs_di, // debugging:
+     //Input buffer ddrc_sequencer_i/phy_cmd_i/phy_top_i/byte_lane0_i/dqs_i/iobufs_dqs_i/IBUFDS/IBUFDS_S (in ddrc_sequencer_i/phy_cmd_i/phy_top_i/byte_lane0_i/dqs_i/iobufs_dqs_i macro) has no loads. An input buffer must drive an internal load.
+     
     input       dci_disable,  // disable DCI termination during writes and idle
     input [7:0] dly_data,
     input [3:0] din,
@@ -90,7 +92,6 @@ IOBUFDS_DCIEN #(
     .IBUFDISABLE(1'b0),
     .I(dqs_data_dly), //dqs_data),
     .T(dqs_tri));
-    
 idelay_fine_pipe # (
     .IODELAY_GRP(IODELAY_GRP),
     .DELAY_VALUE(0),
@@ -105,6 +106,5 @@ idelay_fine_pipe # (
     .data_in(dqs_di),
     .data_out(dqs_received_dly)
 );
-
 endmodule
 

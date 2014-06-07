@@ -71,7 +71,7 @@ odelay_fine_pipe # (
     .DELAY_VALUE(0),
     .REFCLK_FREQUENCY(REFCLK_FREQUENCY),
     .HIGH_PERFORMANCE_MODE(HIGH_PERFORMANCE_MODE)
-) dqs_out_dly_i(
+) dq_out_dly_i(
     .clk(clk_div),
     .rst(rst),
     .set(set_odelay),
@@ -86,7 +86,7 @@ IOBUF_DCIEN #(
     .IOSTANDARD(IOSTANDARD),
     .SLEW(SLEW),
     .USE_IBUFDISABLE("FALSE")
-) iobufs_dqs_i (
+) iobufs_dq_i (
     .O(dq_di),
     .IO(dq),
     .DCITERMDISABLE(dci_disable),
@@ -99,7 +99,7 @@ idelay_fine_pipe # (
     .DELAY_VALUE(0),
     .REFCLK_FREQUENCY(REFCLK_FREQUENCY),
     .HIGH_PERFORMANCE_MODE(HIGH_PERFORMANCE_MODE)
-) dqs_in_dly_i(
+) dq_in_dly_i(
     .clk(clk_div),
     .rst(rst),
     .set(set_idelay),

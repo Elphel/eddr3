@@ -95,6 +95,12 @@ module  ddrc_test01_testbench #(
     parameter DLY_RST_REL_MASK =      'h3fe,  // address mask for delay calibration circuitry
     parameter EXTRA_REL =             'h02e,  // address to set extra parameters (currently just inv_clk_div)
     parameter EXTRA_REL_MASK =        'h3ff,  // address mask for extra parameters
+    parameter REFRESH_EN_REL =        'h030,  // address to enable('h31) and disable ('h30) DDR refresh
+    parameter REFRESH_EN_REL_MASK =   'h3fe,  // address mask to enable/disable DDR refresh
+    parameter REFRESH_PER_REL =       'h032,  // address to set refresh period in 32 x tCK
+    parameter REFRESH_PER_REL_MASK =  'h3ff,  // address mask set refresh period
+    parameter REFRESH_ADDR_REL =      'h033,  // address to set sequencer start address for DDR refresh
+    parameter REFRESH_ADDR_REL_MASK = 'h3ff,  // address mask set refresh sequencer address
     
     // simulation-specific parameters
     parameter integer AXI_RDADDR_LATENCY=2,
@@ -141,6 +147,11 @@ module  ddrc_test01_testbench #(
 // SuppressWarnings VEditor
     localparam BASEADDR_EXTRA =   BASEADDR_CTRL | (EXTRA_REL<<2);    // 'h02e, address to set extra parameters (currently just inv_clk_div)
     
+    localparam BASEADDR_REFRESH_EN =   BASEADDR_CTRL | (REFRESH_EN_REL<<2);    // address to enable('h31) and disable ('h30) DDR refresh
+    localparam BASEADDR_REFRESH_PER =   BASEADDR_CTRL | (REFRESH_PER_REL<<2);    // address ('h32) to set refresh period in 32 x tCK
+    localparam BASEADDR_REFRESH_ADDR =   BASEADDR_CTRL | (REFRESH_ADDR_REL<<2);    // address ('h33)to set sequencer start address for DDR refresh
+    
+    
     localparam BASEADDRESS_LANE0_ODELAY = BASEADDR_DLY_LD;  
     localparam BASEADDRESS_LANE0_IDELAY = BASEADDR_DLY_LD+('h10<<2);  
     localparam BASEADDRESS_LANE1_ODELAY = BASEADDR_DLY_LD+('h20<<2);  
@@ -181,7 +192,10 @@ module  ddrc_test01_testbench #(
     localparam WBUF_DLY_WLV=    4'h7; // write leveling mode: extra delay (in mclk cycles) to add to write buffer enable (DDR3 read data)
     
 //    localparam DLY_PHASE= 8'hdb; // mmcm fine phase shift
-    localparam WRITELEV_OFFSET=    'h20; // write leveling start address (in words)
+    localparam INITIALIZE_OFFSET=  'h00; // moemory initialization start address (in words) ..`h0c
+    localparam REFRESH_OFFSET=     'h10; // refresh start address (in words) ..`h13
+    localparam WRITELEV_OFFSET=    'h20; // write leveling start address (in words) ..`h2a
+    
     localparam READ_PATTERN_OFFSET='h40; // read pattern to memory block sequence start address (in words) ..'h053 with 8x2*64 bits (variable)
     localparam WRITE_BLOCK_OFFSET= 'h100; // write block sequence start address (in words) ..'h14c
     localparam READ_BLOCK_OFFSET=  'h180; // read  block sequence start address (in words)
@@ -206,7 +220,8 @@ module  ddrc_test01_testbench #(
   wire        SDDMU;  // inout
   wire        DQSU;   // inout
   wire        NDQSU;  // inout
-  
+  wire        DUMMY_TO_KEEP;  // output to keep PS7 signals from "optimization"
+  wire        MEMCLK;
   
   // Simulation signals
   reg [11:0] ARID_IN_r;
@@ -339,11 +354,15 @@ always #(CLKIN_PERIOD/2) CLK <= ~CLK;
   // SuppressWarnings VEditor : assigned in $readmem() system task
     $dumpvars(0,ddrc_test01_testbench);
     CLK <=1'b0;
-    RST <= 1'b1;
+    RST <= 1'bx;
     AR_SET_CMD_r <= 1'b0;
     AW_SET_CMD_r <= 1'b0;
     W_SET_CMD_r <= 1'b0;
-    #100000; // same as glbl
+    #500;
+    $display ("ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.rst=%d",ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.rst);
+    #500;
+    RST <= 1'b1;
+    #99000; // same as glbl
     repeat (20) @(posedge CLK) ;
     RST <=1'b0;
     axi_set_b_lag(0); //(1);
@@ -354,13 +373,22 @@ always #(CLKIN_PERIOD/2) CLK <= ~CLK;
     enable_cmda(1);
     repeat (16) @(posedge CLK) ;
     activate_sdrst(0); // was enabled at system reset
+    set_refresh(
+        50, // input [ 9:0] t_rfc; // =50 for tCK=2.5ns
+        16); //input [ 7:0] t_refi; // 48/97 for normal, 8 - for simulation
     #5000; // actually 500 usec required
     repeat (16) @(posedge CLK) ;
     enable_cke(1);
     repeat (16) @(posedge CLK) ;
     set_mrs(1);
-    set_write_lev(16); // write leveling, 16 times   (full buffer - 128) 
+    run_sequence(0,INITIALIZE_OFFSET);
+    repeat (4) @(posedge CLK) ;
+//    wait_sequencer_ready(16);
+
+// enable refresh    
+    enable_refresh(1);
     
+    set_write_lev(16); // write leveling, 16 times   (full buffer - 128) 
     // set dq /dqs tristate on/off patterns
     axi_write_single(BASEADDR_PATTERNS_TRI, {16'h0, DQSTRI_LAST, DQSTRI_FIRST, DQTRI_LAST, DQTRI_FIRST});
  
@@ -368,7 +396,7 @@ always #(CLKIN_PERIOD/2) CLK <= ~CLK;
     
     #100;
 //    $finish;
-    run_sequence(0,0);
+    run_sequence(0,INITIALIZE_OFFSET);
     wait_sequencer_ready(16);
     axi_write_single(BASEADDR_PATTERNS, 32'h0055); // set patterns for DM (always 0) and DQS - always the same (may try different for write lev.)
 
@@ -379,6 +407,12 @@ always #(CLKIN_PERIOD/2) CLK <= ~CLK;
     
 //axi_set_dqs_idelay_nominal;
     run_sequence(0,WRITELEV_OFFSET);
+// trying multiple run_sequence    
+    run_sequence(0,WRITELEV_OFFSET);
+    run_sequence(0,WRITELEV_OFFSET);
+
+    wait_sequencer_ready(16);
+    wait_sequencer_ready(16);
     wait_sequencer_ready(16);
 `ifdef use200Mhz
     axi_set_dly_single(0,8,'h78); // was 'h74 dqs lane 0, odelay    
@@ -483,7 +517,7 @@ always #(CLKIN_PERIOD/2) CLK <= ~CLK;
 
 
 assign ddrc_test01_i.ps7_i.FCLKCLK=        {4{CLK}};
-assign ddrc_test01_i.ps7_i.FCLKRESETN=     {4{~RST}};
+assign ddrc_test01_i.ps7_i.FCLKRESETN=     {RST,~RST,RST,~RST};
 // Read address
 assign ddrc_test01_i.ps7_i.MAXIGP0ARADDR=  araddr;
 assign ddrc_test01_i.ps7_i.MAXIGP0ARVALID= arvalid;
@@ -598,7 +632,13 @@ assign bresp=                              ddrc_test01_i.ps7_i.MAXIGP0BRESP;
         .DLY_RST_REL           (DLY_RST_REL),
         .DLY_RST_REL_MASK      (DLY_RST_REL_MASK),
         .EXTRA_REL             (EXTRA_REL),
-        .EXTRA_REL_MASK        (EXTRA_REL_MASK)
+        .EXTRA_REL_MASK        (EXTRA_REL_MASK),
+        .REFRESH_EN_REL        (REFRESH_EN_REL),
+        .REFRESH_EN_REL_MASK   (REFRESH_EN_REL_MASK),
+        .REFRESH_PER_REL       (REFRESH_PER_REL),
+        .REFRESH_PER_REL_MASK  (REFRESH_PER_REL_MASK),
+        .REFRESH_ADDR_REL      (REFRESH_ADDR_REL),
+        .REFRESH_ADDR_REL_MASK (REFRESH_ADDR_REL_MASK)
     ) ddrc_test01_i (
         .SDRST   (SDRST), // DDR3 reset (active low)
         .SDCLK   (SDCLK), // output 
@@ -616,7 +656,9 @@ assign bresp=                              ddrc_test01_i.ps7_i.MAXIGP0BRESP;
         .NDQSL   (NDQSL), // inout
         .SDDMU   (SDDMU), // inout
         .DQSU    (DQSU), // inout
-        .NDQSU   (NDQSU) // inout
+        .NDQSU   (NDQSU), // inout
+        .DUMMY_TO_KEEP(DUMMY_TO_KEEP),  // to keep PS7 signals from "optimization"
+        .MEMCLK  (MEMCLK)
     );
 // Micron DDR3 memory model
     /* Instance of Micron DDR3 memory model */
@@ -989,6 +1031,15 @@ simul_axi_read simul_axi_read_i(
             else 
                 axi_write_single(BASEADDR_SDRST_ACT, 0);
         //BASEADDR_CMDA_EN
+        end
+    endtask
+    task enable_refresh;
+        input en;
+        begin
+            if (en) 
+                axi_write_single(BASEADDR_REFRESH_EN+4, 0);
+            else 
+                axi_write_single(BASEADDR_REFRESH_EN, 0);
         end
     endtask
 
@@ -1788,7 +1839,12 @@ simul_axi_read simul_axi_read_i(
              cmd_addr <= cmd_addr + 4;
              
              
-             data <= encode_seq_skip(2,0,1,1); // Keep DCI and ODT active 
+//             data <= encode_seq_skip(1,0,1,1); // Keep DCI and ODT active 
+//             @(posedge CLK)
+//             axi_write_single(cmd_addr, data);
+//             cmd_addr <= cmd_addr + 4;
+//             
+             data <= encode_seq_skip(2,0,1,0); // Keep DCI (but not ODT) active  ODT should be off befor MRS
              @(posedge CLK)
              axi_write_single(cmd_addr, data);
              cmd_addr <= cmd_addr + 4;
@@ -1826,6 +1882,48 @@ simul_axi_read simul_axi_read_i(
         end
     endtask
 
+    task set_refresh;
+        input [ 9:0] t_rfc; // =50 for tCK=2.5ns
+        input [ 7:0] t_refi; // 48/97 for normal, 8 - for simulation
+        reg [31:0] cmd_addr;
+        reg [31:0] data;
+        begin
+             cmd_addr <= BASEADDR_CMD0 + (REFRESH_OFFSET<<2);
+             @(posedge CLK)
+             data <=  encode_seq_word(
+                15'h0,              // [14:0] phy_addr_in;
+                3'b0,               // [ 2:0] phy_bank_in; //TODO: debug!
+                3'b110,             // [ 2:0] phy_rcw_in; // {ras,cas,we}, positive
+                1'b0,               //        phy_odt_in; // may be optimized?
+                1'b0,               // phy_cke_inv; // may be optimized?
+                1'b0,               // phy_sel_in; // first/second half-cycle, other will be nop (cke+odt applicable to both)
+                1'b0,               // phy_dq_en_in;
+                1'b0,               // phy_dqs_en_in;
+                1'b0,               // phy_dqs_toggle_en;
+                1'b0,               // phy_dci_en_in;      // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
+                1'b0,               // phy_buf_wr;   // connect to external buffer
+                1'b0,               // phy_buf_rd;   // connect to external buffer
+                1'b0);              // add NOP after the current command, keep other data
+             @(posedge CLK)
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+             data <= encode_seq_skip(t_rfc,0,0,0); // =50 tREFI=260 ns before next ACTIVATE or REFRESH, @2.5ns clock, @5ns cycle
+             @(posedge CLK)
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+// Ready for normal operation
+             data <= encode_seq_skip(0,1,0,0); // sequence done bit, skip length is ignored
+             @(posedge CLK)
+             axi_write_single(cmd_addr, data);
+             cmd_addr <= cmd_addr + 4;
+
+             axi_write_single(BASEADDR_REFRESH_ADDR, REFRESH_OFFSET);
+             axi_write_single(BASEADDR_REFRESH_PER, {24'h0,t_refi});
+             
+             
+        
+        end
+    endtask         
 
     task set_mrs; // will also calibrate ZQ
         input reset_dll;

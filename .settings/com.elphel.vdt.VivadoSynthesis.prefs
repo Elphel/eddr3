@@ -1,4 +1,5 @@
 VivadoSynthesis_102_ConstraintsFiles=ddrc_test01.xdc<-@\#\#@->ddrc_test01_timing.xdc<-@\#\#@->
+VivadoSynthesis_115_flatten_hierarchy=none
 VivadoSynthesis_95_ShowInfo=false
-com.elphel.store.context.VivadoSynthesis=VivadoSynthesis_102_ConstraintsFiles<-@\#\#@->VivadoSynthesis_95_ShowInfo<-@\#\#@->
+com.elphel.store.context.VivadoSynthesis=VivadoSynthesis_102_ConstraintsFiles<-@\#\#@->VivadoSynthesis_95_ShowInfo<-@\#\#@->VivadoSynthesis_115_flatten_hierarchy<-@\#\#@->
 eclipse.preferences.version=1

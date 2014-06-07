@@ -51,11 +51,11 @@ localparam integer DATA_WIDTH_TRI=  (MODE_DDR=="TRUE")?4:1;
                .DATA_RATE_OQ         (DATA_RATE),
                .DATA_RATE_TQ         (DATA_RATE),
                .DATA_WIDTH           (DATA_WIDTH),
-               .INIT_OQ              (1'b0),
-               .INIT_TQ              (1'b0),
+               .INIT_OQ              (1'b1),
+               .INIT_TQ              (1'b1),
                .SERDES_MODE          ("MASTER"),
-               .SRVAL_OQ             (1'b0),
-               .SRVAL_TQ             (1'b0),
+               .SRVAL_OQ             (1'b1),
+               .SRVAL_TQ             (1'b1),
                .TRISTATE_WIDTH       (DATA_WIDTH_TRI),
                .TBYTE_CTL            ("FALSE"), 
                .TBYTE_SRC            ("FALSE")
@@ -94,13 +94,13 @@ localparam integer DATA_WIDTH_TRI=  (MODE_DDR=="TRUE")?4:1;
                .DATA_RATE_TQ         (DATA_RATE),
                .DATA_WIDTH           (DATA_WIDTH),
 //               .DDR3_DATA            (DDR3_DATA), //For DDR3 DQ, DQS: 1, Address, ctrl, clock - 0
-               .INIT_OQ              (1'b0),
-               .INIT_TQ              (1'b0),
+               .INIT_OQ              (1'b1),
+               .INIT_TQ              (1'b1),
                .INTERFACE_TYPE       ("DEFAULT"), //"DEFAULT", "MEMORY_DDR3" 
                .ODELAY_USED          (0),         // 1 available only for MEMORY_DDR3
                .SERDES_MODE          ("MASTER"),
-               .SRVAL_OQ             (1'b0),
-               .SRVAL_TQ             (1'b0),
+               .SRVAL_OQ             (1'b1),
+               .SRVAL_TQ             (1'b1),
                .TRISTATE_WIDTH       (DATA_WIDTH_TRI)
             ) oserdes_i (
                .OFB                 (dout_dly),

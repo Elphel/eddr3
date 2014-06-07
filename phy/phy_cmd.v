@@ -76,7 +76,19 @@ module  phy_cmd#(
     input                  [6:0] dly_addr, // select which delay to program
     input                        ld_delay, // load delay data to selected iodelayl (clk_div synchronous)
     input                        set,       // clk_div synchronous set all delays from previously loaded values
-    output                       locked,
+//    output                       locked,
+    output                       locked_mmcm,
+    output                       locked_pll,
+    output                       dly_ready,
+    output                       dci_ready,
+
+    output                       phy_locked_mmcm,
+    output                       phy_locked_pll,
+    output                       phy_dly_ready,
+    output                       phy_dci_ready,
+    
+    output               [7:0]   tmp_debug,
+
     output                       ps_rdy,
     output     [PHASE_WIDTH-1:0] ps_out, 
 // command port
@@ -161,11 +173,17 @@ module  phy_cmd#(
     wire                         phy_dci_dis_dqs;
         
     reg                          dqs_tri_prev, dq_tri_prev;
-    wire                         phy_locked;
+//    wire                         phy_locked;
     wire                         phy_ps_rdy;
     wire       [PHASE_WIDTH-1:0] phy_ps_out; 
-    reg                          locked_r1,locked_r2;
+//    reg                          locked_r1,locked_r2;
     reg                          ps_rdy_r1,ps_rdy_r2;
+    reg                          locked_mmcm_r1,locked_mmcm_r2;
+    reg                          locked_pll_r1, locked_pll_r2;
+    reg                          dly_ready_r1, dly_ready_r2;
+    reg                          dci_ready_r1, dci_ready_r2;
+    
+    
     reg        [PHASE_WIDTH-1:0] ps_out_r1,ps_out_r2; 
     wire                  [63:0] phy_rdata; // data read from ddr3 iserdese2 at posedge clk_div
     reg                   [63:0] phy_rdata_r; // registered @ posedge mclk
@@ -175,6 +193,11 @@ module  phy_cmd#(
     wire   [ADDRESS_NUMBER-1:0] phy_addr_calm;
     wire                 [ 2:0] phy_bank_calm;
     reg                  [ 8:0] extra_prev;
+    
+//    assign     phy_locked= phy_locked_mmcm && phy_locked_pll; // no dci and dly here
+    
+    
+    
 //    output                [63:0] buf_wdata, // data to be written to the buffer (from DDR3)
     // SuppressWarnings VEditor 
   (* keep = "true" *)  wire  phy_spare;
@@ -252,9 +275,14 @@ module  phy_cmd#(
     assign  phy_dci_dis_dq =   phy_dci_in;         // DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
     assign  phy_dci_dis_dqs =  phy_dci_in || phy_odt_cur;  // In write leveling mode phy_dci_in = 0, phy_odt_cur=1 - use DCI on DQ only, no DQS
     
-    assign  locked = locked_r2;
+//    assign  locked = locked_r2;
     assign  ps_rdy = ps_rdy_r2;
     assign  ps_out = ps_out_r2;
+    
+    assign  locked_mmcm = locked_mmcm_r2;
+    assign  locked_pll = locked_pll_r2;
+    assign  dly_ready = dly_ready_r2;
+    assign  dci_ready = dci_ready_r2;
     
     assign buf_wdata[63:0] = phy_rdata_r[63:0];
     
@@ -307,14 +335,25 @@ module  phy_cmd#(
     
 // cross clock boundary posedge posedge clk_div->negedge clk_div -> posedge mclk  (mclk is later than clk_div)    
     always @ (negedge clk_div) begin
-        locked_r1 <=   phy_locked;
+//        locked_r1 <=   phy_locked;
         ps_rdy_r1 <=   phy_ps_rdy;
-        ps_out_r1 <=   phy_ps_out; 
+        ps_out_r1 <=   phy_ps_out;
+        
+        locked_mmcm_r1 <= phy_locked_mmcm;
+        locked_pll_r1  <= phy_locked_pll;
+        dly_ready_r1   <= phy_dly_ready;
+        dci_ready_r1   <= phy_dci_ready;
+        
     end
     always @ (posedge mclk) begin
-        locked_r2 <=   locked_r1;
+//        locked_r2 <=   locked_r1;
         ps_rdy_r2 <=   ps_rdy_r1;
         ps_out_r2 <=   ps_out_r1; 
+
+        locked_mmcm_r2 <= locked_mmcm_r1;
+        locked_pll_r2  <= locked_pll_r1;
+        dly_ready_r2   <= dly_ready_r1;
+        dci_ready_r2   <= dci_ready_r1;
     end
 
 
@@ -405,7 +444,12 @@ module  phy_cmd#(
         .dly_addr        (dly_addr_r), // input[6:0] 
         .ld_delay        (ld_delay_r), // input
         .set             (set_r), // input
-        .locked          (phy_locked), // output
+//        .locked          (phy_locked), // output
+        .locked_mmcm     (phy_locked_mmcm), // output
+        .locked_pll      (phy_locked_pll), // output
+        .dly_ready       (phy_dly_ready), // output
+        .dci_ready       (phy_dci_ready), // output
+        .tmp_debug       (tmp_debug[7:0]),
         .ps_rdy          (phy_ps_rdy), // output
         .ps_out          (phy_ps_out) // output[7:0] 
     );

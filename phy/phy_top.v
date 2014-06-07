@@ -106,25 +106,63 @@ module  phy_top #(
     input                  [6:0] dly_addr, // select which delay to program
     input                        ld_delay, // load delay data to selected iodelayl (clk_div synchronous)
     input                        set,       // clk_div synchronous set all delays from previously loaded values
-    output                       locked,
+//    output                       locked,
+    output                       locked_mmcm,
+    output                       locked_pll,
+    output                       dly_ready,
+    output                       dci_ready,
+    output               [7:0]   tmp_debug,
     output                       ps_rdy,
     output     [PHASE_WIDTH-1:0] ps_out 
 );
-  reg rst=1'b0;
+  reg rst= 1'b1;
+//  reg rst_dbg=1'b1;
 //  always @(posedge clk_div or posedge rst_in) begin // got min hold violation
   always @(negedge clk_div or posedge rst_in) begin
     if (rst_in) rst <= 1'b1;
     else        rst <= 1'b0;
   end
+//  always @(posedge clk_div or posedge rst_in) begin
+//    if (rst_in) rst_dbg <= 1'b1;
+//    else        rst_dbg <= 1'b0;
+//  end
   wire  ld_data_l = (dly_addr[6:5] == 2'h0) && ld_delay ;             
   wire  ld_data_h = (dly_addr[6:5] == 2'h1) && ld_delay ;             
   wire  ld_cmda =   (dly_addr[6:5] == 2'h2) && ld_delay ;             
   wire  ld_mmcm=    (dly_addr[6:0] == 7'h60) && ld_delay ;
   wire  clkfb_ref, clk_ref_pre; 
   wire  clk_ref; // 200MHz/300Mhz to calibrate I/O delays            
-  wire locked_mmcm,locked_pll, dly_ready, dci_ready;
-  assign locked=locked_mmcm && locked_pll && dly_ready && dci_ready; // both PLL ready, I/O delay calibrated
-  
+//  wire locked_mmcm,locked_pll, dly_ready, dci_ready;
+//  assign locked=locked_mmcm && locked_pll && dly_ready && dci_ready; // both PLL ready, I/O delay calibrated
+  wire clkin_stopped_mmcm;
+  wire clkfb_stopped_mmcm;
+
+/*
+  reg dbg_reg1=1;
+  reg dbg_reg2=1;
+  reg dbg_reg3=1;
+*/  
+  assign tmp_debug ={
+    dly_addr[1],
+    dly_addr[0],
+    clkin_stopped_mmcm,
+    clkfb_stopped_mmcm,
+    ddr_rst,
+    rst_in,
+    dci_rst,
+    dly_rst
+  };
+  /*
+  always @ (posedge clk_in) begin
+    dbg_reg1 <= ~dbg_reg1;
+  end
+  always @ (posedge clk_ref) begin
+    dbg_reg2 <= ~dbg_reg2;
+  end
+  always @ (posedge clk_div) begin
+    dbg_reg3 <= ~dbg_reg3;
+  end
+  */
 /* memory reset */
     obuf #(
         .CAPACITANCE("DONT_CARE"),
@@ -241,9 +279,10 @@ wire sdclk; // BUFIO
     ) oddr_ds_i (
         .clk(sdclk), // input
         .ce(1'b1), // input
-        .rst(1'b0), // input
+        .rst(rst), // input
         .set(1'b0), // input
         .din(2'b01), // input[1:0] 
+        .tin(rst),   // tristate at reset
         .dq(ddr3_clk), // output
         .ndq(ddr3_nclk) // output
     );
@@ -321,9 +360,12 @@ BUFG mclk_i (.O(mclk),.I(mclk_pre) );
         .clkout1b(), // output
         .clkout2b(), // output
         .clkout3b(), // output
-        .clkfbout(clk_fb), // output
+        .clkfbout            (clk_fb), // output
         .clkfboutb(), // output
-        .locked(locked_mmcm) // output
+        .locked              (locked_mmcm),
+        .clkin_stopped       (clkin_stopped_mmcm), // output
+        .clkfb_stopped       (clkfb_stopped_mmcm) // output
+         // output
     );
 
 // Generate reference clock for the I/O delays
@@ -357,11 +399,10 @@ BUFG mclk_i (.O(mclk),.I(mclk_pre) );
         .rst(rst || dly_rst),
         .rdy(dly_ready)
     );
-
     dci_reset dci_reset_i (
         .reset(rst || dci_rst), // input
         .ready(dci_ready) // output
     );
-
+//assign dci_ready= !(rst || dci_rst); 
 endmodule
 

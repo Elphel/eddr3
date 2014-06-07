@@ -40,14 +40,17 @@ module  ddrc_status
     output                        busy,          // interface busy (combinatorial delay from start_wburst and pre_addr
 // status/readback signals
 //    input                         run_done,      // sequencer done (add busy?)
-    input                         run_busy,      // sequencer busy
-
+    input                         run_busy,       // sequencer busy
     input                         locked,        // MMCM and PLL locked
+    input                         locked_mmcm,
+    input                         locked_pll,
+    input                         dly_ready,
+    input                         dci_ready,
     input                         ps_rdy,        // MMCM phase shift control ready
     input                  [ 7:0] ps_out         // MMCM phase shift value (in 1/56 of the Fvco period)
 );
     assign busy=0;
-    assign rdata={21'b0,run_busy,locked,ps_rdy,ps_out[7:0]};
+    assign rdata={17'b0,dly_ready,dci_ready, locked_mmcm, locked_pll, run_busy,locked,ps_rdy,ps_out[7:0]};
     
 
 endmodule

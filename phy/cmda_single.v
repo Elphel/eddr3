@@ -50,7 +50,7 @@ oserdes_mem#(
     .rst(rst),          // reset
     .din(din[1:0]),     // parallel data in
 //    .tin(tin[1:0]),     // parallel tri-state in
-    .tin(tin),     // parallel tri-state in
+    .tin(tin),          // parallel tri-state in
     .dout_dly(d_ser),   // data out to be connected to odelay input
     .dout_iob(),        // data out to be connected directly to the output buffer
     .tout_dly(),        // tristate out to be connected to odelay input

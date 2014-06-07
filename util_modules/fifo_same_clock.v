@@ -37,6 +37,10 @@ module fifo_same_clock
   output reg              half_full // FIFO half full
   );
     localparam integer DATA_2DEPTH=(1<<DATA_DEPTH)-1;
+//ISExst: FF/Latch ddrc_test01.axibram_write_i.waddr_i.fill[4] has a constant value of 0 in block <ddrc_test01>. This FF/Latch will be trimmed during the optimization process.
+//ISExst: FF/Latch ddrc_test01.axibram_read_i.raddr_i.fill[4] has a constant value of 0 in block <ddrc_test01>. This FF/Latch will be trimmed during the optimization process.
+//ISExst: FF/Latch ddrc_test01.axibram_write_i.wdata_i.fill[4] has a constant value of 0 in block <ddrc_test01>. This FF/Latch will be trimmed during the optimization process.
+// Do not understand - why?
     reg  [DATA_DEPTH  :0] fill=0;
     reg                   just_one,two_or_less;
     reg  [DATA_WIDTH-1:0] inreg;
@@ -56,16 +60,18 @@ module fifo_same_clock
     assign outreg_use_inreg=(out_full && two_or_less) || just_one;
  //   assign next_fill = fill[4:0]+((we && ~rem)?1:((~we && rem)?5'b11111:5'b00000));
  // TODO: verify rem is not needed instead of re
-    assign next_fill = fill[4:0]+((we && ~re)?1:((~we && re)?5'b11111:5'b00000)); //SuppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 5-bit target.
+    assign next_fill = fill[DATA_DEPTH:0]+((we && ~re)?1:((~we && re)?-1:0)); //S uppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 5-bit target.
     
 
 
     always @ (posedge  clk or posedge  rst) begin
       if   (rst) fill <= 0;
-      else if (we && ~re) fill <= fill+1; //SuppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 5-bit target.
-      else if (~we && re) fill <= fill-1; //SuppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 5-bit target.
+      else fill <= next_fill;
+//      else if (we && ~re) fill <= fill+1; //S uppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 5-bit target.
+//      else if (~we && re) fill <= fill-1; //S uppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 5-bit target.
+      
       if (rst)      wa <= 0;
-      else if (wem) wa <= wa+1;  //SuppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 4-bit target.
+      else if (wem) wa <= wa+1;  //S uppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 4-bit target.
       if (rst)      ra <= 1; // 0;
       else if (re)  ra <= ra+1; //now ra is 1 ahead  //SuppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 4-bit target.
       else if (!nempty) ra <= wa+1; // Just recover from bit errors TODO: fix  //SuppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 4-bit target.

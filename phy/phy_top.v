@@ -116,16 +116,10 @@ module  phy_top #(
     output     [PHASE_WIDTH-1:0] ps_out 
 );
   reg rst= 1'b1;
-//  reg rst_dbg=1'b1;
-//  always @(posedge clk_div or posedge rst_in) begin // got min hold violation
   always @(negedge clk_div or posedge rst_in) begin
     if (rst_in) rst <= 1'b1;
     else        rst <= 1'b0;
   end
-//  always @(posedge clk_div or posedge rst_in) begin
-//    if (rst_in) rst_dbg <= 1'b1;
-//    else        rst_dbg <= 1'b0;
-//  end
   wire  ld_data_l = (dly_addr[6:5] == 2'h0) && ld_delay ;             
   wire  ld_data_h = (dly_addr[6:5] == 2'h1) && ld_delay ;             
   wire  ld_cmda =   (dly_addr[6:5] == 2'h2) && ld_delay ;             
@@ -136,15 +130,24 @@ module  phy_top #(
 //  assign locked=locked_mmcm && locked_pll && dly_ready && dci_ready; // both PLL ready, I/O delay calibrated
   wire clkin_stopped_mmcm;
   wire clkfb_stopped_mmcm;
+  
+  
+  reg dbg1=0;
+  reg dbg2=0;
+  always @ (posedge rst_in or posedge mclk) begin
+    if (rst_in) dbg1 <= 0;
+    else dbg1 <= ~dbg1;
+  end
 
-/*
-  reg dbg_reg1=1;
-  reg dbg_reg2=1;
-  reg dbg_reg3=1;
-*/  
+  always @ (posedge rst_in or posedge clk_div) begin
+    if (rst_in) dbg2 <= 0;
+    else dbg2 <= ~dbg2;
+  end
+  
+
   assign tmp_debug ={
-    dly_addr[1],
-    dly_addr[0],
+    dbg2, //dly_addr[1],
+    dbg1, //dly_addr[0],
     clkin_stopped_mmcm,
     clkfb_stopped_mmcm,
     ddr_rst,
@@ -152,17 +155,7 @@ module  phy_top #(
     dci_rst,
     dly_rst
   };
-  /*
-  always @ (posedge clk_in) begin
-    dbg_reg1 <= ~dbg_reg1;
-  end
-  always @ (posedge clk_ref) begin
-    dbg_reg2 <= ~dbg_reg2;
-  end
-  always @ (posedge clk_div) begin
-    dbg_reg3 <= ~dbg_reg3;
-  end
-  */
+
 /* memory reset */
     obuf #(
         .CAPACITANCE("DONT_CARE"),
@@ -173,7 +166,6 @@ module  phy_top #(
         .O(ddr3_nrst), // output
         .I(~ddr_rst)   // input
     );
-  
   
   cmd_addr #(
     .IODELAY_GRP(IODELAY_GRP),

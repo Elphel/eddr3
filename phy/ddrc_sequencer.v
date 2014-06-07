@@ -364,7 +364,7 @@ module  ddrc_sequencer   #(
         .CMD_DONE_BIT          (CMD_DONE_BIT)    // bit number (address) to signal sequence done
         
     ) phy_cmd_i (
-        .SDRST               (SDRST), // output ****************
+        .SDRST               (SDRST), // output
         .SDCLK               (SDCLK), // output
         .SDNCLK              (SDNCLK), // output
         .SDA                 (SDA[ADDRESS_NUMBER-1:0]), // output[14:0] 
@@ -403,15 +403,12 @@ module  ddrc_sequencer   #(
         
         .ps_rdy              (ps_rdy), // output
         .ps_out              (ps_out[7:0]), // output[7:0]
-/// debugging
-//        .phy_cmd_word        (32'h0), //phy_cmd_word[31:0]), // input[31:0]
         .phy_cmd_word        (phy_cmd_word[31:0]), // input[31:0]
         .phy_cmd_nop         (phy_cmd_nop), // output
         .phy_cmd_add_pause   (phy_cmd_add_pause), // one pause cycle (for 8-bursts)
         .add_pause           (add_pause),
         .pause_len           (pause_len),     // output  [CMD_PAUSE_BITS-1:0]
         .sequence_done       (sequence_done), // output
-//        .buf_addr            (buf_addr[6:0]), // output[6:0] 
         .buf_wdata           (buf_wdata[63:0]), // output[63:0] 
         .buf_rdata           (buf_rdata[63:0]), // input[63:0] 
         .buf_wr              (buf_wr_ndly), // output

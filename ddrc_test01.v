@@ -91,7 +91,7 @@ module  ddrc_test01 #(
     parameter CKE_EN_REL_MASK =       'h3fe,  // address mask for command/address outputs
     parameter DCI_RST_REL =           'h02a,  // address to activate('h82b)/deactivate('h82a) Zynq DCI calibrate circuitry  
     parameter DCI_RST_REL_MASK =      'h3fe,  // address mask for DCI calibrate circuitry
-    parameter DLY_RST_REL =           'h02a,  // address to activate('h82d)/deactivate('h82c) delay calibration circuitry  
+    parameter DLY_RST_REL =           'h02c,  // address to activate('h82d)/deactivate('h82c) delay calibration circuitry  
     parameter DLY_RST_REL_MASK =      'h3fe,  // address mask for delay calibration circuitry
     parameter EXTRA_REL =             'h02e,  // address to set extra parameters (currently just inv_clk_div)
     parameter EXTRA_REL_MASK =        'h3ff,  // address mask for extra parameters
@@ -134,10 +134,10 @@ module  ddrc_test01 #(
    
     
 // AXI write interface signals
-(* keep = "true" *)
+//(* keep = "true" *)
    wire           axi_aclk;    // clock - should be buffered
 //   wire           axi_aresetn; // reset, active low
-(* dont_touch = "true" *)
+//(* dont_touch = "true" *)
    wire           axi_rst;     // reset, active high
 // AXI Write Address
    wire   [31:0]  axi_awaddr;  // AWADDR[31:0], input
@@ -290,16 +290,7 @@ module  ddrc_test01 #(
    wire       refresh_set;
 
    assign      port0_rd_match=(((axird_bram_raddr ^ PORT0_RD_ADDR) & PORT0_RD_ADDR_MASK)==0);  
-//   assign en_cmd0_wr=     axiwr_bram_wen   && (axiwr_bram_waddr[11:10]==2'h1);
-//   assign en_port0_rd=    axird_bram_ren   && (axird_bram_raddr[11:10]==2'h0);
-//   assign en_port0_regen= axird_bram_regen && (axird_bram_raddr[11:10]==2'h0);
-//   assign en_port1_wr=    axiwr_bram_wen   && (axiwr_bram_waddr[11:10]==2'h0);
-
-
    assign en_cmd0_wr=     axiwr_bram_wen   && (((axiwr_bram_waddr ^ CMD0_ADDR) & CMD0_ADDR_MASK)==0);
-
-//   assign en_port0_rd=    axird_bram_ren   && (((axird_bram_raddr ^ PORT0_RD_ADDR) & PORT0_RD_ADDR_MASK)==0);
-//   assign en_port0_regen= axird_bram_regen && (((axird_bram_raddr ^ PORT0_RD_ADDR) & PORT0_RD_ADDR_MASK)==0);
    assign en_port0_rd=    axird_bram_ren   && port0_rd_match;
    assign en_port0_regen= axird_bram_regen && port0_rd_match_r;
 
@@ -311,6 +302,19 @@ module  ddrc_test01 #(
    assign axird_dev_ready = ~axird_dev_busy; //may combine (AND) multiple sources if needed
    
    assign locked=locked_mmcm && locked_pll;
+
+// Clock and reset from PS
+    wire comb_rst=~frst[0] | frst[1];
+    reg axi_rst_pre=1'b1;
+
+    always @(posedge comb_rst or posedge axi_aclk) begin
+        if (comb_rst) axi_rst_pre <= 1'b1;
+        else          axi_rst_pre <= 1'b0;
+    end
+     
+BUFG bufg_axi_rst_i  (.O(axi_rst),.I(axi_rst_pre));
+BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
+   
 always @ (posedge axi_aclk) begin
    port0_rd_match_r <= port0_rd_match; // rd address matched in previous cycle
 end
@@ -323,33 +327,8 @@ always @ (posedge axi_rst or posedge axi_aclk) begin
     
 end
    
-// Clock and reset from PS
-reg frst_inv;
-always @ (negedge frst[0] or posedge axi_aclk) begin
-    if (!frst[0]) frst_inv <= 1'b1;
-    else          frst_inv <= 1'b0; 
-end
-
-    /* Instance template for module PULLDOWN */
-    PULLDOWN PULLDOWN_i (
-        .O(MEMCLK) // output 
-    );
-wire dbg_clk; // = fclk[1] ^ MEMCLK;
-//BUFG dbg_clk_ii (.O(dbg_clk),.I(fclk[1] ^ MEMCLK));
-BUFG dbg_clk_ii (.O(dbg_clk),.I(MEMCLK));
-//(* dont_touch = "true" *) 
-reg [7:0] dbg_toggle;
-//always @ (posedge axi_rst or posedge axi_aclk) begin
-wire dbg_rst=frst[1] && !frst[0]; 
-always @ (posedge dbg_rst or posedge dbg_clk) begin
-//always @ (posedge axi_rst or posedge dbg_clk) begin
-//always @ (posedge fclk[1]) begin
-   if   (dbg_rst) dbg_toggle <= 8'ha5;
-   else           dbg_toggle <= dbg_toggle+1; //dbg_toggle+1;
-end
-
 /*
-     dly_addr[1],
+    dly_addr[1],
     dly_addr[0],
     clkin_stopped_mmcm,
     clkfb_stopped_mmcm,
@@ -357,10 +336,7 @@ end
     rst_in,
     dci_rst,
     dly_rst
-
 */
-
-
 
 //MEMCLK
 wire [63:0] gpio_in;
@@ -368,93 +344,55 @@ assign gpio_in={
 16'b0,
     1'b1,              // 1
     MEMCLK,            // 1/0? - external clock
-    dbg_rst,           // 1
-    fclk[1] ^ MEMCLK, //dbg_clk,           // 0/1 
+    1'b0,              //
+    1'b0,              // 
     
-    frst[1],           // 1 (follows)
+    frst[1],           // 0 (follows)
     fclk[1:0],         // 2'bXX (toggle)
     axird_dev_busy,    // 0
 
-{frst[2]?8'h5a:{
-    dbg_toggle[7:4],   // 4'b1111 -> 4'ha
+    4'b0,              // 4'b0
     
-    dbg_toggle[3:0]}},   // 4'b1111 -> 4'ha
+    4'b0,              // 4'b0
     
     tmp_debug[7:4],    // 4'b0111 -> 4'bx00x
-                       //    dly_addr[1],
-                       //    dly_addr[0],
-                       //    clkin_stopped_mmcm,
-                       //    clkfb_stopped_mmcm,
+                       //    dly_addr[1],        0
+                       //    dly_addr[0],        0
+                       //    clkin_stopped_mmcm, 0 
+                       //    clkfb_stopped_mmcm, 0
     
     tmp_debug[3:0],    // 4'b1100 -> 4'bxx00
-                       //    ddr_rst,
-                       //    rst_in,
-                       //    dci_rst,
-                       //    dly_rst
+                       //    ddr_rst, 1 1 4000609c -> 0 , 40006098 -> 1
+                       //    rst_in,  0 0
+                       //    dci_rst, 0 1
+                       //    dly_rst  0 1
     
+    phy_locked_mmcm,   //  1 1
+    phy_locked_pll,    //  1 1
+    phy_dly_ready,     //  1 0
+    phy_dci_ready,     //  1 0
     
-    phy_locked_mmcm,   // 0 1
-    phy_locked_pll,    // 0 1
-    phy_dly_ready,     // 0 1
-    phy_dci_ready,     // 1 1
-    
-    locked_mmcm,       // 0 1 
-    locked_pll,        // 0 1
-    dly_ready,         // 0 1
-    dci_ready,         // 0 1
+    locked_mmcm,       //  1 1
+    locked_pll,        //  1 1
+    dly_ready,         //  1 0
+    dci_ready,         //  1 0
     
     ps_out[7:4],       // 4'b0 input[7:0] 4'b0
     
     ps_out[3:0],       // 4'b0 input[7:0] 4'b0
      
     run_busy, // input // 0 
-    locked, // input   // 0
-    ps_rdy, // input   // 0
+    locked, // input   // 1
+    ps_rdy, // input   // 1
     axi_arready,       // 1
     
     axi_awready,       // 1 
     axi_wready,        // 1 
-    axi_aclk,          // 0/1 
-    axi_rst            // 0
+    fclk[0],           // 0/1 
+    axi_rst_pre //axi_rst            // 0
 };
-/*
-  assign tmp_debug ={
-  1'b1,
-    clkin_stopped_mmcm,
-    clkfb_stopped_mmcm,
-    clk_in, // dbg_reg3,
-    dbg_reg2,
-    dbg_reg1,
-    rst_in,
-    dly_rst
-  };
 
-*/
-//assign DUMMY_TO_KEEP = ^gpio_in[63:0]; // to keep PS7 signals from "optimization"
-assign DUMMY_TO_KEEP = dbg_toggle[0];
-/*
-        .rdata            (status_rdata[31:0]), // output[31:0] 
-        .busy             (axird_dev_busy), // output
-//        .run_done         (run_done), // input
-        .run_busy         (run_busy), // input
-        .locked           (locked), // input
-        .ps_rdy           (ps_rdy), // input
-        .ps_out           (ps_out[7:0]) // input[7:0] 
-
-*/
-
-/*
-`ifndef IVERILOG
-(* dont_touch = "true" *)
-`endif
- wire frst_inv= ~frst[0];
-*/
-
-//BUFG bufg_axi_rst_i  (.O(axi_rst),.I(~frst[0]));
-//assign axi_rst=~frst[0];
-assign axi_rst=~frst[0] || frst[1]; // prevent releasing reset before explicit command 
-//BUFG bufg_axi_rst_i  (.O(axi_rst),.I(frst_inv));
-BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
+assign DUMMY_TO_KEEP = 1'b0; // dbg_toggle[0];
 
     axibram_write #(
         .ADDRESS_BITS(AXI_WR_ADDR_BITS)
@@ -633,12 +571,10 @@ run_busy
         .need             (refresh_need), // output
         .grant            (refresh_grant) // input
     );
-
-    always @ (posedge axi_rst or  posedge mclk) begin
+    always @(posedge axi_rst or  posedge mclk) begin
          if (axi_rst) refresh_grant <= 0; 
-         refresh_grant <= !refresh_grant && refresh_en && !run_busy && !axi_run_seq && (refresh_need || (refresh_want && !run_seq_rq_gen)); 
+         else refresh_grant <= !refresh_grant && refresh_en && !run_busy && !axi_run_seq && (refresh_need || (refresh_want && !run_seq_rq_gen)); 
     end
-
     
     ddrc_status
 //     #(

@@ -19,7 +19,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/> .
  *******************************************************************************/
 `timescale 1ns/1ps
-
+/*
+ Currently ddr3_a, ddr3_ba, ddr_cke and ddr_odt do not change inside a 2-clock command cycle, so half register
+ bits are removed during optimization
+*/
 module  cmd_addr #(
     parameter IODELAY_GRP = "IODELAY_MEMORY",
     parameter IOSTANDARD =  "SSTL15",
@@ -62,7 +65,8 @@ reg  in_tri_r=1'b1; // or tri-state on reset?
  (* keep = "true" *) reg        set_r=0;
 reg  [7:0] ld_dly_cmd=8'b0;
 reg  [ADDRESS_NUMBER-1:0] ld_dly_addr=0;
-wire  [ADDRESS_NUMBER-1:0] decode_addr;
+//wire  [ADDRESS_NUMBER-1:0] decode_addr;
+wire  [23:0] decode_addr24;
 wire [7:0] decode_sel={
     (dly_addr[2:0]==7)?1'b1:1'b0,
     (dly_addr[2:0]==6)?1'b1:1'b0,
@@ -72,7 +76,10 @@ wire [7:0] decode_sel={
     (dly_addr[2:0]==2)?1'b1:1'b0,
     (dly_addr[2:0]==1)?1'b1:1'b0,
     (dly_addr[2:0]==0)?1'b1:1'b0};
-
+assign decode_addr24={
+  (dly_addr[4:3] == 2'h2)?decode_sel[7:0]:8'h0,
+  (dly_addr[4:3] == 2'h1)?decode_sel[7:0]:8'h0,
+  (dly_addr[4:3] == 2'h0)?decode_sel[7:0]:8'h0};
 always @ (posedge clk_div or posedge rst) begin
     if (rst) begin
         in_a_r <= 0; in_ba_r <= 6'b0;
@@ -89,7 +96,8 @@ always @ (posedge clk_div or posedge rst) begin
         dly_data_r<=dly_data;
         set_r<=set;
         ld_dly_cmd <=  {8 { dly_addr[4] & dly_addr[3] & ld_delay}} & decode_sel[7:0];
-        ld_dly_addr <= {(ADDRESS_NUMBER) {ld_delay}} & decode_addr;
+//        ld_dly_addr <= {(ADDRESS_NUMBER) {ld_delay}} & decode_addr;
+        ld_dly_addr <= {(ADDRESS_NUMBER) {ld_delay}} & decode_addr24[ADDRESS_NUMBER-1:0];
     end
 end     
 
@@ -97,7 +105,7 @@ end
 generate
     genvar i;
     for (i=0; i<ADDRESS_NUMBER; i=i+1) begin: addr_block
-       assign decode_addr[i]=(ld_dly_addr[4:0] == i)?1'b1:1'b0;
+//       assign decode_addr[i]=(ld_dly_addr[4:0] == i)?1'b1:1'b0;
     cmda_single #(
          .IODELAY_GRP(IODELAY_GRP),
          .IOSTANDARD(IOSTANDARD),

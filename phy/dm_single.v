@@ -19,7 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/> .
  *******************************************************************************/
 `timescale 1ns/1ps
-//`define use_iobuf 1
+// ISE 14.7 does not have OBUFT_DCIEN
+`define USE_IOBUF 1
 module  dm_single #(
     parameter IODELAY_GRP ="IODELAY_MEMORY",
     parameter IBUF_LOW_PWR ="TRUE", //SuppressThisWarning VEditor not used in OBUF_DCIEN
@@ -69,7 +70,7 @@ odelay_fine_pipe # (
     .data_in(d_ser),
     .data_out(dq_data_dly)
 );
-`ifdef use_iobuf
+`ifdef USE_IOBUF
 IOBUF_DCIEN #(
     .IBUF_LOW_PWR(IBUF_LOW_PWR), //
     .IOSTANDARD(IOSTANDARD),

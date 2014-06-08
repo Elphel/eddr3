@@ -369,13 +369,13 @@ assign gpio_in={
     
     phy_locked_mmcm,   //  1 1
     phy_locked_pll,    //  1 1
-    phy_dly_ready,     //  1 0
     phy_dci_ready,     //  1 0
+    phy_dly_ready,     //  1 0
     
     locked_mmcm,       //  1 1
     locked_pll,        //  1 1
-    dly_ready,         //  1 0
     dci_ready,         //  1 0
+    dly_ready,         //  1 0
     
     ps_out[7:4],       // 4'b0 input[7:0] 4'b0
     

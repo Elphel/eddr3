@@ -4,4 +4,6 @@ vivado_*
 syntax_*
 simulation/*
 ise_*
-
+attic/*
+IVERILOG_INCLUDE.v
+eddr3.prj

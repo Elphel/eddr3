@@ -436,7 +436,8 @@ def set_read_pattern( #    task set_read_pattern;
                 0)                 # 1'b0)                   # add NOP after the current command, keep other data
     axi_write_single(cmd_addr, data)
     cmd_addr = cmd_addr + 4
-    data = encode_seq_skip(5,0,0,0) # tMOD
+#    data = encode_seq_skip(5,0,0,0) # tMOD
+    data = encode_seq_skip(5,0,1,0) # tMOD Early DCI
     axi_write_single(cmd_addr, data)
     cmd_addr = cmd_addr + 4
 # first read
@@ -622,7 +623,8 @@ def set_read_block(
     axi_write_single(cmd_addr, data)
     cmd_addr = cmd_addr + 4
 # see if pause is needed . See when buffer read should be started - maybe before WR command
-    data = encode_seq_skip(1,0,0,0)
+#    data = encode_seq_skip(1,0,0,0)
+    data = encode_seq_skip(1,0,1,0) #early DCI enable
     axi_write_single(cmd_addr, data)
     cmd_addr = cmd_addr + 4
 # first read
@@ -1218,7 +1220,8 @@ def set_refresh( #     task set_refresh;
     axi_write_single(BASEADDR_REFRESH_PER, t_refi)
 
 def set_mrs( #    task set_mrs; # will also calibrate ZQ
-        reset_dll): # input reset_dll;
+        reset_dll, # input reset_dll;
+        cl): #CAS latency code: 2 - 5, 4 - 6, 6 - 7
     global BASEADDR_CMD0
         # reg [17:0] mr0;
         # reg [17:0] mr1;
@@ -1230,7 +1233,7 @@ def set_mrs( #    task set_mrs; # will also calibrate ZQ
              0,         #  1'h0,      #       pd; # precharge power down 0 - dll off (slow exit), 1 - dll on (fast exit)
              2,         #  3'h2,      # [2:0] wr; # write recovery (encode ceil(tWR/tCK)) # 3'b010:  6
              reset_dll, #       dll_rst; # 1 - dll reset (self clearing bit)
-             4,         #  4'h4,      # [3:0] cl; # CAS latency: # 0100:  6 (time 15ns)
+             cl & 0x0f, # 4,         #  4'h4,      # [3:0] cl; # CAS latency: # 0100:  6 (time 15ns)
              0,         #  1'h0,      #       bt; # read burst type: 0 sequential (nibble), 1 - interleave
              0)         #  2'h0)       # [1:0] bl; # burst length: # 2'b00 - fixed BL8
 
@@ -1539,7 +1542,7 @@ def axi_set_wbuf_delay(#    task axi_set_wbuf_delay;
 
 def set_all_sequences(): #    task set_all_sequences;
     print("SET MRS")    
-    set_mrs(1)
+    set_mrs(1,4) # CL=5 (6: CL=7)
     print("SET REFRESH")    
     set_refresh(
                 50, # input [ 9:0] t_rfc; # =50 for tCK=2.5ns
@@ -1680,9 +1683,9 @@ elif command=="set_refresh":
     set_refresh(args[0],args[1])
     print("set_refresh(0x%x,0x%x) OK"%(args[0],args[1]))
 elif command=="set_mrs":
-    check_args(1,command,args)
-    set_mrs(args[0])
-    print("set_mrs(0x%x) OK"%(args[0]))
+    check_args(2,command,args)
+    set_mrs(args[0],args[1])
+    print("set_mrs(0x%x,0x%x) OK"%(args[0],args[1]))
 elif command=="axi_set_delays":
     check_args(0,command,args)
     axi_set_delays()

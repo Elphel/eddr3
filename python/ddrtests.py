@@ -402,7 +402,8 @@ def encode_seq_skip(
 
   # Set MR3, read nrep*8 words, save to buffer (port0). No ACTIVATE/PRECHARGE are needed/allowed
 def set_read_pattern( #    task set_read_pattern;
-        nrep): # input integer nrep;
+        nrep, # input integer nrep;
+        npat):#trying pattern type (only 0 defined)
 #        reg   [31:0] cmd_addr;
 #        reg   [31:0] data;
 #        reg                 [17:0] mr3_norm;
@@ -415,7 +416,7 @@ def set_read_pattern( #    task set_read_pattern;
                 0) # 2'h0)    # [1:0] mpr_rf; # MPR read function: 2'b00: predefined pattern 0101...
     mr3_pattern = ddr3_mr3 (
                 1, # 1'h1,     #       mpr;    # MPR mode: 0 - normal, 1 - dataflow from MPR
-                0) # 2'h0)    # [1:0] mpr_rf; # MPR read function: 2'b00: predefined pattern 0101...
+                npat & 3) # 2'h0)    # [1:0] mpr_rf; # MPR read function: 2'b00: predefined pattern 0101...
 
 # Set pattern mode
     data =  encode_seq_word(
@@ -537,7 +538,8 @@ def set_read_pattern( #    task set_read_pattern;
             ((0 &     0x1) <<  6) | # phy_dqs_en_in #phy_dqs_tri_in,  # tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
             ((0 &     0x1) <<  5) | # phy_dqs_toggle_en #enable toggle DQS according to the pattern
             (( 1 &    0x1) <<  4) | # phy_dci_en_in  #phy_dci_in,      # DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
-            (( 1 &    0x1) <<  3) | # phy_buf_wr # connect to external buffer (but only if not paused)
+#            (( 1 &    0x1) <<  3) | # phy_buf_wr # connect to external buffer (but only if not paused)
+            ((0 &    0x1) <<  3) | # phy_buf_wr # connect to external buffer (but only if not paused)
             ((0 &     0x1) <<  2) | # phy_buf_rd # connect to external buffer (but only if not paused)
             ((0 &     0x1) <<  1))  # add_nop    # add NOP after the current command, keep other data
     axi_write_single(cmd_addr, data)
@@ -783,7 +785,8 @@ def set_write_block(
     axi_write_single(cmd_addr, data)
     cmd_addr = cmd_addr + 4
 # see if pause is needed . See when buffer read should be started - maybe before WR command
-    data = encode_seq_skip(1,0,0,0) # tRCD
+#    data = encode_seq_skip(1,0,0,0) # tRCD
+    data = encode_seq_skip(2,0,0,0) # tRCD
     axi_write_single(cmd_addr, data)
     cmd_addr = cmd_addr + 4
 # first write
@@ -794,13 +797,15 @@ def set_write_block(
             ((0x3 &   0x7) << 11) | # 3'b011, # phy_rcw_in[2:0],      # {ras,cas,we}
             (( 1 &    0x1) << 10) | # phy_odt_in
             ((0 &     0x1) <<  9) | # phy_cke_inv   # invert CKE
-            (( 1 &    0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
+#            (( 1 &    0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
+            ((0  &    0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
             ((0 &     0x1) <<  7) | # phy_dq_en_in #phy_dq_tri_in,   # tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
             ((0 &     0x1) <<  6) | # phy_dqs_en_in #phy_dqs_tri_in,  # tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
             ((0 &     0x1) <<  5) | # phy_dqs_toggle_en #enable toggle DQS according to the pattern
             ((0 &     0x1) <<  4) | # phy_dci_en_in  #phy_dci_in,      # DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
             ((0 &     0x1) <<  3) | # phy_buf_wr # connect to external buffer (but only if not paused)
-            ((0 &     0x1) <<  2) | # phy_buf_rd # connect to external buffer (but only if not paused)
+#            ((0 &     0x1) <<  2) | # phy_buf_rd # connect to external buffer (but only if not paused)
+            (( 1 &     0x1) <<  2) | # phy_buf_rd # connect to external buffer (but only if not paused)
             ((0 &     0x1) <<  1))  # add_nop    # add NOP after the current command, keep other data
     axi_write_single(cmd_addr, data)
     cmd_addr = cmd_addr + 4
@@ -831,7 +836,8 @@ def set_write_block(
                 ((0x3 &   0x7) << 11) | # 3'b011, # phy_rcw_in[2:0],      # {ras,cas,we}
                 (( 1 &    0x1) << 10) | # phy_odt_in
                 ((0 &     0x1) <<  9) | # phy_cke_inv   # invert CKE
-                (( 1 &    0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
+#                (( 1 &    0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
+                (( 0 &    0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
                 (( 1 &    0x1) <<  7) | # phy_dq_en_in #phy_dq_tri_in,   # tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
                 (( 1 &    0x1) <<  6) | # phy_dqs_en_in #phy_dqs_tri_in,  # tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
                 (( 1 &    0x1) <<  5) | # phy_dqs_toggle_en #enable toggle DQS according to the pattern
@@ -871,7 +877,8 @@ def set_write_block(
             (( 1 &    0x1) <<  5) | # phy_dqs_toggle_en #enable toggle DQS according to the pattern
             ((0 &     0x1) <<  4) | # phy_dci_en_in  #phy_dci_in,      # DCI disable, both DQ and DQS lines (internal logic and timing sequencer for 0->1 and 1->0)
             ((0 &     0x1) <<  3) | # phy_buf_wr # connect to external buffer (but only if not paused)
-            (( 1 &    0x1) <<  2) | # phy_buf_rd # connect to external buffer (but only if not paused)
+#            (( 1 &    0x1) <<  2) | # phy_buf_rd # connect to external buffer (but only if not paused)
+            (( 0 &    0x1) <<  2) | # phy_buf_rd # connect to external buffer (but only if not paused)
             ((0 &     0x1) <<  1))  # add_nop    # add NOP after the current command, keep other data
     axi_write_single(cmd_addr, data)
     cmd_addr = cmd_addr + 4
@@ -1521,6 +1528,13 @@ def axi_set_phase( #    task axi_set_phase;
 
 #   target_phase <= phase;
 
+def axi_set_wbuf_delay(#    task axi_set_wbuf_delay;
+        delay): #input [3:0] delay;
+    global BASEADDR_WBUF_DELAY
+    print("SET WBUF DELAY to 0x%x"%delay);
+    axi_write_single(BASEADDR_WBUF_DELAY, delay);
+
+
 def set_all_sequences(): #    task set_all_sequences;
     print("SET MRS")    
     set_mrs(1)
@@ -1531,7 +1545,7 @@ def set_all_sequences(): #    task set_all_sequences;
     print("SET WRITE LEVELING")    
     set_write_lev(16) # write leveling, 16 times   (full buffer - 128) 
     print("SET READ PATTERN")    
-    set_read_pattern(8) # 8x2*64 bits, 32x32 bits to read
+    set_read_pattern(8,0) # 8x2*64 bits, 32x32 bits to read (second 0 - pattern type, only 0 defined)
     print("SET WRITE BLOCK")    
     set_write_block(
                 5,      # 3'h5,     # bank
@@ -1546,7 +1560,7 @@ def set_all_sequences(): #    task set_all_sequences;
             )
 
 def set_up(): #    task set_up;
-    global DLY_DQ_IDELAY,DLY_DQ_ODELAY,DLY_DQS_IDELAY,DLY_DQS_ODELAY,DLY_DM_ODELAY,DLY_CMDA_ODELAY
+    global DLY_DQ_IDELAY,DLY_DQ_ODELAY,DLY_DQS_IDELAY,DLY_DQS_ODELAY,DLY_DM_ODELAY,DLY_CMDA_ODELAY,WBUF_DLY_DFLT,DLY_PHASE
 # set dq /dqs tristate on/off patterns
     axi_set_tristate_patterns()
 # set patterns for DM (always 0) and DQS - always the same (may try different for write lev.)
@@ -1560,6 +1574,8 @@ def set_up(): #    task set_up;
             #axi_set_delays;
 #    set clock phase relative to DDR clk
     axi_set_phase(DLY_PHASE)
+    
+    axi_set_wbuf_delay(WBUF_DLY_DFLT)
 # main
 if len(sys.argv)<2:
     print ("Usage: %s command [hex_parameter, ...]"%sys.argv[0])
@@ -1641,8 +1657,8 @@ elif command=="read_buf":
     read_buf(args[0])
     print("read_buf() OK")
 elif command=="set_read_pattern":
-    check_args(1,command,args)
-    set_read_pattern(args[0])
+    check_args(2,command,args)
+    set_read_pattern(args[0],args[1])
     print("set_read_pattern(0x%x) OK"%(args[0]))
 elif command=="set_read_block":
     check_args(3,command,args)
@@ -1725,6 +1741,11 @@ elif command=="axi_set_phase":
     check_args(1,command,args)
     axi_set_phase(args[0])
     print("axi_set_phase(0x%x) OK"%(args[0]))
+
+elif command=="axi_set_wbuf_delay":
+    check_args(1,command,args)
+    axi_set_wbuf_delay(args[0])
+    print("axi_set_wbuf_delay(0x%x) OK"%(args[0]))
     
 elif command=="set_write_lev":
     check_args(1,command,args)

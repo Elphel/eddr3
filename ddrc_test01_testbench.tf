@@ -432,7 +432,8 @@ always #(CLKIN_PERIOD/2) CLK <= ~CLK;
 // Set special values for DQS idelay for write leveling
     axi_set_dqs_idelay_wlv;
 // Set write buffer (from DDR3) WE signal delay for write leveling mode
-    axi_write_single(BASEADDR_WBUF_DELAY, {28'h0, WBUF_DLY_WLV});
+//    axi_write_single(BASEADDR_WBUF_DELAY, {28'h0, WBUF_DLY_WLV});
+    axi_set_wbuf_delay(WBUF_DLY_WLV);
     
 //axi_set_dqs_idelay_nominal;
     run_write_lev;
@@ -475,7 +476,8 @@ always #(CLKIN_PERIOD/2) CLK <= ~CLK;
 // restore normal dqs idelay (after write leveling)
     axi_set_dqs_idelay_nominal;
 // restore normal write buffer (from DDR3) WE signal delay
-    axi_write_single(BASEADDR_WBUF_DELAY, {28'h0, WBUF_DLY_DFLT});
+//    axi_write_single(BASEADDR_WBUF_DELAY, {28'h0, WBUF_DLY_DFLT});
+    axi_set_wbuf_delay(WBUF_DLY_DFLT);
 
 // test reading pattern       
 //    set_read_pattern(8); // 8x2*64 bits, 32x32 bits to read
@@ -2580,7 +2582,17 @@ simul_axi_read simul_axi_read_i(
             target_phase <= phase;
         end
     endtask
+
+    task axi_set_wbuf_delay;
+        input [3:0] delay;
+        begin
+            $display("SET WBUF DELAY to 0x%x @ %t",delay,$time);
+            axi_write_single(BASEADDR_WBUF_DELAY, {28'h0, delay});
+        end
+    endtask
+    
 /*
+
     assign rdata={21'b0,run_busy,locked,ps_rdy,ps_out[7:0]};
 */    
     task wait_phase_shifter_ready;

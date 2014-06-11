@@ -22,6 +22,8 @@
 
 module  dq_single #(
     parameter IODELAY_GRP ="IODELAY_MEMORY",
+    parameter integer IDELAY_VALUE = 0,
+    parameter integer ODELAY_VALUE = 0,
     parameter IBUF_LOW_PWR ="TRUE",
     parameter IOSTANDARD = "SSTL15_T_DCI",
     parameter SLEW = "SLOW",
@@ -68,7 +70,7 @@ oserdes_mem#(
 );
 odelay_fine_pipe # (
     .IODELAY_GRP(IODELAY_GRP),
-    .DELAY_VALUE(0),
+    .DELAY_VALUE(ODELAY_VALUE),
     .REFCLK_FREQUENCY(REFCLK_FREQUENCY),
     .HIGH_PERFORMANCE_MODE(HIGH_PERFORMANCE_MODE)
 ) dq_out_dly_i(
@@ -96,7 +98,7 @@ IOBUF_DCIEN #(
     
 idelay_fine_pipe # (
     .IODELAY_GRP(IODELAY_GRP),
-    .DELAY_VALUE(0),
+    .DELAY_VALUE(IDELAY_VALUE),
     .REFCLK_FREQUENCY(REFCLK_FREQUENCY),
     .HIGH_PERFORMANCE_MODE(HIGH_PERFORMANCE_MODE)
 ) dq_in_dly_i(

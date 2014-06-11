@@ -22,6 +22,7 @@
 
 module  cmda_single #(
     parameter IODELAY_GRP ="IODELAY_MEMORY",
+    parameter integer ODELAY_VALUE = 0,
     parameter IOSTANDARD = "SSTL15",
     parameter SLEW = "SLOW",
     parameter real REFCLK_FREQUENCY = 300.0,
@@ -58,7 +59,7 @@ oserdes_mem#(
 );
 odelay_fine_pipe # (
     .IODELAY_GRP(IODELAY_GRP),
-    .DELAY_VALUE(0),
+    .DELAY_VALUE(ODELAY_VALUE),
     .REFCLK_FREQUENCY(REFCLK_FREQUENCY),
     .HIGH_PERFORMANCE_MODE(HIGH_PERFORMANCE_MODE)
 ) dqs_out_dly_i(

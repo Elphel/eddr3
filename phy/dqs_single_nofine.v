@@ -1,16 +1,16 @@
 /*******************************************************************************
- * Module: dqs_single
+ * Module: dqs_single_nofine
  * Date:2014-04-26  
  * Author: Andrey Filippov
  * Description: Single-bit DDR3 DQS I/O
  *
  * Copyright (c) 2014 Elphel, Inc.
- * dqs_single.v is free software; you can redistribute it and/or modify
+ * dqs_single_nofine.v is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- *  dqs_single.v is distributed in the hope that it will be useful,
+ *  dqs_single_nofine.v is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -19,15 +19,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/> .
  *******************************************************************************/
 `timescale 1ns/1ps
-module  dqs_single #(
+module  dqs_single_nofine #(
     parameter IODELAY_GRP ="IODELAY_MEMORY",
-    parameter integer IDELAY_VALUE = 0,
+    parameter integer IDELAY_VALUE = 0, // same scale as for fine delay
     parameter integer ODELAY_VALUE = 0,
     parameter IBUF_LOW_PWR ="TRUE",
     parameter IOSTANDARD = "DIFF_SSTL15_T_DCI",
     parameter SLEW = "SLOW",
     parameter real REFCLK_FREQUENCY = 300.0,
     parameter HIGH_PERFORMANCE_MODE = "FALSE"
+    
 )(
     inout       dqs,
     inout       ndqs,
@@ -94,9 +95,9 @@ IOBUFDS_DCIEN #(
     .IBUFDISABLE(1'b0),
     .I(dqs_data_dly), //dqs_data),
     .T(dqs_tri));
-idelay_fine_pipe # (
+idelay_nofine # (
     .IODELAY_GRP(IODELAY_GRP),
-    .DELAY_VALUE(IDELAY_VALUE),
+    .DELAY_VALUE(IDELAY_VALUE>>3),
     .REFCLK_FREQUENCY(REFCLK_FREQUENCY),
     .HIGH_PERFORMANCE_MODE(HIGH_PERFORMANCE_MODE)
 ) dqs_in_dly_i(
@@ -104,7 +105,7 @@ idelay_fine_pipe # (
     .rst(rst),
     .set(set_idelay),
     .ld(ld_idelay),
-    .delay(dly_data[7:0]),
+    .delay(dly_data[7:3]),
     .data_in(dqs_di),
     .data_out(dqs_received_dly)
 );

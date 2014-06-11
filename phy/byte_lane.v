@@ -19,7 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/> .
  *******************************************************************************/
 `timescale 1ns/1ps
-
+// minimizing total DQS in delay to match DQ (finedelay stage adds some?)
+`define NOFINEDELAY_DQS 1
 module  byte_lane #(
     parameter IODELAY_GRP ="IODELAY_MEMORY",
     parameter IBUF_LOW_PWR ="TRUE",
@@ -145,7 +146,11 @@ dm_single #(
         .ld_odelay(ld_odly_dm)         // clk_div synchronous set odealy value from loaded
 );
 
+`ifdef NOFINEDELAY_DQS
+dqs_single_nofine #(
+`else
 dqs_single #(
+`endif
         .IODELAY_GRP(IODELAY_GRP),
         .IBUF_LOW_PWR(IBUF_LOW_PWR),
         .IOSTANDARD(IOSTANDARD_DQS),

@@ -23,6 +23,8 @@
 `define USE_IOBUF 1
 module  dm_single #(
     parameter IODELAY_GRP ="IODELAY_MEMORY",
+//    parameter integer IDELAY_VALUE = 0,
+    parameter integer ODELAY_VALUE = 0,
     parameter IBUF_LOW_PWR ="TRUE", //SuppressThisWarning VEditor not used in OBUF_DCIEN
     parameter IOSTANDARD = "SSTL15_T_DCI",
     parameter SLEW = "SLOW",
@@ -58,7 +60,7 @@ oserdes_mem#(
 );
 odelay_fine_pipe # (
     .IODELAY_GRP(IODELAY_GRP),
-    .DELAY_VALUE(0),
+    .DELAY_VALUE(ODELAY_VALUE),
     .REFCLK_FREQUENCY(REFCLK_FREQUENCY),
     .HIGH_PERFORMANCE_MODE(HIGH_PERFORMANCE_MODE)
 ) dm_out_dly_i(

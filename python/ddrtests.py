@@ -403,7 +403,8 @@ def encode_seq_skip(
   # Set MR3, read nrep*8 words, save to buffer (port0). No ACTIVATE/PRECHARGE are needed/allowed
 def set_read_pattern( #    task set_read_pattern;
         nrep, # input integer nrep;
-        npat):#trying pattern type (only 0 defined)
+        npat, #trying pattern type (only 0 defined)
+        scnd):#adjusting first/seccond 
 #        reg   [31:0] cmd_addr;
 #        reg   [31:0] data;
 #        reg                 [17:0] mr3_norm;
@@ -446,7 +447,7 @@ def set_read_pattern( #    task set_read_pattern;
             ((0x2 &   0x7) << 11) | # 3'b010, # phy_rcw_in[2:0],      # {ras,cas,we}
             ((0 &     0x1) << 10) | # phy_odt_in
             ((0 &     0x1) <<  9) | # phy_cke_inv   # invert CKE
-            (( 1 &    0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
+            ((scnd &  0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
             ((0 &     0x1) <<  7) | # phy_dq_en_in #phy_dq_tri_in,   # tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
             ((0 &     0x1) <<  6) | # phy_dqs_en_in #phy_dqs_tri_in,  # tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
             ((0 &     0x1) <<  5) | # phy_dqs_toggle_en #enable toggle DQS according to the pattern
@@ -482,7 +483,7 @@ def set_read_pattern( #    task set_read_pattern;
                 ((0x2 &   0x7) << 11) | # 3'b010, # phy_rcw_in[2:0],      # {ras,cas,we}
                 ((0 &     0x1) << 10) | # phy_odt_in
                 ((0 &     0x1) <<  9) | # phy_cke_inv   # invert CKE
-                (( 1 &    0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
+                ((scnd &  0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
                 ((0 &     0x1) <<  7) | # phy_dq_en_in #phy_dq_tri_in,   # tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
                 ((0 &     0x1) <<  6) | # phy_dqs_en_in #phy_dqs_tri_in,  # tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
                 ((0 &     0x1) <<  5) | # phy_dqs_toggle_en #enable toggle DQS according to the pattern
@@ -596,7 +597,8 @@ def set_read_pattern( #    task set_read_pattern;
 def set_read_block(
         ba,        # [ 2:0] bank address
         ra,        # [14:0] row address
-        ca):        # [ 9:0] column address
+        ca,        # [ 9:0] column address
+        scnd):     # use second (delayed) clock for read command
 #        cmd_addr,  # command address (bit 10 - auto/manual banks)
 #        data):     # [31:0] - command data
     global BASEADDR_CMD0, READ_BLOCK_OFFSET
@@ -631,7 +633,7 @@ def set_read_block(
             ((0x2 &   0x7) << 11) | # 3'b010, # phy_rcw_in[2:0],      # {ras,cas,we}
             ((0 &     0x1) << 10) | # phy_odt_in
             ((0 &     0x1) <<  9) | # phy_cke_inv   # invert CKE
-            (( 1 &    0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
+            ((scnd &  0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
             ((0 &     0x1) <<  7) | # phy_dq_en_in #phy_dq_tri_in,   # tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
             ((0 &     0x1) <<  6) | # phy_dqs_en_in #phy_dqs_tri_in,  # tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
             ((0 &     0x1) <<  5) | # phy_dqs_toggle_en #enable toggle DQS according to the pattern
@@ -648,7 +650,7 @@ def set_read_block(
             ((0x0 &   0x7) << 11) | # 3'b000, # phy_rcw_in[2:0],      # {ras,cas,we}
             ((0 &     0x1) << 10) | # phy_odt_in
             ((0 &     0x1) <<  9) | # phy_cke_inv   # invert CKE
-            (( 1 &    0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
+            ((scnd &  0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
             ((0 &     0x1) <<  7) | # phy_dq_en_in #phy_dq_tri_in,   # tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
             ((0 &     0x1) <<  6) | # phy_dqs_en_in #phy_dqs_tri_in,  # tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
             ((0 &     0x1) <<  5) | # phy_dqs_toggle_en #enable toggle DQS according to the pattern
@@ -667,7 +669,7 @@ def set_read_block(
                 ((0x2 &   0x7) << 11) | # 3'b010, # phy_rcw_in[2:0],      # {ras,cas,we}
                 ((0 &     0x1) << 10) | # phy_odt_in
                 ((0 &     0x1) <<  9) | # phy_cke_inv   # invert CKE
-                (( 1 &    0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
+                ((scnd &  0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
                 ((0 &     0x1) <<  7) | # phy_dq_en_in #phy_dq_tri_in,   # tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
                 ((0 &     0x1) <<  6) | # phy_dqs_en_in #phy_dqs_tri_in,  # tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
                 ((0 &     0x1) <<  5) | # phy_dqs_toggle_en #enable toggle DQS according to the pattern
@@ -684,7 +686,7 @@ def set_read_block(
             ((0x0 &   0x7) << 11) | # 3'b000, # phy_rcw_in[2:0],      # {ras,cas,we}
             ((0 &     0x1) << 10) | # phy_odt_in
             ((0 &     0x1) <<  9) | # phy_cke_inv   # invert CKE
-            (( 1 &    0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
+            ((scnd &  0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
             ((0 &     0x1) <<  7) | # phy_dq_en_in #phy_dq_tri_in,   # tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
             ((0 &     0x1) <<  6) | # phy_dqs_en_in #phy_dqs_tri_in,  # tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
             ((0 &     0x1) <<  5) | # phy_dqs_toggle_en #enable toggle DQS according to the pattern
@@ -701,7 +703,7 @@ def set_read_block(
             ((0x0 &   0x7) << 11) | # 3'b000, # phy_rcw_in[2:0],      # {ras,cas,we}
             ((0 &     0x1) << 10) | # phy_odt_in
             ((0 &     0x1) <<  9) | # phy_cke_inv   # invert CKE
-            (( 1 &    0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
+            ((scnd &  0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
             ((0 &     0x1) <<  7) | # phy_dq_en_in #phy_dq_tri_in,   # tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
             ((0 &     0x1) <<  6) | # phy_dqs_en_in #phy_dqs_tri_in,  # tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
             ((0 &     0x1) <<  5) | # phy_dqs_toggle_en #enable toggle DQS according to the pattern
@@ -718,7 +720,7 @@ def set_read_block(
             ((0x0 &   0x7) << 11) | # 3'b000, # phy_rcw_in[2:0],      # {ras,cas,we}
             ((0 &     0x1) << 10) | # phy_odt_in
             ((0 &     0x1) <<  9) | # phy_cke_inv   # invert CKE
-            (( 1 &    0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
+            ((scnd &  0x1) <<  8) | # phy_sel_in   # first/second half-cycle, other will be nop (cke+odt applicable to both)
             ((0 &     0x1) <<  7) | # phy_dq_en_in #phy_dq_tri_in,   # tristate DQ  lines (internal timing sequencer for 0->1 and 1->0)
             ((0 &     0x1) <<  6) | # phy_dqs_en_in #phy_dqs_tri_in,  # tristate DQS lines (internal timing sequencer for 0->1 and 1->0)
             ((0 &     0x1) <<  5) | # phy_dqs_toggle_en #enable toggle DQS according to the pattern
@@ -1545,7 +1547,7 @@ def set_all_sequences(): #    task set_all_sequences;
     print("SET WRITE LEVELING")    
     set_write_lev(16) # write leveling, 16 times   (full buffer - 128) 
     print("SET READ PATTERN")    
-    set_read_pattern(8,0) # 8x2*64 bits, 32x32 bits to read (second 0 - pattern type, only 0 defined)
+    set_read_pattern(8,0,1) # 8x2*64 bits, 32x32 bits to read (second 0 - pattern type, only 0 defined)
     print("SET WRITE BLOCK")    
     set_write_block(
                 5,      # 3'h5,     # bank
@@ -1556,7 +1558,8 @@ def set_all_sequences(): #    task set_all_sequences;
     set_read_block(
                 5,      # 3'h5,     # bank
                 0x1234, # 15'h1234, # row address
-                0x100   # 10'h100   # column address
+                0x100,   # 10'h100   # column address
+                1       # use second clock for read commands
             )
 
 def set_up(): #    task set_up;
@@ -1657,13 +1660,13 @@ elif command=="read_buf":
     read_buf(args[0])
     print("read_buf() OK")
 elif command=="set_read_pattern":
-    check_args(2,command,args)
-    set_read_pattern(args[0],args[1])
-    print("set_read_pattern(0x%x) OK"%(args[0]))
-elif command=="set_read_block":
     check_args(3,command,args)
-    set_read_block(args[0],args[1],args[2])
-    print("set_read_block(0x%x,0x%x,0x%x) OK"%(args[0],args[1],args[2]))
+    set_read_pattern(args[0],args[1],args[2])
+    print("set_read_pattern(0x%x,0x%x,0x%x) OK"%(args[0],args[1],args[2]))
+elif command=="set_read_block":
+    check_args(4,command,args)
+    set_read_block(args[0],args[1],args[2],args[3])
+    print("set_read_block(0x%x,0x%x,0x%x,0x%x) OK"%(args[0],args[1],args[2],args[3]))
 elif command=="set_write_block":
     check_args(3,command,args)
     set_write_block(args[0],args[1],args[2])

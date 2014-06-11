@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.49 (w)1999-2013 BSI
-[*] Sat Jun  7 21:41:06 2014
+[*] Tue Jun 10 23:54:44 2014
 [*]
-[dumpfile] "/data/vdt/vdt-projects/eddr3/simulation/ddrc_test01_testbench-latest.lxt"
-[dumpfile_mtime] "Thu Jun  5 05:22:25 2014"
-[dumpfile_size] 80462049
+[dumpfile] "/data/vdt/vdt-projects/eddr3/simulation/ddrc_test01_testbench-20140610170704485.lxt"
+[dumpfile_mtime] "Tue Jun 10 23:11:05 2014"
+[dumpfile_size] 75451369
 [savefile] "/data/vdt/vdt-projects/eddr3/ddrc_test01_testbench.sav"
-[timestart] 99857000
+[timestart] 137157300
 [size] 1920 1180
-[pos] -1921 -1
-*-19.410349 101060000 114486875 114489375 114571875 114574375 115289323 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -1 -1
+*-15.445735 137359375 134765625 134912600 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] ddrc_test01_testbench.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.axibram_read_i.
@@ -33,11 +33,12 @@
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.pll_base_i.PLLE2_BASE_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.pll_base_i.PLLE2_BASE_i.plle2_adv_1.
 [treeopen] ddrc_test01_testbench.simul_axi_master_rdaddr_i.
+[treeopen] ddrc_test01_testbench.simul_axi_master_wdata_i.
 [treeopen] ddrc_test01_testbench.simul_axi_master_wraddr_i.
 [sst_width] 219
 [signals_width] 367
 [sst_expanded] 1
-[sst_vpaned_height] 740
+[sst_vpaned_height] 820
 @c00200
 -PS7_AXI
 @22
@@ -844,8 +845,6 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.set[0]
 @22
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.tin_dq[7:0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.tin_dqs[7:0]
-@28
-ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.dbg_reg1[0]
 @200
 -
 @1401200
@@ -1098,7 +1097,7 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_control_i.wdata_fifo_out_r[31:0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_control_i.wr_en[0]
 @1401200
 -ddrc_control_i
-@800200
+@c00200
 -ddrc_status
 @28
 ddrc_test01_testbench.ddrc_test01_i.ddrc_status_i.busy[0]
@@ -1122,7 +1121,7 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_status_i.ps_rdy[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_status_i.rdata[31:0]
 @28
 ddrc_test01_testbench.ddrc_test01_i.ddrc_status_i.run_busy[0]
-@1000200
+@1401200
 -ddrc_status
 @c00200
 -ddr_refresh
@@ -1528,8 +1527,9 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.sequence_done[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.set[0]
 @1401200
 -ddrc_sequencer
-@c00200
+@800200
 -ddr_sequencer_i_selected
+@c00200
 -tristate_control
 @28
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.SDODT[0]
@@ -1631,6 +1631,7 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.buf_wdata_negedge[63:0]
 @28
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.buf_wr[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.buf_wr_negedge[0]
+@29
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.mclk[0]
 @22
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.cmd0_addr[9:0]
@@ -1706,7 +1707,7 @@ ddrc_test01_testbench.ddrc_test01_i.en_port0_rd[0]
 ddrc_test01_testbench.ddrc_test01_i.en_port0_regen[0]
 @200
 -
-@1401200
+@1000200
 -ddr_sequencer_i_selected
 @c00200
 -ddrc_test01
@@ -1846,6 +1847,42 @@ ddrc_test01_testbench.ddrc_test01_i.status_rdata[31:0]
 @c00200
 -axibram_write_i
 @28
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.write_in_progress_w[0]
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.write_in_progress[0]
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.w_nempty[0]
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.w_nempty_ready[0]
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.bram_we_w[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.bram_waddr[12:0]
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.bram_wdata[31:0]
+@200
+-simul_wdata
+@28
+ddrc_test01_testbench.simul_axi_master_wdata_i.set_cmd[0]
+ddrc_test01_testbench.simul_axi_master_wdata_i.wvalid[0]
+@200
+-simul_waddr
+@28
+ddrc_test01_testbench.simul_axi_master_wraddr_i.set_cmd[0]
+ddrc_test01_testbench.simul_axi_master_wraddr_i.awvalid[0]
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.start_write_burst_w[0]
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.awvalid[0]
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wvalid[0]
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.aw_nempty[0]
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.aw_nempty_ready[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.awlen[3:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.w_nempty[0]
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.w_nempty_ready[0]
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.start_write_burst_w[0]
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.bram_we_w[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.write_left[3:0]
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_num_in_fifo[3:0]
+@200
+-
+@28
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.aclk[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.aw_half_full[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.aw_nempty[0]
@@ -1882,6 +1919,7 @@ ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.bram_wstb[3:0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.bready[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.bresp[1:0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.bresp_in[1:0]
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.bresp_re[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.bvalid[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.dev_ready[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.dev_ready_r[0]
@@ -1895,6 +1933,9 @@ ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wburst[1:0]
 @22
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata[31:0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_out[31:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.was_bresp_re[0]
+@22
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wid[11:0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wid_out[11:0]
 @28
@@ -1912,25 +1953,27 @@ ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wstb[3:0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wstb_out[3:0]
 @28
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wvalid[0]
-@c00200
+@800200
 -axibram_write_waddr
+@28
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.awvalid[0]
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.awready[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.awaddr[31:0]
+@200
+-
 @28
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.clk[0]
 @22
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.data_in[32:0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.data_out[32:0]
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.fill[4:0]
+ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.fill[3:0]
 @28
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.full[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.half_full[0]
 @22
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.inreg[32:0]
 @28
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.just_one[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.nempty[0]
-@22
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.next_fill[4:0]
-@28
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.out_full[0]
 @22
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.outreg[32:0]
@@ -1944,27 +1987,21 @@ ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.wa[3:0]
 @28
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.we[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.wem[0]
-@1401200
+@1000200
 -axibram_write_waddr
-@c00200
+@800200
 -axibram_write_wdata
 @28
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.clk[0]
 @22
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.data_in[48:0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.data_out[48:0]
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.fill[4:0]
 @28
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.full[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.half_full[0]
 @22
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.inreg[48:0]
 @28
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.just_one[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.nempty[0]
-@22
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.next_fill[4:0]
-@28
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.out_full[0]
 @22
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.outreg[48:0]
@@ -1978,8 +2015,9 @@ ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.wa[3:0]
 @28
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.we[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.wem[0]
-@1401200
+@1000200
 -axibram_write_wdata
+@1401200
 -axibram_write_i
 @c00200
 -wresp_i
@@ -1991,12 +2029,8 @@ ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wresp_i.wem[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wresp_i.wa[3:0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wresp_i.data_in[13:0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wresp_i.inreg[13:0]
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wresp_i.fill[4:0]
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wresp_i.next_fill[4:0]
 @28
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wresp_i.full[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wresp_i.half_full[0]
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wresp_i.just_one[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wresp_i.nempty[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wresp_i.re[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wresp_i.rem[0]
@@ -2013,16 +2047,8 @@ ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wresp_i.rst[0]
 -waddr_i
 @28
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.clk[0]
-@22
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.fill[4:0]
-@28
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.full[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.half_full[0]
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.just_one[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.nempty[0]
-@22
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.next_fill[4:0]
-@28
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.out_full[0]
 @22
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.waddr_i.ra[3:0]
@@ -2044,18 +2070,12 @@ ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.clk[0]
 @22
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.data_in[48:0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.data_out[48:0]
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.fill[4:0]
 @28
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.full[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.half_full[0]
 @22
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.inreg[48:0]
 @28
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.just_one[0]
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.nempty[0]
-@22
-ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.next_fill[4:0]
-@28
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.out_full[0]
 @22
 ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.wdata_i.outreg[48:0]
@@ -2592,7 +2612,7 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_la
 -byte_lane0_selected
 @200
 -
-@800200
+@c00200
 -cmd_addr_i
 @28
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_addr_i.clk[0]
@@ -2607,7 +2627,6 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_add
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_addr_i.ddr3_ras[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_addr_i.ddr3_we[0]
 @22
-ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_addr_i.decode_addr[14:0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_addr_i.decode_sel[7:0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_addr_i.dly_addr[4:0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_addr_i.dly_data[7:0]
@@ -2650,9 +2669,9 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_add
 (14)ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_addr_i.ld_dly_addr[14:0]
 @1001200
 -group_end
-@800023
+@800022
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_addr_i.ld_dly_cmd[7:0]
-@29
+@28
 (0)ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_addr_i.ld_dly_cmd[7:0]
 (1)ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_addr_i.ld_dly_cmd[7:0]
 (2)ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_addr_i.ld_dly_cmd[7:0]
@@ -2661,13 +2680,13 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_add
 (5)ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_addr_i.ld_dly_cmd[7:0]
 (6)ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_addr_i.ld_dly_cmd[7:0]
 (7)ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_addr_i.ld_dly_cmd[7:0]
-@1001201
+@1001200
 -group_end
 @28
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_addr_i.rst[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_addr_i.set[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.cmd_addr_i.set_r[0]
-@1000200
+@1401200
 -cmd_addr_i
 @c00200
 -dq1_idelay2

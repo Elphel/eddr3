@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/> .
  *******************************************************************************/
 `timescale 1ns/1ps
-
+`define DEBUG_FIFO 1 
 module fifo_same_clock
 #(
   parameter integer DATA_WIDTH=16,
@@ -32,67 +32,80 @@ module fifo_same_clock
   input                   re,       // read enable
   input  [DATA_WIDTH-1:0] data_in,  // input data
   output [DATA_WIDTH-1:0] data_out, // output data
-  output reg              nempty,   // FIFO has some data
-  output reg              full,     // FIFO full
+  output                  nempty,   // FIFO has some data
   output reg              half_full // FIFO half full
+`ifdef DEBUG_FIFO
+    ,output reg                 under,    // debug outputs - under - attempt to read from empty
+    output reg                  over,      // overwritten
+    output reg [DATA_DEPTH-1:0] wcount,
+    output reg [DATA_DEPTH-1:0] rcount,
+    output     [DATA_DEPTH-1:0] num_in_fifo
+    
+`endif
   );
     localparam integer DATA_2DEPTH=(1<<DATA_DEPTH)-1;
 //ISExst: FF/Latch ddrc_test01.axibram_write_i.waddr_i.fill[4] has a constant value of 0 in block <ddrc_test01>. This FF/Latch will be trimmed during the optimization process.
 //ISExst: FF/Latch ddrc_test01.axibram_read_i.raddr_i.fill[4] has a constant value of 0 in block <ddrc_test01>. This FF/Latch will be trimmed during the optimization process.
 //ISExst: FF/Latch ddrc_test01.axibram_write_i.wdata_i.fill[4] has a constant value of 0 in block <ddrc_test01>. This FF/Latch will be trimmed during the optimization process.
 // Do not understand - why?
-    reg  [DATA_DEPTH  :0] fill=0;
-    reg                   just_one,two_or_less;
+    reg  [DATA_DEPTH-1:0] fill=0; // RAM fill
     reg  [DATA_WIDTH-1:0] inreg;
     reg  [DATA_WIDTH-1:0] outreg;
     reg  [DATA_DEPTH-1:0] ra;
     reg  [DATA_DEPTH-1:0] wa;
-    wire [DATA_DEPTH  :0] next_fill;
-    wire                  outreg_use_inreg;
+    wire [DATA_DEPTH-1:0] next_fill;
     reg  wem;
     wire rem;
     reg  out_full=0; //output register full
     reg  [DATA_WIDTH-1:0]   ram [0:DATA_2DEPTH];
-//    assign next_fill = fill[4:0]+((we && ~re)?1:((~we && re)?5'b11111:5'b00000));
-//    assign data_out  = just_one?inreg:outreg;
-    assign data_out  = out_full?outreg:inreg;
-    assign rem = (!out_full || re)&& (just_one? wem : re); 
-    assign outreg_use_inreg=(out_full && two_or_less) || just_one;
- //   assign next_fill = fill[4:0]+((we && ~rem)?1:((~we && rem)?5'b11111:5'b00000));
- // TODO: verify rem is not needed instead of re
-    assign next_fill = fill[DATA_DEPTH:0]+((we && ~re)?1:((~we && re)?-1:0)); //S uppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 5-bit target.
     
-
-
+    reg  ram_nempty;
+    
+    assign next_fill = fill[DATA_DEPTH-1:0]+((wem && ~rem)?1:((~wem && rem && ram_nempty)?-1:0));
+    assign rem= ram_nempty && (re || !out_full); 
+    assign data_out=outreg;
+    assign nempty=out_full;
+    
+`ifdef DEBUG_FIFO
+    assign num_in_fifo=fill[DATA_DEPTH-1:0];
+`endif
+    
     always @ (posedge  clk or posedge  rst) begin
       if   (rst) fill <= 0;
       else fill <= next_fill;
-//      else if (we && ~re) fill <= fill+1; //S uppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 5-bit target.
-//      else if (~we && re) fill <= fill-1; //S uppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 5-bit target.
-      
+      if (rst) wem <= 0;
+      else     wem <= we;
+      if   (rst) ram_nempty <= 0;
+      else ram_nempty <= (next_fill != 0);
+     
       if (rst)      wa <= 0;
-      else if (wem) wa <= wa+1;  //S uppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 4-bit target.
-      if (rst)      ra <= 1; // 0;
-      else if (re)  ra <= ra+1; //now ra is 1 ahead  //SuppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 4-bit target.
-      else if (!nempty) ra <= wa+1; // Just recover from bit errors TODO: fix  //SuppressThisWarning ISExst Result of 32-bit expression is truncated to fit in 4-bit target.
-      
-      if (rst)      nempty <= 0;
-      else          nempty <= (next_fill != 0);
+      else if (wem) wa <= wa+1;
+      if (rst)      ra <=  0;
+      else if (rem) ra <= ra+1;
+      else if (!ram_nempty) ra <= wa; // Just recover from bit errors
 
       if (rst)             out_full <= 0;
       else if (rem && ~re) out_full <= 1;
       else if (re && ~rem) out_full <= 0;
-      
+
+`ifdef DEBUG_FIFO
+      if (rst)     wcount <= 0;
+      else if (we) wcount <= wcount + 1;
+
+      if (rst)     rcount <= 0;
+      else if (re) rcount <= rcount + 1;
+`endif      
     end
+
+// no reset elements
     always @ (posedge  clk) begin
-      if (wem) ram[wa] <= inreg;
-      just_one <= (next_fill == 1);
-      two_or_less <= (next_fill == 1) | (next_fill == 2);
       half_full <=(fill & (1<<(DATA_DEPTH-1)))!=0;
-      full <=     (fill & (1<< DATA_DEPTH   ))!=0;
+      if (wem) ram[wa] <= inreg;
       if (we)  inreg  <= data_in;
-//      if (rem) outreg <= just_one?inreg:ram[ra];
-      if (rem) outreg <= outreg_use_inreg ? inreg : ram[ra];
-      wem <= we;
+      if (rem) outreg <= ram[ra];
+`ifdef DEBUG_FIFO
+      under <= ~we & re & ~nempty; // underrun error
+      over <=  we & ~re & (fill == (1<< (DATA_DEPTH-1)));    // overrun error
+`endif      
     end
 endmodule

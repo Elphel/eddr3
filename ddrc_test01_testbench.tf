@@ -103,9 +103,9 @@ module  ddrc_test01_testbench #(
     parameter REFRESH_ADDR_REL_MASK = 'h3ff,  // address mask set refresh sequencer address
     
     // simulation-specific parameters
-    parameter integer AXI_RDADDR_LATENCY=2,
-    parameter integer AXI_WRADDR_LATENCY=4,
-    parameter integer AXI_WRDATA_LATENCY=1,
+    parameter integer AXI_RDADDR_LATENCY= 2, // 2, //2, //2,
+    parameter integer AXI_WRADDR_LATENCY= 1, // 1, //2, //4,
+    parameter integer AXI_WRDATA_LATENCY= 2, // 1, //1, //1
     parameter integer AXI_TASK_HOLD=1.0,
     parameter integer ADDRESS_NUMBER=15 
 )();
@@ -172,6 +172,14 @@ module  ddrc_test01_testbench #(
     localparam DLY_LANE1_ODELAY= 80'h4c4c4b4a494844434241; // odelay dqm, odelay ddqs, odelay dq[7:0]
     localparam DLY_LANE1_IDELAY= 72'ha0636261605c5b5a59; // idelay dqs, idelay dq[7:0
     localparam DLY_CMDA=  256'h3c3c3c3c3b3a39383434343433323130002c2c2c2b2a29282424242423222120; // odelay odt, cke, cas, ras, we, ba2,ba1,ba0, X, a14,..,a0
+// alternative to set same type delays to the same value    
+    localparam DLY_DQ_IDELAY =  'h60;
+    localparam DLY_DQ_ODELAY =  'h48;
+    localparam DLY_DQS_IDELAY = 'ha0;
+    localparam DLY_DQS_ODELAY = 'h4c; // b0 for WLV
+    localparam DLY_DM_ODELAY =  'h48;
+    localparam DLY_CMDA_ODELAY ='h30;
+    
 `else   
     localparam DLY_LANE0_DQS_WLV_IDELAY = 8'he8; // idelay dqs
     localparam DLY_LANE1_DQS_WLV_IDELAY = 8'he8; // idelay dqs
@@ -180,6 +188,15 @@ module  ddrc_test01_testbench #(
     localparam DLY_LANE1_ODELAY= 80'h7474737271706c6b6a69; // odelay dqm, odelay ddqs, odelay dq[7:0]
     localparam DLY_LANE1_IDELAY= 72'hd8737271706c6b6a69; // idelay dqs, idelay dq[7:0
     localparam DLY_CMDA=  256'h5c5c5c5c5b5a59585454545453525150004c4c4c4b4a49484444444443424140; // odelay odt, cke, cas, ras, we, ba2,ba1,ba0, X, a14,..,a0
+// alternative to set same type delays to the same value    
+    localparam DLY_DQ_IDELAY =  'h70;
+    localparam DLY_DQ_ODELAY =  'h68;
+    localparam DLY_DQS_IDELAY = 'hd8;
+    localparam DLY_DQS_ODELAY = 'h74; // b0 for WLV
+    localparam DLY_DM_ODELAY =  'h74;
+    localparam DLY_CMDA_ODELAY ='h50;
+
+
 `endif   
     
     localparam DLY_PHASE= 8'h1c; // mmcm fine phase shift, 1/4 tCK
@@ -365,40 +382,52 @@ always #(CLKIN_PERIOD/2) CLK <= ~CLK;
     #99000; // same as glbl
     repeat (20) @(posedge CLK) ;
     RST <=1'b0;
+//set simulation-only parameters   
     axi_set_b_lag(0); //(1);
     axi_set_rd_lag(0);
+
+// set real hardware parameters
+// set delays (same for the same group),patterns, sequences, write buffer
+// use axi_set_delays task to set individual delays from tables
+    set_up;
+/*    
+// set dq /dqs tristate on/off patterns
+    axi_set_tristate_patterns;
+// set patterns for DM (always 0) and DQS - always the same (may try different for write lev.)
+    axi_set_dqs_dqm_patterns;
+    
+// prepare all sequences
+    set_all_sequences;
+// prepare write buffer    
+    write_block_buf; // fill block memory
+
+    
+// set all delays    
     axi_set_delays;
+*/    
     read_status; // ps ready goes false with some delay
     wait_phase_shifter_ready;
+// enable output for address/commands to DDR chip    
     enable_cmda(1);
     repeat (16) @(posedge CLK) ;
+// remove reset from DDR chip    
     activate_sdrst(0); // was enabled at system reset
-    set_refresh(
-        50, // input [ 9:0] t_rfc; // =50 for tCK=2.5ns
-        16); //input [ 7:0] t_refi; // 48/97 for normal, 8 - for simulation
+
     #5000; // actually 500 usec required
     repeat (16) @(posedge CLK) ;
     enable_cke(1);
     repeat (16) @(posedge CLK) ;
-    set_mrs(1);
-    run_sequence(0,INITIALIZE_OFFSET);
-    repeat (4) @(posedge CLK) ;
-//    wait_sequencer_ready(16);
+    
+    run_mrs;
 
+    repeat (4) @(posedge CLK) ;
 // enable refresh    
     enable_refresh(1);
     
-    set_write_lev(16); // write leveling, 16 times   (full buffer - 128) 
-    // set dq /dqs tristate on/off patterns
-    axi_write_single(BASEADDR_PATTERNS_TRI, {16'h0, DQSTRI_LAST, DQSTRI_FIRST, DQTRI_LAST, DQTRI_FIRST});
- 
- 
-    
     #100;
 //    $finish;
-    run_sequence(0,INITIALIZE_OFFSET);
-    wait_sequencer_ready(16);
-    axi_write_single(BASEADDR_PATTERNS, 32'h0055); // set patterns for DM (always 0) and DQS - always the same (may try different for write lev.)
+//    run_sequence(0,INITIALIZE_OFFSET); // Why was it for the second time?
+//    wait_sequencer_ready(16);
 
 // Set special values for DQS idelay for write leveling
     axi_set_dqs_idelay_wlv;
@@ -406,10 +435,10 @@ always #(CLKIN_PERIOD/2) CLK <= ~CLK;
     axi_write_single(BASEADDR_WBUF_DELAY, {28'h0, WBUF_DLY_WLV});
     
 //axi_set_dqs_idelay_nominal;
-    run_sequence(0,WRITELEV_OFFSET);
+    run_write_lev;
 // trying multiple run_sequence    
-    run_sequence(0,WRITELEV_OFFSET);
-    run_sequence(0,WRITELEV_OFFSET);
+    run_write_lev;
+    run_write_lev;
 
     wait_sequencer_ready(16);
     wait_sequencer_ready(16);
@@ -421,8 +450,7 @@ always #(CLKIN_PERIOD/2) CLK <= ~CLK;
     axi_set_dly_single(0,8,'h80); // was 'h74 dqs lane 0, odelay    
     axi_set_dly_single(2,8,'hc0); // was 'h74 dqs lane 1, odelay    
 `endif
-
-    run_sequence(0,WRITELEV_OFFSET);
+    run_write_lev;
 `ifdef use200Mhz
     #120; // 140 ns delay 30; // 30 ns delay
     axi_set_dly_single(2,8,'h78); // was 'h74 dqs lane 1, odelay
@@ -450,8 +478,8 @@ always #(CLKIN_PERIOD/2) CLK <= ~CLK;
     axi_write_single(BASEADDR_WBUF_DELAY, {28'h0, WBUF_DLY_DFLT});
 
 // test reading pattern       
-    set_read_pattern(8); // 8x2*64 bits, 32x32 bits to read
-    run_sequence(0,READ_PATTERN_OFFSET);
+//    set_read_pattern(8); // 8x2*64 bits, 32x32 bits to read
+    run_read_pattern;
 // TODO: add timing variation during read    
 
     wait_sequencer_ready(16);
@@ -468,23 +496,26 @@ always #(CLKIN_PERIOD/2) CLK <= ~CLK;
 
     
 // test write block;
+/* 
     write_block_buf; // fill block memory
-    set_write_block(
+   set_write_block(
         3'h5,     // bank
         15'h1234, // row address
         10'h100   // column address
         );   
-    run_sequence(1,WRITE_BLOCK_OFFSET);
+*/
+    run_write_block;
     wait_sequencer_ready(16);
     
 // test read block;
+/*
     set_read_block(
         3'h5,     // bank
         15'h1234, // row address
         10'h100   // column address
         );
-           
-    run_sequence(0,READ_BLOCK_OFFSET);
+*/           
+    run_read_block;
     
 // read block over AXI    
     wait_sequencer_ready(16);
@@ -1003,6 +1034,43 @@ simul_axi_read simul_axi_read_i(
 //            $display("run_sequence(%x,%x) 2 @ %t",channel,start_addr,$time);
         end
     endtask
+    
+    task run_mrs;
+        begin
+            $display("RUN MRS @ %t",$time);
+            run_sequence(0,INITIALIZE_OFFSET);
+        end
+    endtask
+    
+    task run_write_lev;
+        begin
+            $display("RUN WRITE LEVELING @ %t",$time);
+            run_sequence(0,WRITELEV_OFFSET);
+        end
+    endtask
+
+    task run_read_pattern;
+        begin
+            $display("RUN READ PATTERN @ %t",$time);
+            run_sequence(0,READ_PATTERN_OFFSET);
+        end
+    endtask
+
+    task run_write_block;
+        begin
+            $display("RUN WRITE BLOCK @ %t",$time);
+            run_sequence(1,WRITE_BLOCK_OFFSET);
+        end
+    endtask
+
+    task run_read_block;
+        begin
+            $display("RUN WRITE BLOCK @ %t",$time);
+            run_sequence(0,READ_BLOCK_OFFSET);
+        end
+    endtask
+    
+    
     task enable_cmda;
         input en;
         begin
@@ -1296,7 +1364,7 @@ simul_axi_read simul_axi_read_i(
 // Turn off DCI
              data <=  encode_seq_word(
                 15'h0,                       // [14:0] phy_addr_in;
-                mr3_norm[17:15],             // [ 2:0] phy_bank_in; //TODO: debug!
+                3'h0,    //mr3_norm[17:15],             // [ 2:0] phy_bank_in; //TODO: debug!
                 3'b000,                      // [ 2:0] phy_rcw_in; // {ras,cas,we}, positive
                 1'b0,                        //        phy_odt_in; // may be optimized?
                 1'b0,                        // phy_cke_inv; // may be optimized?
@@ -1964,8 +2032,12 @@ simul_axi_read simul_axi_read_i(
              mr3 <= ddr3_mr3 (
                 1'h0,     //       mpr;    // MPR mode: 0 - normal, 1 - dataflow from MPR
                 2'h0);    // [1:0] mpr_rf; // MPR read function: 2'b00: predefined pattern 0101...
-             cmd_addr <= BASEADDR_CMD0;   
+             cmd_addr <= BASEADDR_CMD0 + (INITIALIZE_OFFSET << 2);   
              @(posedge CLK)
+             $display("mr0=0x%x",mr0);
+             $display("mr1=0x%x",mr1);
+             $display("mr2=0x%x",mr2);
+             $display("mr3=0x%x",mr3);
              data <=  encode_seq_word(
                 mr2[14:0],              // [14:0] phy_addr_in;
                 mr2[17:15],             // [ 2:0] phy_bank_in; //TODO: debug!
@@ -2310,6 +2382,24 @@ simul_axi_read simul_axi_read_i(
     reg [7:0] target_phase=0;
 
 // initialize delays
+
+// set dq /dqs tristate on/off patterns
+    task axi_set_tristate_patterns;
+        begin
+            $display("SET TRISTATE PATTERNS @ %t",$time);    
+            axi_write_single(BASEADDR_PATTERNS_TRI, {16'h0, DQSTRI_LAST, DQSTRI_FIRST, DQTRI_LAST, DQTRI_FIRST});
+        end
+    endtask
+
+    task axi_set_dqs_dqm_patterns;
+        begin
+            $display("SET DQS+DQM PATTERNS @ %t",$time);    
+ // set patterns for DM (always 0) and DQS - always the same (may try different for write lev.)        
+            axi_write_single(BASEADDR_PATTERNS, 32'h0055);
+        end
+    endtask
+
+// use to set all different delays from tables, use axi_set_same_delays for same delays
     task axi_set_delays;
      integer i;
      begin
@@ -2377,12 +2467,116 @@ simul_axi_read simul_axi_read_i(
         end
     endtask
 
+    task axi_set_dq_idelay;
+        input [7:0] delay;
+        integer i, dly;
+        begin
+           dly=delay;
+           $display("SET DQ IDELAY=0x%x @ %t",delay,$time);
+           for (i=0;i<8;i=i+1) begin
+               axi_write_single(BASEADDRESS_LANE0_IDELAY + (i<<2), dly & 32'hff);
+           end
+           for (i=0;i<8;i=i+1) begin
+               axi_write_single(BASEADDRESS_LANE1_IDELAY + (i<<2), dly & 32'hff);
+           end
+           axi_write_single(BASEADDR_DLY_SET, 0); // set all delays
+        end
+    endtask
+
+    task axi_set_dq_odelay;
+        input [7:0] delay;
+        integer i, dly;
+        begin
+           dly=delay;
+           $display("SET DQ ODELAY=0x%x @ %t",delay,$time);
+           for (i=0;i<8;i=i+1) begin
+               axi_write_single(BASEADDRESS_LANE0_ODELAY + (i<<2), dly & 32'hff);
+           end
+           for (i=0;i<8;i=i+1) begin
+               axi_write_single(BASEADDRESS_LANE1_ODELAY + (i<<2), dly & 32'hff);
+           end
+           axi_write_single(BASEADDR_DLY_SET, 0); // set all delays
+        end
+    endtask
+    task axi_set_dqs_idelay;
+        input [7:0] delay;
+        integer i, dly;
+        begin
+           dly=delay;
+           i=8;
+           $display("SET DQS IDELAY=0x%x @ %t",delay,$time);
+           axi_write_single(BASEADDRESS_LANE0_IDELAY + (i<<2), dly & 32'hff);
+           axi_write_single(BASEADDRESS_LANE1_IDELAY + (i<<2), dly & 32'hff);
+           axi_write_single(BASEADDR_DLY_SET, 0); // set all delays
+        end
+    endtask
+
+    task axi_set_dqs_odelay;
+        input [7:0] delay;
+        integer i, dly;
+        begin
+           dly=delay;
+           i=8;
+           $display("SET DQS ODELAY=0x%x @ %t",delay,$time);
+           axi_write_single(BASEADDRESS_LANE0_ODELAY + (i<<2), dly & 32'hff);
+           axi_write_single(BASEADDRESS_LANE1_ODELAY + (i<<2), dly & 32'hff);
+           axi_write_single(BASEADDR_DLY_SET, 0); // set all delays
+        end
+    endtask
+
+    task axi_set_dm_odelay;
+        input [7:0] delay;
+        integer i, dly;
+        begin
+           dly=delay;
+           i=9;
+           $display("SET DQM IDELAY=0x%x @ %t",delay,$time);
+           axi_write_single(BASEADDRESS_LANE0_ODELAY + (i<<2), dly & 32'hff);
+           axi_write_single(BASEADDRESS_LANE1_ODELAY + (i<<2), dly & 32'hff);
+           axi_write_single(BASEADDR_DLY_SET, 0); // set all delays
+        end
+    endtask
+
+    task axi_set_cmda_odelay;
+        input [7:0] delay;
+        integer i, dly;
+        begin
+           dly=delay;
+           $display("SET COMMAND and ADDRESS ODELAY=0x%x @ %t",delay,$time);
+            for (i=0;i<32;i=i+1) begin
+                axi_write_single(BASEADDRESS_CMDA + (i<<2), dly & 32'hff);
+            end
+           axi_write_single(BASEADDR_DLY_SET, 0); // set all delays
+        end
+    endtask
+
+    task axi_set_same_delays;
+        input [7:0] dq_idelay;
+        input [7:0] dq_odelay;
+        input [7:0] dqs_idelay;
+        input [7:0] dqs_odelay;
+        input [7:0] dm_odelay;
+        input [7:0] cmda_odelay;
+        begin
+           $display("SET DELAYS(0x%x,0x%x,0x%x,0x%x,0x%x,0x%x) @ %t",
+           dq_idelay,dq_odelay,dqs_idelay,dqs_odelay,dm_odelay,cmda_odelay,$time);
+            axi_set_dq_idelay(dq_idelay);
+            axi_set_dq_odelay(dq_odelay);
+            axi_set_dqs_idelay(dqs_idelay);
+            axi_set_dqs_odelay(dqs_odelay);
+            axi_set_dm_odelay(dm_odelay);
+            axi_set_cmda_odelay(cmda_odelay);
+        end
+    endtask
+
 
 
     task axi_set_phase;
         input [PHASE_WIDTH-1:0] phase;
         begin
+            $display("SET CLOCK PHASE to 0x%x @ %t",phase,$time);
             axi_write_single(BASEADDRESS_PHASE, {{(32-PHASE_WIDTH){1'b0}},phase});
+            axi_write_single(BASEADDR_DLY_SET, 0); // set all delays
             target_phase <= phase;
         end
     endtask
@@ -2597,6 +2791,62 @@ simul_axi_read simul_axi_read_i(
             ARBURST_IN_r <= 2'hz;
             AR_SET_CMD_r <= 1'b0;
             LAST_ARID <= id;
+        end
+    endtask
+
+    task set_all_sequences;
+        begin
+            $display("SET MRS @ %t",$time);    
+            set_mrs(1);
+            $display("SET REFRESH @ %t",$time);    
+            set_refresh(
+                50, // input [ 9:0] t_rfc; // =50 for tCK=2.5ns
+                16); //input [ 7:0] t_refi; // 48/97 for normal, 8 - for simulation
+            $display("SET WRITE LEVELING @ %t",$time);    
+            set_write_lev(16); // write leveling, 16 times   (full buffer - 128) 
+            $display("SET READ PATTERN @ %t",$time);    
+            set_read_pattern(8); // 8x2*64 bits, 32x32 bits to read
+
+            $display("SET WRITE BLOCK @ %t",$time);    
+            set_write_block(
+                3'h5,     // bank
+                15'h1234, // row address
+                10'h100   // column address
+            );
+           
+            $display("SET READ BLOCK @ %t",$time);    
+            set_read_block(
+                3'h5,     // bank
+                15'h1234, // row address
+                10'h100   // column address
+            );
+        end
+    endtask
+/*
+   task set_same_delays;
+        input [7:0] dq_idelay;
+        input [7:0] dq_odelay;
+        input [7:0] dqs_idelay;
+        input [7:0] dqs_odelay;
+        input [7:0] dm_odelay;
+        input [7:0] cmda_odelay;
+
+*/
+    task set_up;
+        begin
+// set dq /dqs tristate on/off patterns
+            axi_set_tristate_patterns;
+// set patterns for DM (always 0) and DQS - always the same (may try different for write lev.)
+            axi_set_dqs_dqm_patterns;
+// prepare all sequences
+            set_all_sequences;
+// prepare write buffer    
+            write_block_buf; // fill block memory
+// set all delays
+//#axi_set_delays - from tables, per-pin
+            axi_set_same_delays(DLY_DQ_IDELAY,DLY_DQ_ODELAY,DLY_DQS_IDELAY,DLY_DQS_ODELAY,DLY_DM_ODELAY,DLY_CMDA_ODELAY);    
+// set clock phase relative to DDR clk
+            axi_set_phase(DLY_PHASE);
         end
     endtask
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 # Copyright (C) 2013, Elphel.inc.
 # Monitor a range of GPIO bits (should be exported first)
 # This program is free software: you can redistribute it and/or modify
@@ -22,7 +23,6 @@ __version__ = "3.0+"
 __maintainer__ = "Andrey Filippov"
 __email__ = "andrey@elphel.com"
 __status__ = "Development"
-from __future__ import print_function
 import sys
 if len(sys.argv) < 2 :
     print ("Usage: ", sys.argv[0]+" <gpio_number>[<gpio_max_number>]")

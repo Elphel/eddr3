@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 # Copyright (C) 2013, Elphel.inc.
 # Export range of GPIO (EMIO)registers
 # This program is free software: you can redistribute it and/or modify
@@ -23,7 +24,6 @@ __maintainer__ = "Andrey Filippov"
 __email__ = "andrey@elphel.com"
 __status__ = "Development"
 
-from __future__ import print_function
 import sys
 if len(sys.argv) < 3 or (sys.argv[1] != "in" and sys.argv[1] != "out") :
     print ("Usage: ", sys.argv[0]+" <in|out> <gpio_number>[<gpio_max_number>]")

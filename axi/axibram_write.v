@@ -19,6 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/> .
  *******************************************************************************/
+`define DEBUG_FIFO 1 
 module  axibram_write #(
     parameter ADDRESS_BITS = 10 // number of memory address bits
 )(
@@ -61,6 +62,33 @@ module  axibram_write #(
    output        bram_wen,    // external memory wreite enable, (internally combined with registered dev_ready
    output  [3:0] bram_wstb, 
    output [31:0] bram_wdata
+`ifdef DEBUG_FIFO
+    ,
+        output    waddr_under,
+        output    wdata_under,
+        output    wresp_under, 
+        output    waddr_over,
+        output    wdata_over,
+        output    wresp_over,
+        
+        output [3:0]   waddr_wcount, 
+        output [3:0]   waddr_rcount, 
+        output [3:0]   waddr_num_in_fifo, 
+        
+        output [3:0]   wdata_wcount, 
+        output [3:0]   wdata_rcount, 
+        output [3:0]   wdata_num_in_fifo, 
+        
+        output [3:0]   wresp_wcount, 
+        output [3:0]   wresp_rcount, 
+        output [3:0]   wresp_num_in_fifo,
+        
+        output [3:0]   wleft,
+        
+        output [3:0]   wlength,
+        output reg [3:0] wlen_in_dbg  
+
+`endif   
 );
 //    wire rst=~aresetn;
 // **** Write channel: ****
@@ -84,7 +112,7 @@ module  axibram_write #(
     wire [11:0] wid_out;
     reg         write_in_progress=0;
     reg  [ADDRESS_BITS-1:0] write_address;       // transfer address (not including lower bits 
-    reg  [ 3:0] write_left;          // number of read transfers
+    reg  [ 3:0] write_left;          // number of write transfers
 // will ignore arsize - assuming always 32 bits  (a*size[2:0]==2)
     reg  [ 1:0] wburst;             // registered burst type
     reg  [ 3:0] wlen;               // registered awlen type (for wrapped over transfers)
@@ -105,12 +133,9 @@ module  axibram_write #(
         (wburst[0]? (write_address[ADDRESS_BITS-1:0]+1):(write_address[ADDRESS_BITS-1:0]));
         
     assign      bram_we_w=         w_nempty_ready &&  write_in_progress;
-//    assign      bram_we_nonmasked= w_nempty &&  write_in_progress;
-//    assign start_write_burst_w=aw_nempty && (!write_in_progress || (w_nempty && (write_left[3:0]==4'b0)));
-//    assign start_write_burst_w=aw_nempty_ready && (!write_in_progress || (w_nempty_ready && (write_left[3:0]==4'b0)));
     assign start_write_burst_w=w_nempty_ready && aw_nempty_ready && (!write_in_progress || (w_nempty_ready && (write_left[3:0]==4'b0)));
-//    assign write_in_progress_w=aw_nempty || (write_in_progress && !(w_nempty && (write_left[3:0]==4'b0))); 
-    assign write_in_progress_w=aw_nempty_ready || (write_in_progress && !(w_nempty_ready && (write_left[3:0]==4'b0))); 
+//    assign write_in_progress_w=                  aw_nempty_ready || (write_in_progress && !(w_nempty_ready && (write_left[3:0]==4'b0))); 
+    assign write_in_progress_w=w_nempty_ready && aw_nempty_ready || (write_in_progress && !(w_nempty_ready && (write_left[3:0]==4'b0))); 
     
     always @ (posedge  aclk or posedge  rst) begin
       if   (rst)                    wburst[1:0] <= 0;
@@ -161,17 +186,31 @@ module  axibram_write #(
    assign  bram_wstb   = wstb_out[3:0]; 
    assign  bram_wdata = wdata_out[31:0];
     
-fifo_same_clock   #( .DATA_WIDTH(20+ADDRESS_BITS),.DATA_DEPTH(4))    
+ `ifdef DEBUG_FIFO
+    assign wleft=write_left;
+    assign wlength[3:0]=wlen[3:0];
+    always @ (posedge aclk) begin
+        wlen_in_dbg <= awlen[3:0];
+    end
+ `endif  
+fifo_same_clock   #( .DATA_WIDTH(20+ADDRESS_BITS),.DATA_DEPTH(4))
     waddr_i (
-        .rst(rst),
-        .clk(aclk),
-        .we(awvalid && awready),
-        .re(start_write_burst_w),
-        .data_in({awid[11:0], awburst[1:0],awsize[1:0],awlen[3:0],awaddr[ADDRESS_BITS+1:2]}),
-        .data_out({awid_out[11:0], awburst_out[1:0],awsize_out[1:0],awlen_out[3:0],awaddr_out[ADDRESS_BITS-1:0]}),  //SuppressThisWarning ISExst Assignment to awsize_out ignored, since the identifier is never used
-        .nempty(aw_nempty),
-        .full(),
-        .half_full(aw_half_full)
+        .rst       (rst),
+        .clk       (aclk),
+        .we        (awvalid && awready),
+        .re        (start_write_burst_w),
+        .data_in   ({awid[11:0], awburst[1:0],awsize[1:0],awlen[3:0],awaddr[ADDRESS_BITS+1:2]}),
+        .data_out  ({awid_out[11:0], awburst_out[1:0],awsize_out[1:0],awlen_out[3:0],awaddr_out[ADDRESS_BITS-1:0]}),  //SuppressThisWarning ISExst Assignment to awsize_out ignored, since the identifier is never used
+        .nempty    (aw_nempty),
+        .half_full (aw_half_full)
+`ifdef DEBUG_FIFO
+        ,
+        .under      (waddr_under), // output reg 
+        .over       (waddr_over), // output reg
+        .wcount     (waddr_wcount), // output[3:0] reg 
+        .rcount     (waddr_rcount), // output[3:0] reg 
+        .num_in_fifo(waddr_num_in_fifo) // output[3:0] 
+`endif         
     );
 fifo_same_clock   #( .DATA_WIDTH(49),.DATA_DEPTH(4))    
     wdata_i (
@@ -182,20 +221,45 @@ fifo_same_clock   #( .DATA_WIDTH(49),.DATA_DEPTH(4))
         .data_in({wid[11:0],wlast,wstb[3:0],wdata[31:0]}),
         .data_out({wid_out[11:0],wlast_out,wstb_out[3:0],wdata_out[31:0]}), //SuppressThisWarning ISExst Assignment to wlast ignored, since the identifier is never used
         .nempty(w_nempty),
-        .full(),
         .half_full(w_half_full)
+`ifdef DEBUG_FIFO
+        ,
+        .under      (wdata_under), // output reg 
+        .over       (wdata_over), // output reg
+        .wcount     (wdata_wcount), // output[3:0] reg 
+        .rcount     (wdata_rcount), // output[3:0] reg 
+        .num_in_fifo(wdata_num_in_fifo) // output[3:0] 
+`endif
     );
+//debugging - slow down bresp
+reg was_bresp_re=0;
+wire bresp_re;
+assign bresp_re=bready && bvalid && !was_bresp_re;
+always @ (posedge rst or posedge aclk) begin
+    if (rst) was_bresp_re<=0;
+    else was_bresp_re <= bresp_re;
+end
+  
 fifo_same_clock  #( .DATA_WIDTH(14),.DATA_DEPTH(4))    
     wresp_i (
         .rst(rst),
         .clk(aclk),
         .we(bram_we_w),
-        .re(bready && bvalid),
+//        .re(bready && bvalid),
+        .re(bresp_re), // not allowing RE next cycle after bvalid
         .data_in({wid_out[11:0],bresp_in[1:0]}),
         .data_out({bid[11:0],bresp[1:0]}),
         .nempty(bvalid),
-        .full(),
         .half_full()
+`ifdef DEBUG_FIFO
+        ,
+        .under      (wresp_under), // output reg 
+        .over       (wresp_over), // output reg
+        .wcount     (wresp_wcount), // output[3:0] reg 
+        .rcount     (wresp_rcount), // output[3:0] reg 
+        .num_in_fifo(wresp_num_in_fifo) // output[3:0] 
+        
+`endif
     );
 
 endmodule

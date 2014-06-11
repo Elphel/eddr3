@@ -20,6 +20,7 @@
  *******************************************************************************/
 `timescale 1ns/1ps
 `define use200Mhz 1
+`define DEBUG_FIFO 1 
 module  ddrc_test01 #(
     parameter PHASE_WIDTH =     8,
     parameter SLEW_DQ =         "SLOW",
@@ -136,6 +137,7 @@ module  ddrc_test01 #(
 // AXI write interface signals
 //(* keep = "true" *)
    wire           axi_aclk;    // clock - should be buffered
+//   wire           axi_naclk;   // debugging
 //   wire           axi_aresetn; // reset, active low
 //(* dont_touch = "true" *)
    wire           axi_rst;     // reset, active high
@@ -312,8 +314,12 @@ module  ddrc_test01 #(
         else          axi_rst_pre <= 1'b0;
     end
      
-BUFG bufg_axi_rst_i  (.O(axi_rst),.I(axi_rst_pre));
-BUFG bufg_axi_aclk_i (.O(axi_aclk),.I(fclk[0]));
+BUFG bufg_axi_rst_i   (.O(axi_rst),.I(axi_rst_pre));
+BUFG bufg_axi_aclk_i  (.O(axi_aclk),.I(fclk[0]));
+//BUFG bufg_axi_naclk_i (.O(axi_naclk),.I(~fclk[0]));
+
+
+
    
 always @ (posedge axi_aclk) begin
    port0_rd_match_r <= port0_rd_match; // rd address matched in previous cycle
@@ -326,6 +332,37 @@ always @ (posedge axi_rst or posedge axi_aclk) begin
     else if (axird_start_burst) select_status <= (((axird_pre_araddr^ STATUS_ADDR) & STATUS_ADDR_MASK)==0);
     
 end
+
+`ifdef DEBUG_FIFO
+        wire    waddr_under, wdata_under, wresp_under; 
+        wire    waddr_over, wdata_over, wresp_over;
+        reg     waddr_under_r, wdata_under_r, wresp_under_r;
+        reg     waddr_over_r, wdata_over_r, wresp_over_r;
+        wire    fifo_rst= frst[2];
+        wire [3:0]   waddr_wcount; 
+        wire [3:0]   waddr_rcount; 
+        wire [3:0]   waddr_num_in_fifo; 
+        
+        wire [3:0]   wdata_wcount; 
+        wire [3:0]   wdata_rcount; 
+        wire [3:0]   wdata_num_in_fifo; 
+        
+        wire [3:0]   wresp_wcount; 
+        wire [3:0]   wresp_rcount; 
+        wire [3:0]   wresp_num_in_fifo; 
+        wire [3:0]   wleft;
+        wire [3:0]   wlength; // output[3:0] 
+        wire [3:0]   wlen_in_dbg; // output[3:0] reg 
+        
+           
+    always @(posedge fifo_rst or posedge axi_aclk) begin
+     if (fifo_rst) {waddr_under_r, wdata_under_r, wresp_under_r,waddr_over_r, wdata_over_r, wresp_over_r} <= 0;
+     else {waddr_under_r, wdata_under_r, wresp_under_r, waddr_over_r, wdata_over_r, wresp_over_r} <=
+          {waddr_under_r, wdata_under_r, wresp_under_r, waddr_over_r, wdata_over_r, wresp_over_r} | 
+          {waddr_under,   wdata_under,   wresp_under,   waddr_over,   wdata_over,   wresp_over};
+    end         
+`endif
+
    
 /*
     dly_addr[1],
@@ -341,6 +378,7 @@ end
 //MEMCLK
 wire [63:0] gpio_in;
 assign gpio_in={
+frst[3]?{
 16'b0,
     1'b1,              // 1
     MEMCLK,            // 1/0? - external clock
@@ -360,13 +398,11 @@ assign gpio_in={
                        //    dly_addr[0],        0
                        //    clkin_stopped_mmcm, 0 
                        //    clkfb_stopped_mmcm, 0
-    
-    tmp_debug[3:0],    // 4'b1100 -> 4'bxx00
+    tmp_debug[3:0],     // 4'b1100 -> 4'bxx00
                        //    ddr_rst, 1 1 4000609c -> 0 , 40006098 -> 1
                        //    rst_in,  0 0
                        //    dci_rst, 0 1
                        //    dly_rst  0 1
-    
     phy_locked_mmcm,   //  1 1
     phy_locked_pll,    //  1 1
     phy_dci_ready,     //  1 0
@@ -375,20 +411,47 @@ assign gpio_in={
     locked_mmcm,       //  1 1
     locked_pll,        //  1 1
     dci_ready,         //  1 0
-    dly_ready,         //  1 0
+    dly_ready         //  1 0
+                       
+    }:{
+        waddr_wcount[3:0], 
+        waddr_rcount[3:0], 
+        waddr_num_in_fifo[3:0], 
+        
+        wdata_wcount[3:0], 
+        wdata_rcount[3:0], 
+        wdata_num_in_fifo[3:0], 
+        
+        wresp_wcount[3:0], 
+        wresp_rcount[3:0], 
+        wresp_num_in_fifo[3:0],
+        wleft[3:0],
+        wlength[3:0], 
+        wlen_in_dbg[3:0] 
+    },
     
-    ps_out[7:4],       // 4'b0 input[7:0] 4'b0
     
-    ps_out[3:0],       // 4'b0 input[7:0] 4'b0
+    //ps_out[7:4],       // 4'b0 input[7:0] 4'b0
+    
+    //ps_out[3:0],       // 4'b0 input[7:0] 4'b0
+    1'b0,
+    waddr_under_r,
+    wdata_under_r,
+    wresp_under_r,
+    
+    1'b0, 
+    waddr_over_r,
+    wdata_over_r,
+    wresp_over_r, // ???
      
     run_busy, // input // 0 
     locked, // input   // 1
     ps_rdy, // input   // 1
     axi_arready,       // 1
     
-    axi_awready,       // 1 
-    axi_wready,        // 1 
-    fclk[0],           // 0/1 
+    axi_awready,       // 1
+    axi_wready,        // 1  - sometimes gets stuck with 0 (axi_awready==1) ? TODO: Add timeout 
+    fifo_rst,   // fclk[0],          // 0/1 
     axi_rst_pre //axi_rst            // 0
 };
 
@@ -423,7 +486,29 @@ assign DUMMY_TO_KEEP = 1'b0; // dbg_toggle[0];
         .bram_waddr  (axiwr_bram_waddr[AXI_WR_ADDR_BITS-1:0]), // output[9:0] 
         .bram_wen    (axiwr_bram_wen), // output
         .bram_wstb   (axiwr_bram_wstb[3:0]), // output[3:0] //SuppressThisWarning ISExst Assignment to axiwr_bram_wstb ignored, since the identifier is never used
-        .bram_wdata  (axiwr_bram_wdata[31:0]) // output[31:0] 
+        .bram_wdata  (axiwr_bram_wdata[31:0]) // output[31:0]
+`ifdef DEBUG_FIFO
+        ,
+        .waddr_under (waddr_under), // output
+        .wdata_under (wdata_under), // output
+        .wresp_under (wresp_under), // output
+        .waddr_over  (waddr_over),  // output
+        .wdata_over  (wdata_over),  // output
+        .wresp_over  (wresp_over),   // output
+        .waddr_wcount(waddr_wcount), // output[3:0] 
+        .waddr_rcount(waddr_rcount), // output[3:0] 
+        .waddr_num_in_fifo(waddr_num_in_fifo), // output[3:0] 
+        .wdata_wcount(wdata_wcount), // output[3:0] 
+        .wdata_rcount(wdata_rcount), // output[3:0] 
+        .wdata_num_in_fifo(wdata_num_in_fifo), // output[3:0] 
+        .wresp_wcount(wresp_wcount), // output[3:0] 
+        .wresp_rcount(wresp_rcount), // output[3:0] 
+        .wresp_num_in_fifo(wresp_num_in_fifo), // output[3:0]
+        .wleft       (wleft[3:0]),
+        .wlength     (wlength[3:0]), // output[3:0] 
+        .wlen_in_dbg (wlen_in_dbg[3:0]) // output[3:0] reg 
+                 
+`endif         
     );
 
     /* Instance template for module axibram_read */
@@ -976,8 +1061,10 @@ run_busy
     .FPGAIDLEN(1'b1),             //Idle PL AXI interfaces (active low), input
 // AXI PS Master GP0    
 // AXI PS Master GP0: Clock, Reset
-//    .MAXIGP0ACLK(axi_aclk),       // AXI PS Master GP0 Clock , input
-    .MAXIGP0ACLK(fclk[0]),       // AXI PS Master GP0 Clock , input
+    .MAXIGP0ACLK(axi_aclk),       // AXI PS Master GP0 Clock , input
+//    .MAXIGP0ACLK(fclk[0]),       // AXI PS Master GP0 Clock , input
+//      .MAXIGP0ACLK(~fclk[0]),       // AXI PS Master GP0 Clock , input
+//      .MAXIGP0ACLK(axi_naclk),       // AXI PS Master GP0 Clock , input
     //
     .MAXIGP0ARESETN(),            // AXI PS Master GP0 Reset, output
 // AXI PS Master GP0: Read Address    

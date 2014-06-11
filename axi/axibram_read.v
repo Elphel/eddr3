@@ -232,7 +232,6 @@ fifo_same_clock   #( .DATA_WIDTH(ADDRESS_BITS+20),.DATA_DEPTH(4))
         .data_in({arid[11:0], arburst[1:0],arsize[1:0],arlen[3:0],araddr[ADDRESS_BITS+1:2]}),
         .data_out({arid_out[11:0], arburst_out[1:0],arsize_out[1:0],arlen_out[3:0],araddr_out[ADDRESS_BITS-1:0]}), //SuppressThisWarning ISExst Assignment to arsize ignored, since the identifier is never used
         .nempty(ar_nempty),
-        .full(),
         .half_full(ar_half_full)
     );
 endmodule

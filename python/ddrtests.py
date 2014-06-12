@@ -26,6 +26,7 @@ __status__ = "Development"
 import mmap
 import sys
 import struct
+import random
 DRY_MODE= False # True
 MONITOR_EMIO=False #True
 def write_mem (addr, data):
@@ -46,7 +47,7 @@ def write_mem (addr, data):
         mm[page_offs:page_offs+4]=packedData
 #        print ("0x%08x <== 0x%08x (%d)"%(addr,d,d))
         mm.close()
-    if MONITOR_EMIO:
+    if MONITOR_EMIO and VEBOSE:
         gpio0=read_mem (0xe000a068)
         gpio1=read_mem (0xe000a06c)
         print("GPIO: %04x %04x %04x %04x"%(gpio1>>16, gpio1 & 0xffff, gpio0>>16, gpio0 & 0xffff))
@@ -172,12 +173,12 @@ if use200Mhz:
     DLY_CMDA=  [0x3c,0x3c,0x3c,0x3c,0x3b,0x3a,0x39,0x38,0x34,0x34,0x34,0x34,0x33,0x32,0x31,0x30,
                 0x00,0x2c,0x2c,0x2c,0x2b,0x2a,0x29,0x28,0x24,0x24,0x24,0x24,0x23,0x22,0x21,0x20] # odelay odt, cke, cas, ras, we, ba2,ba1,ba0, X, a14,..,a0
 # alternative to set same type delays to the same value    
-    DLY_DQ_IDELAY =  0x60
-    DLY_DQ_ODELAY =  0x48
-    DLY_DQS_IDELAY = 0xa0
+    DLY_DQ_IDELAY =  0x70 # 0x60
+    DLY_DQ_ODELAY =  0xf0 # 0x48
+    DLY_DQS_IDELAY = 0x20 # 0xa0
     DLY_DQS_ODELAY = 0x4c # b0 for WLV
-    DLY_DM_ODELAY =  0x48
-    DLY_CMDA_ODELAY =0x30
+    DLY_DM_ODELAY =  0x48 # 0x48
+    DLY_CMDA_ODELAY =0x20 # 0x30
     
 else:   
     DLY_LANE0_DQS_WLV_IDELAY = 0xe8 # idelay dqs
@@ -197,10 +198,10 @@ else:
     DLY_CMDA_ODELAY =0x50
 
 
-
+NUM_FINE_STEPS=    5
 #`endif   
     
-DLY_PHASE= 0x1c # mmcm fine phase shift, 1/4 tCK
+DLY_PHASE=       0x39 # 0x1c # mmcm fine phase shift, 1/4 tCK
     
 DQSTRI_FIRST=    0x3 # DQS tri-state control word, first when enabling output 
 DQSTRI_LAST=     0xc # DQS tri-state control word, first after disabling output
@@ -218,7 +219,7 @@ READ_PATTERN_OFFSET=0x40 # read pattern to memory block sequence start address (
 WRITE_BLOCK_OFFSET= 0x100 # write block sequence start address (in words) ..0x14c
 READ_BLOCK_OFFSET=  0x180 # read  block sequence start address (in words)
 
-
+VERBOSE=True
 def check_args(n,command,args):
     if len(args) != n:
         if n==0:
@@ -241,48 +242,52 @@ def read_status(): #    task read_status;
     return axi_read_addr(BASEADDR_STATUS)
 
 def wait_phase_shifter_ready(target_phase): #    task wait_phase_shifter_ready;
-    global STATUS_PSHIFTER_RDY_MASK, PHASE_WIDTH
+    global STATUS_PSHIFTER_RDY_MASK, PHASE_WIDTH,VERBOSE
+    if (VERBOSE): print("wait_phase_shifter_ready(0x%x)..."%target_phase,end="")
     status = read_status()
     while ((status & STATUS_PSHIFTER_RDY_MASK) == 0) or ((status ^ target_phase) & ((1<<PHASE_WIDTH)-1) != 0):
         status=read_status()
+    if (VERBOSE): print("DONE")
 
 def wait_sequencer_ready(): #    task wait_sequencer_ready;
-    global STATUS_SEQ_BUSY_MASK
+    global STATUS_SEQ_BUSY_MASK,VERBOSE
+    if (VERBOSE): print("wait_sequencer_ready()...",end="")
 #        input integer num_skip; #skip this cycles before testing ready (latency from write to busy)
 #            repeat (num_skip) @(posedge CLK);
     status=read_status()
 #            repeat (8) @(posedge CLK); # latency from read command to registered_rdata. TODO: make it certain (read with the same ID)
     while (status & STATUS_SEQ_BUSY_MASK) != 0:
         status= read_status()
+    if (VERBOSE): print("DONE")
 
 def run_sequence (channel,start_addr):
-    global BASEADDR_RUN_CHN
-    print("run_sequence(0x%x,0x%x)"%(channel,start_addr))
+    global BASEADDR_RUN_CHN,VERBOSE
+    if (VERBOSE): print("run_sequence(0x%x,0x%x)"%(channel,start_addr))
     axi_write_single(BASEADDR_RUN_CHN+(channel<<2), start_addr)
 
 def run_mrs(): #    task run_mrs;
-    global INITIALIZE_OFFSET
-    print("RUN MRS")
+    global INITIALIZE_OFFSET, VERBOSE
+    if (VERBOSE): print("RUN MRS")
     run_sequence(0,INITIALIZE_OFFSET)
     
 def run_write_lev(): #     task run_write_lev;
-    global WRITELEV_OFFSET
-    print("RUN WRITE LEVELING")
+    global WRITELEV_OFFSET, VERBOSE
+    if (VERBOSE): print("RUN WRITE LEVELING")
     run_sequence(0,WRITELEV_OFFSET)
 
 def run_read_pattern(): #     task run_read_pattern;
-    global READ_PATTERN_OFFSET
-    print("RUN READ PATTERN")
+    global READ_PATTERN_OFFSET, VERBOSE
+    if (VERBOSE): print("RUN READ PATTERN")
     run_sequence(0,READ_PATTERN_OFFSET)
 
 def run_write_block(): #     task run_write_block;
-    global WRITE_BLOCK_OFFSET
-    print("RUN WRITE BLOCK")
+    global WRITE_BLOCK_OFFSET, VERBOSE
+    if (VERBOSE): print("RUN WRITE BLOCK")
     run_sequence(1,WRITE_BLOCK_OFFSET)
 
 def run_read_block(): #     task run_read_block;
-    global READ_BLOCK_OFFSET
-    print("RUN WRITE BLOCK")
+    global READ_BLOCK_OFFSET, VERBOSE
+    if (VERBOSE): print("RUN READ BLOCK")
     run_sequence(0,READ_BLOCK_OFFSET)
 
     
@@ -315,36 +320,38 @@ def enable_refresh(en):
         axi_write_single(BASEADDR_REFRESH_EN, 0)
 
 def write_block_buf():
-    global BASEADDR_PORT1_WR
-    print("WRITE BLOCK DATA")
+    global BASEADDR_PORT1_WR, VERBOSE
+    if (VERBOSE): print("WRITE BLOCK DATA")
 
     for i in range(256):
         d=i | (((i + 7) & 0xff) << 8) | (((i + 23) & 0xff) << 16) | (((i + 31) & 0xff) << 24)
         axi_write_single(BASEADDR_PORT1_WR+(i<<2), d)
-#        print("Write block data (addr:data): 0x%x:0x%x "%(BASEADDR_PORT1_WR+(i<<2),d))
+#        if (VERBOSE): print("Write block data (addr:data): 0x%x:0x%x "%(BASEADDR_PORT1_WR+(i<<2),d))
 
 def read_block_buf(
       num_read ): #input integer num_read; // number of words to read (will be rounded up to multiple of 16)
-    global BASEADDR_PORT0_RD
+    global BASEADDR_PORT0_RD, VERBOSE
     buf=[]
     for i in range(num_read):
         d=axi_read_addr(BASEADDR_PORT0_RD+(i<<2))
         buf.append(d)
-        print("Read block data (addr:data): 0x%x:0x%x "%(BASEADDR_PORT0_RD+(i<<2),d))
-        
+        if (VERBOSE): print("Read block data (addr:data): 0x%x:0x%x "%(BASEADDR_PORT0_RD+(i<<2),d))
+    return buf    
 def read_buf(
       num_read ): #input integer num_read; // number of words to read (will be rounded up to multiple of 16)
-    global BASEADDR_PORT0_RD
+    global BASEADDR_PORT0_RD, VERBOSE;
     buf=[]
     for i in range(num_read):
         d=axi_read_addr(BASEADDR_PORT0_RD+(i<<2))
         buf.append(d)
-    for i in range(num_read):
-        addr= i<<2;
-        if (i%8) == 0:
-            print ("\n%08x: "%addr,end="")
-        print ("%08x "%buf[i],end="")
-    print ()
+    if (VERBOSE):         
+        for i in range(num_read):
+            addr= i<<2;
+            if (i%8) == 0:
+                print ("\n%08x: "%addr,end="")
+            print ("%08x "%buf[i],end="")
+        print ()
+    return buf
  
 def encode_seq_word(
         phy_addr_in,       # [14:0] also provides pause length when the command is NOP
@@ -769,7 +776,8 @@ def set_write_block(
 #        reg   [31:0] data;
 #        integer i;
 
-    global BASEADDR_CMD0, WRITE_BLOCK_OFFSET
+    global BASEADDR_CMD0, WRITE_BLOCK_OFFSET,VERBOSE
+    if (VERBOSE): print("set_write_block(0x%x,0x%x,0x%x"%(ba,ra,ca))
     cmd_addr = BASEADDR_CMD0 + (WRITE_BLOCK_OFFSET << 2)
 # activate
     data = ( 
@@ -1222,7 +1230,7 @@ def set_refresh( #     task set_refresh;
 def set_mrs( #    task set_mrs; # will also calibrate ZQ
         reset_dll, # input reset_dll;
         cl): #CAS latency code: 2 - 5, 4 - 6, 6 - 7
-    global BASEADDR_CMD0
+    global BASEADDR_CMD0, VERBOSE
         # reg [17:0] mr0;
         # reg [17:0] mr1;
         # reg [17:0] mr2;
@@ -1256,10 +1264,10 @@ def set_mrs( #    task set_mrs; # will also calibrate ZQ
              0, #    1'h0,     #       mpr;    # MPR mode: 0 - normal, 1 - dataflow from MPR
              0) #    2'h0)    # [1:0] mpr_rf; # MPR read function: 2'b00: predefined pattern 0101...
     cmd_addr = BASEADDR_CMD0;
-    print("mr0=0x%x"%mr0)
-    print("mr1=0x%x"%mr1)
-    print("mr2=0x%x"%mr2)
-    print("mr3=0x%x"%mr3)
+    if (VERBOSE): print("mr0=0x%x"%mr0)
+    if (VERBOSE): print("mr1=0x%x"%mr1)
+    if (VERBOSE): print("mr2=0x%x"%mr2)
+    if (VERBOSE): print("mr3=0x%x"%mr3)
     data =  encode_seq_word(
                 mr2 & 0x7fff,      # mr2[14:0],              # [14:0] phy_addr_in;
                 (mr2 >> 15) & 0x7, # mr2[17:15],             # [ 2:0] phy_bank_in; #TODO: debug!
@@ -1363,20 +1371,20 @@ def set_mrs( #    task set_mrs; # will also calibrate ZQ
     cmd_addr = cmd_addr + 4
 #set tristate patterns
 def axi_set_tristate_patterns(): #    task axi_set_tristate_patterns;
-    global DQSTRI_LAST, DQSTRI_FIRST, DQTRI_LAST, DQTRI_FIRST
+    global DQSTRI_LAST, DQSTRI_FIRST, DQTRI_LAST, DQTRI_FIRST, VERBOSE
     axi_write_single(BASEADDR_PATTERNS_TRI,
            ((DQSTRI_LAST & 0xff)  << 12) |
            ((DQSTRI_FIRST & 0xff) <<  8) |
            ((DQTRI_LAST & 0xff)   <<  4) |
            ((DQTRI_FIRST & 0xff)  <<  0))
-    print("SET TRISTATE PATTERNS")    
+    if (VERBOSE): print("SET TRISTATE PATTERNS")    
 
 
 def axi_set_dqs_dqm_patterns(): #    task axi_set_dqs_dqm_patterns;
-    global BASEADDR_PATTERNS
+    global BASEADDR_PATTERNS, VERBOSE
  # set patterns for DM (always 0) and DQS - always the same (may try different for write lev.)        
     axi_write_single(BASEADDR_PATTERNS, 0x0055)
-    print("SET DQS+DQM PATTERNS")    
+    if (VERBOSE): print("SET DQS+DQM PATTERNS")    
 
 
 # initialize delays
@@ -1453,9 +1461,9 @@ def axi_set_dly_single( #  task axi_set_dly_single;
 
 def  axi_set_dq_idelay(#   task axi_set_dq_idelay;
         delay): # input [7:0] delay;
-    global BASEADDRESS_LANE0_IDELAY,BASEADDRESS_LANE1_IDELAY
+    global BASEADDRESS_LANE0_IDELAY,BASEADDRESS_LANE1_IDELAY, VERBOSE
     dly=delay;
-    print("SET DQ IDELAY=0x%x"%delay)
+    if (VERBOSE): print("SET DQ IDELAY=0x%x"%delay)
     for i in range(8):
         axi_write_single(BASEADDRESS_LANE0_IDELAY + (i<<2), dly & 0xff)
     for i in range(8):
@@ -1464,9 +1472,9 @@ def  axi_set_dq_idelay(#   task axi_set_dq_idelay;
 
 def  axi_set_dq_odelay(#    task axi_set_dq_odelay;
         delay): #input [7:0] delay;
-    global BASEADDRESS_LANE0_ODELAY,BASEADDRESS_LANE1_ODELAY
+    global BASEADDRESS_LANE0_ODELAY,BASEADDRESS_LANE1_ODELAY, VERBOSE
     dly=delay;
-    print("SET DQ ODELAY=0x%x"%delay)
+    if (VERBOSE): print("SET DQ ODELAY=0x%x"%delay)
     for i in range(8):
         axi_write_single(BASEADDRESS_LANE0_ODELAY + (i<<2), dly & 0xff)
     for i in range(8):
@@ -1474,10 +1482,10 @@ def  axi_set_dq_odelay(#    task axi_set_dq_odelay;
     axi_write_single(BASEADDR_DLY_SET, 0) # set all delays
 def  axi_set_dqs_idelay(#    task axi_set_dqs_idelay;
         delay): # input [7:0] delay;
-    global BASEADDRESS_LANE0_IDELAY,BASEADDRESS_LANE1_IDELAY
+    global BASEADDRESS_LANE0_IDELAY,BASEADDRESS_LANE1_IDELAY, VERBOSE
     dly=delay
     i=8
-    print("SET DQS IDELAY=0x%x"%delay)
+    if (VERBOSE): print("SET DQS IDELAY=0x%x"%delay)
     axi_write_single(BASEADDRESS_LANE0_IDELAY + (i<<2), dly & 0xff)
     axi_write_single(BASEADDRESS_LANE1_IDELAY + (i<<2), dly & 0xff)
     axi_write_single(BASEADDR_DLY_SET, 0) # set all delays
@@ -1486,25 +1494,27 @@ def  axi_set_dqs_odelay(#    task axi_set_dqs_odelay;
         delay): # input [7:0] delay;
     dly=delay
     i=8
-    global BASEADDRESS_LANE0_ODELAY,BASEADDRESS_LANE1_ODELAY
-    print("SET DQS ODELAY=0x%x"%delay)
+    global BASEADDRESS_LANE0_ODELAY,BASEADDRESS_LANE1_ODELAY, VERBOSE
+    if (VERBOSE): print("SET DQS ODELAY=0x%x"%delay)
     axi_write_single(BASEADDRESS_LANE0_ODELAY + (i<<2), dly & 0xff)
     axi_write_single(BASEADDRESS_LANE1_ODELAY + (i<<2), dly & 0xff)
     axi_write_single(BASEADDR_DLY_SET, 0) # set all delays
 
 def  axi_set_dm_odelay(#    task axi_set_dm_odelay;
         delay): # input [7:0] delay;
+    global VERBOSE
     dly=delay;
     i=9;
-    print("SET DQM IDELAY=0x%x"%delay)
+    if (VERBOSE): print("SET DQM IDELAY=0x%x"%delay)
     axi_write_single(BASEADDRESS_LANE0_ODELAY + (i<<2), dly & 0xff)
     axi_write_single(BASEADDRESS_LANE1_ODELAY + (i<<2), dly & 0xff)
     axi_write_single(BASEADDR_DLY_SET, 0) # set all delays
 
 def  axi_set_cmda_odelay(#    task axi_set_cmda_odelay;
         delay): # input [7:0] delay;
+    global  VERBOSE
     dly=delay;
-    print("SET COMMAND and ADDRESS ODELAY=0x%x"%delay)
+    if (VERBOSE): print("SET COMMAND and ADDRESS ODELAY=0x%x"%delay)
     for i in range(32):
         axi_write_single(BASEADDRESS_CMDA + (i<<2), dly & 0xff)
     axi_write_single(BASEADDR_DLY_SET, 0) # set all delays
@@ -1516,7 +1526,8 @@ def  axi_set_same_delays(#    task set_same_delays;
         dqs_odelay,  # input [7:0] dqs_odelay;
         dm_odelay,   # input [7:0] dm_odelay;
         cmda_odelay):# input [7:0] cmda_odelay;
-    print("SET DELAYS(0x%x,0x%x,0x%x,0x%x,0x%x,0x%x)"%(dq_idelay,dq_odelay,dqs_idelay,dqs_odelay,dm_odelay,cmda_odelay))
+    global VERBOSE
+    if (VERBOSE): print("SET DELAYS(0x%x,0x%x,0x%x,0x%x,0x%x,0x%x)"%(dq_idelay,dq_odelay,dqs_idelay,dqs_odelay,dm_odelay,cmda_odelay))
     axi_set_dq_idelay(dq_idelay)
     axi_set_dq_odelay(dq_odelay)
     axi_set_dqs_idelay(dqs_idelay)
@@ -1526,8 +1537,8 @@ def  axi_set_same_delays(#    task set_same_delays;
 
 def axi_set_phase( #    task axi_set_phase;
         phase): # input [PHASE_WIDTH-1:0] phase;
-    global BASEADDRESS_PHASE, BASEADDR_DLY_SET, PHASE_WIDTH
-    print("SET CLOCK PHASE to 0x%x"%phase)
+    global BASEADDRESS_PHASE, BASEADDR_DLY_SET, PHASE_WIDTH, VERBOSE
+    if (VERBOSE): print("SET CLOCK PHASE to 0x%x"%phase)
     axi_write_single(BASEADDRESS_PHASE, phase & ((1<<PHASE_WIDTH)-1))
     axi_write_single(BASEADDR_DLY_SET, 0) # set all dealys
 
@@ -1535,34 +1546,35 @@ def axi_set_phase( #    task axi_set_phase;
 
 def axi_set_wbuf_delay(#    task axi_set_wbuf_delay;
         delay): #input [3:0] delay;
-    global BASEADDR_WBUF_DELAY
-    print("SET WBUF DELAY to 0x%x"%delay);
+    global BASEADDR_WBUF_DELAY, VERBOSE
+    if (VERBOSE): print("SET WBUF DELAY to 0x%x"%delay);
     axi_write_single(BASEADDR_WBUF_DELAY, delay);
 
 
 def set_all_sequences(): #    task set_all_sequences;
-    print("SET MRS")    
+    global VERBOSE
+    if (VERBOSE): print("SET MRS")    
     set_mrs(1,4) # CL=5 (6: CL=7)
-    print("SET REFRESH")    
+    if (VERBOSE): print("SET REFRESH")    
     set_refresh(
                 50, # input [ 9:0] t_rfc; # =50 for tCK=2.5ns
                 48) # 16) #input [ 7:0] t_refi; # 48/97 for normal, 8 - for simulation
-    print("SET WRITE LEVELING")    
+    if (VERBOSE): print("SET WRITE LEVELING")    
     set_write_lev(16) # write leveling, 16 times   (full buffer - 128) 
-    print("SET READ PATTERN")    
-    set_read_pattern(8,0,1) # 8x2*64 bits, 32x32 bits to read (second 0 - pattern type, only 0 defined)
-    print("SET WRITE BLOCK")    
+    if (VERBOSE): print("SET READ PATTERN")    
+    set_read_pattern(8,0,0) # 8x2*64 bits, 32x32 bits to read (second 0 - pattern type, only 0 defined)
+    if (VERBOSE): print("SET WRITE BLOCK")    
     set_write_block(
                 5,      # 3'h5,     # bank
                 0x1234, # 15'h1234, # row address
                 0x100   # 10'h100   # column address
             )
-    print("SET READ BLOCK")    
+    if (VERBOSE): print("SET READ BLOCK")    
     set_read_block(
                 5,      # 3'h5,     # bank
                 0x1234, # 15'h1234, # row address
                 0x100,   # 10'h100   # column address
-                1       # use second clock for read commands
+                0       # use second clock for read commands
             )
 
 def set_up(): #    task set_up;
@@ -1582,6 +1594,445 @@ def set_up(): #    task set_up;
     axi_set_phase(DLY_PHASE)
     
     axi_set_wbuf_delay(WBUF_DLY_DFLT)
+def split_delay(dly):
+    global NUM_FINE_STEPS
+    dly_int=dly>>3
+    dly_fine=dly & 0x7
+    if dly_fine > (NUM_FINE_STEPS-1):
+        dly_fine= NUM_FINE_STEPS-1
+    return dly_int*NUM_FINE_STEPS+dly_fine    
+def combine_delay(dly):
+    global NUM_FINE_STEPS
+    return ((dly/NUM_FINE_STEPS)<<3)+(dly%NUM_FINE_STEPS)
+
+def bad_data(buf):
+    for w in buf:
+        if (w!=0xffffffff): return False
+    return True            
+def scan_dqs(
+       low_delay,
+       high_delay,
+       num ):
+    global VERBOSE;
+    saved_verbose=VERBOSE;
+    VERBOSE=False;
+    set_read_pattern(num+1,0,0); # do not use first/last pair of the 32 bit words
+    low = split_delay(low_delay)
+    high = split_delay(high_delay)
+    results = []
+    for dly in range (low, high+1):
+        enc_dly=combine_delay(dly)
+        axi_set_dqs_idelay_individual(enc_dly, enc_dly)
+        run_read_pattern()
+        buf=read_buf(4*num+2)
+        if bad_data(buf):
+            results.append([])
+        else:    
+            data=[0]*32 # for each bit - even, then for all - odd
+            for w in range (4*num):
+                lane=w%2
+                for wb in range(32):
+                    g=(wb/8)%2
+                    b=wb%8+lane*8+16*g
+                    if (buf[w+2] & (1<<wb) != 0):
+                        data[b]+=1
+            results.append(data)
+            print ("%3d (0x%02x): "%(dly,enc_dly),end="")
+            for i in range(32):
+                print("%5x"%data[i],end="")
+            print()    
+    for index in range (len(results)):
+        dly=index+low
+        enc_dly=combine_delay(dly)
+        if (len (results[index])>0):
+            print ("%3d (0x%02x): "%(dly,enc_dly),end="")
+            for i in range(32):
+                print("%5x"%results[index][i],end="")
+            print()    
+#        else:
+#            print ("%3d (0x%02x): *** BAD data *** "%(dly,enc_dly))
+    print()
+    print()
+    print ("Delay",end=" ")
+    for i in range(16):
+        print ("Bit%dP"%i,end=" ")
+    for i in range(16):
+        print ("Bit%dM"%i,end=" ")
+    print()
+    for index in range (len(results)):
+        dly=index+low
+        enc_dly=combine_delay(dly)
+        if (len (results[index])>0):
+            print ("%d"%(dly),end=" ")
+            for i in range(32):
+                print("%d"%results[index][i],end=" ")
+            print()    
+#        else:
+#            print ("%3d (0x%02x): *** BAD data *** "%(dly,enc_dly))
+    print()
+    VEBOSE=saved_verbose
+    return results                                  
+
+def scan_dq_idelay(
+       low_delay,
+       high_delay,
+       num ):
+    global VERBOSE;
+    saved_verbose=VERBOSE;
+    VERBOSE=False;
+    set_read_pattern(num+1,0,0); # do not use first/last pair of the 32 bit words
+    low = split_delay(low_delay)
+    high = split_delay(high_delay)
+    results = []
+    for dly in range (low, high+1):
+        enc_dly=combine_delay(dly)
+        axi_set_dq_idelay(enc_dly)
+        run_read_pattern()
+        wait_sequencer_ready()
+        buf=read_buf(4*num+2)
+        if bad_data(buf):
+            results.append([])
+        else:    
+            data=[0]*32 # for each bit - even, then for all - odd
+            for w in range (4*num):
+                lane=w%2
+                for wb in range(32):
+                    g=(wb/8)%2
+                    b=wb%8+lane*8+16*g
+                    if (buf[w+2] & (1<<wb) != 0):
+                        data[b]+=1
+            results.append(data)
+            print ("%3d (0x%02x): "%(dly,enc_dly),end="")
+            for i in range(32):
+                print("%5x"%data[i],end="")
+            print()    
+    for index in range (len(results)):
+        dly=index+low
+        enc_dly=combine_delay(dly)
+        if (len (results[index])>0):
+            print ("%3d (0x%02x): "%(dly,enc_dly),end="")
+            for i in range(32):
+                print("%5x"%results[index][i],end="")
+            print()    
+#        else:
+#            print ("%3d (0x%02x): *** BAD data *** "%(dly,enc_dly))
+    print()
+    print()
+    print ("Delay",end=" ")
+    for i in range(16):
+        print ("Bit%dP"%i,end=" ")
+    for i in range(16):
+        print ("Bit%dM"%i,end=" ")
+    print()
+    for index in range (len(results)):
+        dly=index+low
+        enc_dly=combine_delay(dly)
+        if (len (results[index])>0):
+            print ("%d"%(dly),end=" ")
+            for i in range(32):
+                print("%d"%results[index][i],end=" ")
+            print()    
+#        else:
+#            print ("%3d (0x%02x): *** BAD data *** "%(dly,enc_dly))
+    print()
+    VEBOSE=saved_verbose
+    return results                                  
+
+def adjust_dq_idelay(
+       low_delay,
+       high_delay,
+       num,
+       falling ): # 0 - use rising as delay increases, 1 - use falling
+    global VERBOSE;
+    saved_verbose=VERBOSE;
+    VERBOSE=False;
+    low = split_delay(low_delay)
+    data_raw=scan_dq_idelay(low_delay,high_delay,num)
+    data=[]
+    delays=[]
+    for i,d in enumerate(data_raw):
+        if len(d)>0:
+            data.append(d)
+            delays.append(i+low)
+    print(delays)
+    
+    best_dlys=[0]*16
+    best_diffs=[num*8.0]*16
+    for i in range (1,len(data)-1):
+        for j in range (16):
+            delta=abs(data[i][j] -data[i][j+16] + 0.5*(data[i-1][j] -data[i-1][j+16]+data[i+1][j] -data[i+1][j+16]))
+            sign=(data[i-1][j] -data[i-1][j+16]-data[i+1][j]+data[i+1][j+16])
+            if falling > 0: sign=-sign;
+            if (sign>0) and (delta < best_diffs[j]):
+                best_diffs[j]=delta
+                best_dlys[j]=delays[i]
+    for i in range (16):
+        print("%2d: %3d (0x%02x)"%(i,best_dlys[i],combine_delay(best_dlys[i])))  
+    VEBOSE=saved_verbose
+    for i in range (8):
+        axi_set_dly_single(1,i,combine_delay(best_dlys[i]))    
+    for i in range (8):
+        axi_set_dly_single(3,i,combine_delay(best_dlys[i+8]))    
+    
+#    VEBOSE=saved_verbose
+
+def convert_mem16_to_w32(mem16):
+    res32=[]
+    for i in range(0,len(mem16),4):
+        res32.append(((mem16[i+3] & 0xff) << 24) |
+                     ((mem16[i+2] & 0xff) << 16) |
+                     ((mem16[i+1] & 0xff) << 8) |
+                     ((mem16[i+0] & 0xff) << 0))
+        res32.append((((mem16[i+3]>>8) & 0xff) << 24) |
+                     (((mem16[i+2]>>8) & 0xff) << 16) |
+                     (((mem16[i+1]>>8) & 0xff) << 8) |
+                     (((mem16[i+0]>>8) & 0xff) << 0))
+    return res32
+
+def convert_w32_to_mem16(w32):
+    mem16=[]
+    for i in range(0,len(w32),2):
+        mem16.append(((w32[i]>> 0) & 0xff) | (((w32[i+1] >>  0) & 0xff) << 8)) 
+        mem16.append(((w32[i]>> 8) & 0xff) | (((w32[i+1] >>  8) & 0xff) << 8)) 
+        mem16.append(((w32[i]>>16) & 0xff) | (((w32[i+1] >> 16) & 0xff) << 8)) 
+        mem16.append(((w32[i]>>24) & 0xff) | (((w32[i+1] >> 24) & 0xff) << 8)) 
+    return mem16
+
+# calibratin finedelay dealy steps using everaged "eye" data, assuming that most error
+# is in finedelay stage
+def calibrate_finedelay(
+            low,         # absolute delay value of start scan
+            avg_types,   # weights of weach of the 8  bit sequences
+            res_avg,     # averaged eye data tablle, each line has 8 elements, or [] for bad measurements
+            ends_dist,   # do not process if one of the primary interval ends is within this from 0.0 or 1.0
+            min_diff):   # minimal difference between primary delay steps to process
+     global NUM_FINE_STEPS
+     start_index=0;
+     weights=[0.0]*( NUM_FINE_STEPS-1)
+     corr=[0.0]*( NUM_FINE_STEPS-1)
+     if (low % NUM_FINE_STEPS) != 0:
+         start_index=NUM_FINE_STEPS-(low % NUM_FINE_STEPS)
+     for index in range(start_index, len(res_avg)-NUM_FINE_STEPS,NUM_FINE_STEPS):
+         if (len(res_avg[index])>0) and (len(res_avg[index+NUM_FINE_STEPS])>0):
+             for t,w in enumerate(avg_types):
+                 if (w>0):
+                     f=res_avg[index][t];
+                     s=res_avg[index+NUM_FINE_STEPS][t];
+#                     print ("index=%d t=%d f=%f s=%s"%(index,t,f,s))
+                     if ((f>ends_dist) and (s>ends_dist) and
+                          (f< (1-ends_dist)) and (s < (1-ends_dist)) and
+                          (abs(s-f)>min_diff)):
+                         diff=s-f
+                         wd=w* diff*diff # squared? or use abs?
+                         for j in range (1,NUM_FINE_STEPS):
+                             if ( (len(res_avg[index+j])>0)):
+                                 v=res_avg[index+j][t];
+                                 #correction to the initila step==1
+                                 d=(v-f)/(s-f)*NUM_FINE_STEPS-j
+                                 #average
+                                 corr[j-1]+=wd*d
+                                 weights[j-1]+=wd
+                                         
+#     print ("\n weights:")
+#     print(weights)
+#     print ("\n corr:")
+#     print(corr)
+     for i,w in enumerate(weights):
+         if (w>0) : corr[i]/=w
+    
+     print ("\ncorr:")
+     print("%f"%0.0)
+#     print(corr)
+     for c in corr:
+         print ("%f"%c)
+     return corr
+ 
+                          
+   
+    
+        
+def scan_dq_idelay_random(
+       low_delay,
+       high_delay,
+       use_dq, # 0 - scan dqs, 1 - scan dq (common valuwe, post-adjustment)
+       ends_dist,   # do not process if one of the primary interval ends is within this from 0.0 or 1.0
+       min_diff):   # minimal difference between primary delay steps to process
+       
+    global BASEADDR_PORT1_WR,VERBOSE;
+    saved_verbose=VERBOSE;
+    VERBOSE=False;
+#    set_read_pattern(num+1,0,0); # do not use first/last pair of the 32 bit words
+    low = split_delay(low_delay)
+    high = split_delay(high_delay)
+    rand16=[]
+    for i in range(512):
+        rand16.append(random.randint(0,65535))
+    wdata=convert_mem16_to_w32(rand16)
+    print("rand16:")
+    for i in range(len(rand16)):
+        if (i & 0x1f) == 0:
+            print("\n%03x:"%i,end=" ")
+        print("%04x"%rand16[i],end=" ")
+    print("\n")        
+    print("wdata:")
+    for i in range(len(wdata)):
+        if (i & 0xf) == 0:
+            print("\n%03x:"%i,end=" ")
+        print("%08x"%wdata[i],end=" ")
+    print("\n")        
+    bit_type=[] # does not include first and last elements
+    for i in range(1,511):
+        types=[]
+        for j in range(16):
+            types.append((((rand16[i-1]>>j) & 1)<<2) | (((rand16[i  ]>>j) & 1)<<1) |  (((rand16[i+1]>>j) & 1)))
+        bit_type.append(types)
+#        print ("i=%d",i)
+#        print(types)
+#    total_types=[[0]*8]*16 # number of times each type occured in the block for each DQ bit (separate for DG up/down?)
+    total_types=[] # number of times each type occured in the block for each DQ bit (separate for DG up/down?)
+    for i in range(16): total_types.append([0]*8) 
+    for type in bit_type:
+#        print(type)
+        for j in range(16):
+#            total_types[j][type[j]]+=1
+            total_types[j][type[j]]=total_types[j][type[j]]+1
+    print("\ntotal_types:")        
+    print (total_types)
+    
+    avg_types=[0.0]*8
+    N=0
+    for t in total_types:
+        for j,n in enumerate(t):
+            avg_types[j]+=n
+            N+=n
+    for i in range(len(avg_types)):
+        avg_types[i]/=N
+    print("\avg_types:")        
+    print (avg_types)
+        
+    #write blobk buffer with 256x32bit data        
+    for i in range(256):
+        axi_write_single(BASEADDR_PORT1_WR+(i<<2), wdata[i])
+    set_write_block(
+                5,      # 3'h5,     # bank
+                0x1234, # 15'h1234, # row address
+                0x100   # 10'h100   # column address
+            )
+    run_write_block()
+    wait_sequencer_ready()
+#now scanning - first DQS, then try with DQ (post-adjustment - best fit) 
+    results = []
+
+    for dly in range (low, high+1):
+        enc_dly=combine_delay(dly)
+        if (use_dq!=0):
+            axi_set_dq_idelay(enc_dly)
+        else:
+            axi_set_dqs_idelay_individual(enc_dly, enc_dly)
+        run_read_block()
+        wait_sequencer_ready()
+        buf32=read_buf(256)
+        if bad_data(buf32):
+            results.append([])
+        else: 
+            read16=convert_w32_to_mem16(buf32) # 512x16 bit, same as DDR3 DQ over time
+            if VERBOSE and (dly==low):   
+                print("buf32:")
+                for i in range(len(buf32)):
+                    if (i & 0xf) == 0:
+                        print("\n%03x:"%i,end=" ")
+                    print("%08x"%buf32[i],end=" ")
+                print("\n")        
+
+
+                print("read16:")
+                for i in range(len(read16)):
+                    if (i & 0x1f) == 0:
+                        print("\n%03x:"%i,end=" ")
+                    print("%04x"%read16[i],end=" ")
+                print("\n")
+#            exit (0)        
+            
+#            data=[[0]*8]*16 # for each bit - 8 types
+            data=[] # number of times each type occured in the block for each DQ bit (separate for DG up/down?)
+            for i in range(16):
+                data.append([0]*8) 
+            
+            for i in range (1,511):
+                w= read16[i]
+                type=bit_type[i-1] # first and last words are not used, no type was calculated
+                for j in range(16):
+                    if (w & (1<<j)) !=0:
+                        data[j][type[j]]+=1
+            for i in range(16):
+                for t in range(8):
+                    if (total_types[i][t] >0 ):
+                        data[i][t]*=1.0/total_types[i][t]
+            results.append(data)
+            print ("%3d (0x%02x): "%(dly,enc_dly),end="")
+            for i in range(16):
+                print("[",end="")
+                for j in range(8):
+                    print("%3d"%(round(100.0*data[i][j])),end=" ")
+                print("]",end=" ")
+            print()    
+    titles=["'000","'001","'010", "'011","'100","'101","'110","'111"]
+    print ("delay",end=" ")
+    for t in range(8):
+        for i in range(16):
+            print("%02d:%s"%(i,titles[t]),end=" ")
+    print()
+    for dly in range (len(results)):
+        if (len(results[dly])>0):
+            print ("%d"%(dly+low),end=" ")
+            for t in range(8):
+                for i in range(16):
+                    print("%.4f"%(results[dly][i][t]),end=" ")
+            print()
+    #calculate weighted averages
+    #TODO: for DQ scan shift individula bits for the best match
+    if  use_dq:
+        print("TODO: shift individual bits for the best match before averaging")
+    res_avg=[]
+    for dly in range (len(results)):
+        if (len(results[dly])>0):
+            data=results[dly]
+            avg=[0.0]*8
+            for t in range(8):
+                weight=0;
+                d=0.0
+                for i in range(16):
+                    weight+=total_types[i][t]
+                    d+=total_types[i][t]*data[i][t]
+                if (weight>0):
+                    d/=weight
+                avg[t] = d
+            res_avg.append(avg)
+        else:
+            res_avg.append([])
+                    
+    print ("delay",end=" ")
+    for t in range(8):
+        print(titles[t],end=" ")
+    print()
+    for dly in range (len(res_avg)):
+        if (len(res_avg[dly])>0):
+            print ("%d"%(dly+low),end=" ")
+            for t in range(8):
+                print("%.4f"%(res_avg[dly][t]),end=" ")
+            print()
+            
+    corr_fine=calibrate_finedelay(
+            low,         # absolute delay value of start scan
+            avg_types,   # weights of weach of the 8  bit sequences
+            res_avg,     # averaged eye data tablle, each line has 8 elements, or [] for bad measurements
+            ends_dist/256.0, # ends_dist,   # do not process if one of the primary interval ends is within this from 0.0 or 1.0
+            min_diff/256.0) #min_diff):   # minimal difference between primary delay steps to process
+            
+    VEBOSE=saved_verbose
+
+
+   
 # main
 if len(sys.argv)<2:
     print ("Usage: %s command [hex_parameter, ...]"%sys.argv[0])
@@ -1776,7 +2227,26 @@ elif command=="set_up":
     set_up()
     print("set_up() OK")
 #  
-    
+elif command=="scan_dqs":
+    check_args(3,command,args)
+    scan_dqs(args[0],args[1],args[2])
+    print("scan_dqs(0x%x,0x%x,0x%x) OK"%(args[0],args[1],args[2]))
+
+elif command=="scan_dq_idelay":
+    check_args(3,command,args)
+    scan_dq_idelay(args[0],args[1],args[2])
+    print("scan_dq_idelay(0x%x,0x%x,0x%x) OK"%(args[0],args[1],args[2]))
+
+elif command=="scan_dq_idelay_random":
+    check_args(5,command,args)
+    scan_dq_idelay_random(args[0],args[1],args[2],args[3],args[4])
+    print("scan_dq_idelay_random(0x%x,0x%x,0x%x,0x%x,0x%x) OK"%(args[0],args[1],args[2],args[3],args[4]))
+
+elif command=="adjust_dq_idelay":
+    check_args(4,command,args)
+    adjust_dq_idelay(args[0],args[1],args[2],args[3])
+    print("adjust_dq_idelay(0x%x,0x%x,0x%x,0x%x) OK"%(args[0],args[1],args[2],args[3]))
+  
 else:
     print("Invalid command: %s"%command)
 exit (0)    

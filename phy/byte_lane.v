@@ -20,7 +20,7 @@
  *******************************************************************************/
 `timescale 1ns/1ps
 // minimizing total DQS in delay to match DQ (finedelay stage adds some?)
-`define NOFINEDELAY_DQS 1
+//`define NOFINEDELAY_DQS 1
 module  byte_lane #(
     parameter IODELAY_GRP ="IODELAY_MEMORY",
     parameter IBUF_LOW_PWR ="TRUE",

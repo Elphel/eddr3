@@ -173,12 +173,12 @@ module  ddrc_test01_testbench #(
     localparam DLY_LANE1_IDELAY= 72'ha0636261605c5b5a59; // idelay dqs, idelay dq[7:0
     localparam DLY_CMDA=  256'h3c3c3c3c3b3a39383434343433323130002c2c2c2b2a29282424242423222120; // odelay odt, cke, cas, ras, we, ba2,ba1,ba0, X, a14,..,a0
 // alternative to set same type delays to the same value    
-    localparam DLY_DQ_IDELAY =  'h60;
-    localparam DLY_DQ_ODELAY =  'h48;
-    localparam DLY_DQS_IDELAY = 'ha0;
-    localparam DLY_DQS_ODELAY = 'h4c; // b0 for WLV
-    localparam DLY_DM_ODELAY =  'h48;
-    localparam DLY_CMDA_ODELAY ='h30;
+    localparam DLY_DQ_IDELAY =  'h20 ;// 'h60;
+    localparam DLY_DQ_ODELAY =  'ha0; // 'h48;
+    localparam DLY_DQS_IDELAY = 'h40; // 'ha0;
+    localparam DLY_DQS_ODELAY = 'h4c; // 
+    localparam DLY_DM_ODELAY =  'ha0; // 'h48;
+    localparam DLY_CMDA_ODELAY ='h50; // 'h30;
     
 `else   
     localparam DLY_LANE0_DQS_WLV_IDELAY = 8'he8; // idelay dqs

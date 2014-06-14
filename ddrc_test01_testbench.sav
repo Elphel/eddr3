@@ -1,22 +1,21 @@
 [*]
 [*] GTKWave Analyzer v3.3.49 (w)1999-2013 BSI
-[*] Wed Jun 11 02:38:51 2014
+[*] Sat Jun 14 07:10:23 2014
 [*]
 [dumpfile] "/data/vdt/vdt-projects/eddr3/simulation/ddrc_test01_testbench-20140610175433027.lxt"
 [dumpfile_mtime] "Tue Jun 10 23:58:40 2014"
 [dumpfile_size] 75451369
 [savefile] "/data/vdt/vdt-projects/eddr3/ddrc_test01_testbench.sav"
-[timestart] 138628110
+[timestart] 137507870
 [size] 1920 1180
 [pos] -1 -1
-*-12.445735 138646045 134765625 134912600 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-12.527021 137532500 134765625 134912600 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] ddrc_test01_testbench.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.axibram_read_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.axibram_write_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_control_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.
-[treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.
 [treeopen] ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].
@@ -1530,54 +1529,67 @@ ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.set[0]
 -ddrc_sequencer
 @800200
 -ddr_sequencer_i_selected
-@800201
 -ddr_read_data
-@29
+@28
 ddrc_test01_testbench.DQSL[0]
-@23
+@22
 ddrc_test01_testbench.SDD[15:0]
-@29
+@28
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dq_di[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dq_block[0].dq_i.dq_dly[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.iclk[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.clk_div[0]
-@23
+@22
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane1_i.dout[31:0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.dout[63:0]
-@1000201
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.mclk[0]
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.buf_wdata[63:0]
+@200
+-ddrc_sequencer
+@22
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.buf_wdata[63:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.buf_wdata_negedge[63:0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.buf_waddr_negedge[8:0]
+@28
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.buf_wr[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.buf_wr_ndly[0]
+ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.buf_wr_negedge[0]
+@1000200
 -ddr_read_data
 @200
 -
-@c00200
+@800201
 -tristate_control
-@28
+@29
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.SDODT[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dci_disable_dqs[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dci_disable_dq[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_dci_in[0]
-@22
+@23
 ddrc_test01_testbench.ddrc_test01_i.ddrc_control_i.dqs_tri_pattern_r[15:0]
-@28
+@29
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.clk[0]
-@22
+@23
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.dqs_tri_off_pattern[3:0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.dqs_tri_on_pattern[3:0]
-@28
+@29
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.dqs_tri_prev[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_dqs_tri_in[0]
-@22
+@23
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_dqs_tri[7:0]
-@28
+@29
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_top_i.byte_lane0_i.dqs_i.iobufs_dqs_i.T[0]
-@22
+@23
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.dq_tri_off_pattern[3:0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.dq_tri_on_pattern[3:0]
-@28
+@29
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.dq_tri_prev[0]
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_dq_tri_in[0]
-@22
+@23
 ddrc_test01_testbench.ddrc_test01_i.ddrc_sequencer_i.phy_cmd_i.phy_dq_tri[7:0]
-@1401200
+@1000201
 -tristate_control
 @28
 ddrc_test01_testbench.ddrc_test01_i.refresh_need[0]

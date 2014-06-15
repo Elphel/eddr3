@@ -1,5 +1,4 @@
 unisims
-glbl.v
 vivado_*
 syntax_*
 simulation/*

@@ -1,0 +1,221 @@
+--- unisims/OSERDESE1.v	2013-12-04 18:42:38.000000000 -0700
++++ unisims_patches/OSERDESE1.v	2014-05-21 09:38:37.000000000 -0600
+@@ -223,6 +223,7 @@
+             "DDR" : data_rate_oq_int <= 1'b0;
+             default : begin
+                           $display("Attribute Syntax Error : The attribute DATA_RATE_OQ on OSERDESE1 instance %m is set to %s.  Legal values for this attribute are SDR or DDR", DATA_RATE_OQ);
++                          $display("finish OSERDESE1 1");
+                           $finish;
+                       end
+         endcase // case(DATA_RATE_OQ)
+@@ -237,6 +238,7 @@
+             "DDR" : data_rate_tq_int <= 2'b10;
+             default : begin
+                           $display("Attribute Syntax Error : The attribute DATA_RATE_TQ on OSERDESE1 instance %m is set to %s.  Legal values for this attribute are BUF, SDR or DDR", DATA_RATE_TQ);
++                          $display("finish OSERDESE1 2");
+                           $finish;
+                       end
+ 
+@@ -250,6 +252,7 @@
+             2, 3, 4, 5, 6, 7, 8, 10 : data_width_int = DATA_WIDTH;
+             default : begin
+                           $display("Attribute Syntax Error : The attribute DATA_WIDTH on OSERDESE1 instance %m is set to %d.  Legal values for this attribute are 2, 3, 4, 5, 6, 7, 8, or 10", DATA_WIDTH);
++                          $display("finish OSERDESE1 3");
+                           $finish;
+                       end
+         endcase // case(DATA_WIDTH)
+@@ -262,6 +265,7 @@
+             1 : ddr3_data_int <= 1'b1;
+             default : begin 
+                           $display("Attribute Syntax Error : The attribute DDR3_DATA on OSERDESE1 instance %m is set to %d.  Legal values for this attribute are 0 or 1", DDR3_DATA);
++                          $display("finish OSERDESE1 4");
+                           $finish;
+                       end
+         endcase // case(DDR3_DATA)
+@@ -274,6 +278,7 @@
+                "MEMORY_DDR3" : interface_type_int <= 1'b1;
+                default : begin
+                           $display("Attribute Syntax Error : The attribute INTERFACE_TYPE on OSERDESE1 instance %m is set to %s.  Legal values for this attribute are DEFAULT, or MEMORY_DDR3", INTERFACE_TYPE);
++                          $display("finish OSERDESE1 5");
+                           $finish;
+                          end
+         endcase // INTERFACE_TYPE
+@@ -290,6 +295,7 @@
+             1 : odelay_used_int <= 1'b1;
+             default : begin
+                           $display("Attribute Syntax Error : The attribute ODELAY_USED on OSERDESE1 instance %m is set to %s.  Legal values for this attribute are FALSE or TRUE", ODELAY_USED);
++                          $display("finish OSERDESE1 6");
+                           $finish;
+                       end
+ 
+@@ -304,6 +310,7 @@
+             "SLAVE"  : serdes_mode_int <= 1'b1;
+             default  : begin
+                           $display("Attribute Syntax Error : The attribute SERDES_MODE on OSERDESE1 instance %m is set to %s.  Legal values for this attribute are MASTER or SLAVE", SERDES_MODE);
++                          $display("finish OSERDESE1 7");
+                           $finish;
+                       end
+ 
+@@ -319,10 +326,12 @@
+             4 : tristate_width_int <= 2'b10;
+             default : begin
+                           $display("Attribute Syntax Error : The attribute TRISTATE_WIDTH on OSERDESE1 instance %m is set to %d.  Legal values for this attribute are 1, 2 or 4", TRISTATE_WIDTH);
++                          $display("finish OSERDESE1 8");
+                           $finish;
+                       end
+ 
+         endcase // case(TRISTATE_WIDTH)
++//        $display("Info: The attribute TRISTATE_WIDTH on OSERDESE1 instance %m is set to %d", TRISTATE_WIDTH);
+ 
+ //-------------------------------------------------
+     end  // initial begin
+@@ -705,17 +714,17 @@
+ begin
+ 	if (GSR) 
+ 		begin
+-			assign q3 = INIT_LOADCNT[3];
+-			assign q2 = INIT_LOADCNT[2];
+-			assign q1 = INIT_LOADCNT[1];
+-			assign q0 = INIT_LOADCNT[0];
++			force q3 = INIT_LOADCNT[3];
++			force q2 = INIT_LOADCNT[2];
++			force q1 = INIT_LOADCNT[1];
++			force q0 = INIT_LOADCNT[0];
+ 		end
+ 	else 
+ 		begin
+-			deassign q3;
+-			deassign q2;
+-			deassign q1;
+-			deassign q0;
++			release q3;
++			release q2;
++			release q1;
++			release q0;
+ 		end
+ end
+ 
+@@ -1033,30 +1042,30 @@
+ begin
+ 	if (GSR) 
+ 		begin
+-			assign d6rnk2 = INIT_ORANK2_PARTIAL[3];
+-			assign d5rnk2 = INIT_ORANK2_PARTIAL[2];
+-			assign d4rnk2 = INIT_ORANK2_PARTIAL[1];
+-			assign d3rnk2 = INIT_ORANK2_PARTIAL[0];
++			force d6rnk2 = INIT_ORANK2_PARTIAL[3];
++			force d5rnk2 = INIT_ORANK2_PARTIAL[2];
++			force d4rnk2 = INIT_ORANK2_PARTIAL[1];
++			force d3rnk2 = INIT_ORANK2_PARTIAL[0];
+ 
+-			assign d6r = INIT_ORANK1[5];
+-			assign d5r = INIT_ORANK1[4];
+-			assign d4r = INIT_ORANK1[3];
+-			assign d3r = INIT_ORANK1[2];
+-			assign d2r = INIT_ORANK1[1];
+-			assign d1r = INIT_ORANK1[0];
++			force d6r = INIT_ORANK1[5];
++			force d5r = INIT_ORANK1[4];
++			force d4r = INIT_ORANK1[3];
++			force d3r = INIT_ORANK1[2];
++			force d2r = INIT_ORANK1[1];
++			force d1r = INIT_ORANK1[0];
+ 		end
+ 	else 
+ 		begin
+-			deassign d6rnk2;
+-			deassign d5rnk2;
+-			deassign d4rnk2;
+-			deassign d3rnk2;
+-			deassign d6r;
+-			deassign d5r;
+-			deassign d4r;
+-			deassign d3r;
+-			deassign d2r;
+-			deassign d1r;
++			release d6rnk2;
++			release d5rnk2;
++			release d4rnk2;
++			release d3rnk2;
++			release d6r;
++			release d5r;
++			release d4r;
++			release d3r;
++			release d2r;
++			release d1r;
+ 		end
+ end
+ 
+@@ -1407,18 +1416,18 @@
+ begin
+ 	if (GSR) 
+ 		begin
+-			assign t1r = INIT_TRANK1[0];
+-			assign t2r = INIT_TRANK1[1];
+-			assign t3r = INIT_TRANK1[2];
+-			assign t4r = INIT_TRANK1[3];
++			force t1r = INIT_TRANK1[0];
++			force t2r = INIT_TRANK1[1];
++			force t3r = INIT_TRANK1[2];
++			force t4r = INIT_TRANK1[3];
+ 
+ 		end
+ 	else 
+ 		begin
+-			deassign t1r;
+-			deassign t2r;
+-			deassign t3r;
+-			deassign t4r;
++			release t1r;
++			release t2r;
++			release t3r;
++			release t4r;
+ 		end
+ end
+ 
+@@ -1492,7 +1501,11 @@
+ 	   5'b11000: ;
+ 	   5'bX1000: ;
+ 
+-		default: $display("DATA_RATE_TQ %b and/or TRISTATE_WIDTH %b at time %t are not supported by OSERDES", DATA_RATE_TQ,TRISTATE_WIDTH,$time);
++		default:
++		 begin
++		 $display("DATA_RATE_TQ %b and/or TRISTATE_WIDTH %b at time %t are not supported by OSERDES", DATA_RATE_TQ,TRISTATE_WIDTH,$time);
++		 $display("1.sel= %b",sel);
++		 end
+ 		endcase
+ 	end
+ // For data 2, width of 1 is inserted as acceptable for buf and sdr
+@@ -1519,7 +1532,11 @@
+ 	   5'b11000: ;
+ 	   5'bX1000: ;
+ 
+-		default: $display("DATA_RATE_TQ %b and/or TRISTATE_WIDTH %b at time %t are not supported by OSERDES", DATA_RATE_TQ,TRISTATE_WIDTH,$time);
++		default:
++		 begin
++		 $display("DATA_RATE_TQ %b and/or TRISTATE_WIDTH %b at time %t are not supported by OSERDES", DATA_RATE_TQ,TRISTATE_WIDTH,$time);
++         $display("2.sel= %b",sel);
++		 end
+ 		endcase
+ 	end
+ 
+@@ -2063,16 +2080,16 @@
+ 
+ input		bufop_clk;
+ 
+-output		qwc, qrd;
++output	[1:0]qwc, qrd; // Scalar port ``qwc'' has a vectored net declaration [1:0]
+ 
+ output		rd_gap1, extra;
+ 
+ 
+ 
+ 
+-reg	[1:0]	qwc;
++reg	[1:0]	qwc; // unisims/OSERDESE1.v:2073 error: Scalar port ``qwc'' has a vectored net declaration [1:0]
+ 
+-reg	[1:0]	qrd;
++reg	[1:0]	qrd; // unisims/OSERDESE1.v:2075: error: Scalar port ``qrd'' has a vectored net declaration [1:0]
+ 
+ 
+ reg		stop_rd, rd_gap1, extra;

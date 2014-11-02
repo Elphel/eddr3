@@ -111,11 +111,11 @@ module ddr3 (
 
 
 `ifdef den1024Mb
-    `include "1024Mb_ddr3_parameters.vh"
+    `include "ddr3/1024Mb_ddr3_parameters.vh"
 `elsif den2048Mb
-    `include "2048Mb_ddr3_parameters.vh"
+    `include "ddr3/2048Mb_ddr3_parameters.vh"
 `elsif den4096Mb
-    `include "4096Mb_ddr3_parameters.vh"
+    `include "ddr3/4096Mb_ddr3_parameters.vh"
 `else
     // NOTE: Intentionally cause a compile fail here to force the users
     //       to select the correct component density before continuing

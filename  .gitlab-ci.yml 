@@ -3,7 +3,7 @@ compile_test:
     - latex
   image: tianon/latex
   script:
-    - echo "just an artifact test" > artifact.txt
+    - echo just-an-artifact-test > artifact.txt
   artifacts:
     paths:
       - artifact.txt

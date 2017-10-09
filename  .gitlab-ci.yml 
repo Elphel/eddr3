@@ -1,0 +1,9 @@
+compile_test:
+  tags:
+    - latex
+  image: tianon/latex
+  script:
+    - echo "just an artifact test" > artifact.txt
+  artifacts:
+    paths:
+      - artifact.txt

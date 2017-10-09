@@ -1,5 +1,3 @@
-before_script:
-  - docker info
 compile_test:
   tags:
     - latex

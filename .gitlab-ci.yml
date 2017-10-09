@@ -1,0 +1,9 @@
+compile_test:
+  tags:
+    - latex
+  image: tianon/latex
+  script:
+    - touch artifact.txt
+  artifacts:
+    paths:
+      - artifact.txt

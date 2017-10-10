@@ -3,6 +3,7 @@ compile_test:
     - latex
   image: tianon/latex
   script:
+    - echo $CI_JOB_TOKEN
     - touch artifact.txt
   artifacts:
     paths:

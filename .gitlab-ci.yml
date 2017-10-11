@@ -1,11 +1,12 @@
 compile_test:
   tags:
-    - lotex2
+    - latex2
   image: gitlab/gitlab-runner-helper:x86_64-a9a76a50
   variables:
     CI_DEBUG_TRACE: "true"
   script:
     - echo $CI_JOB_ID
+    - /usr/bin/gitlab-runner-helper
     - echo "test" > artifact.txt
   artifacts:
     paths:

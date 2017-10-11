@@ -3,7 +3,8 @@ compile_test:
     - ltx
   image: tianon/latex
   script:
-    - echo $CI_REGISTRY
+    - ping -c 1 https://git.elphel.com
+    - ping -c 1 104.247.75.117
     - touch artifact.txt
   artifacts:
     paths:

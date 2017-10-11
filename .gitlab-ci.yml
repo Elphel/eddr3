@@ -1,6 +1,6 @@
 compile_test:
   tags:
-    - latex
+    - latex2
   image: tianon/latex
   script:
     - echo $CI_REGISTRY

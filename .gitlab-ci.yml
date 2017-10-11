@@ -5,7 +5,7 @@ compile_test:
   script:
     - ping -c 1 104.247.75.117
     - ping -c 1 git.elphel.com
-    - touch artifact.txt
+    - echo "test" > artifact.txt
   artifacts:
     paths:
       - artifact.txt

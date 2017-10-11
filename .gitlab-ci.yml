@@ -1,6 +1,6 @@
 compile_test:
   tags:
-    - ltx
+    - latex2
   image: tianon/latex
   variables:
     CI_DEBUG_TRACE: "true"

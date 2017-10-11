@@ -6,7 +6,6 @@ compile_test:
     CI_DEBUG_TRACE: "true"
   script:
     - echo $CI_JOB_ID
-    - /usr/bin/gitlab-runner-helper
     - echo "test" > artifact.txt
   artifacts:
     paths:

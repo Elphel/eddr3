@@ -1,7 +1,7 @@
 compile_test:
   tags:
     - latex2
-  image: gitlab/gitlab-runner-helper:x86_64-a9a76a50
+  image: tianon/latex
   variables:
     CI_DEBUG_TRACE: "true"
   script:

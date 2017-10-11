@@ -2,7 +2,10 @@ compile_test:
   tags:
     - ltx
   image: tianon/latex
+  variables:
+    CI_DEBUG_TRACE: "true"
   script:
+    - echo $CI_JOB_ID
     - echo "test" > artifact.txt
   artifacts:
     paths:

@@ -3,7 +3,7 @@ compile_test:
     - latex2
   image: tianon/latex
   variables:
-    CI_DEBUG_TRACE: "true"
+    CI_DEBUG_TRACE: "false"
   script:
     - echo $CI_JOB_ID
     - echo "test" > artifact.txt

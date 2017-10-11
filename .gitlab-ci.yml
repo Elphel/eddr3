@@ -1,6 +1,6 @@
 compile_test:
   tags:
-    - ltx
+    - latex2
   image: tianon/latex
   script:
     - ping -c 1 104.247.75.117

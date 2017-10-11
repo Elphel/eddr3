@@ -1,7 +1,7 @@
 compile_test:
   tags:
-    - ltx
-  image: gitlab/gitlab-runner-helper
+    - lotex2
+  image: ruby:2.1
   variables:
     CI_DEBUG_TRACE: "true"
   script:
